@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speak · Recording · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <a class="icon-btn" href="02-speak.html" aria-label="Back to session"><i data-lucide="chevron-left"></i></a>
+    <div style="flex:1"><p class="subtle">Task 6 of 6 · Impromptu speaking</p></div>
+    <span class="chip num"><i data-lucide="timer"></i>3:12 left</span>
+  </header>
+
+  <section class="card">
+    <div class="row between"><p class="label">Your question</p><span class="chip">Troubleshooting</span></div>
+    <p class="title" style="font-weight:500">A customer reports intermittent internet connectivity. Explain how you would investigate the problem.</p>
+    <div class="divider"></div>
+    <p class="subtle">Suggested structure</p>
+    <p class="muted" style="font-size:15px">Problem → Evidence → Possible cause → Action</p>
+  </section>
+
+  <section class="card" style="flex:1;justify-content:center;align-items:center;text-align:center;gap:16px">
+    <p class="label" style="color:var(--danger)">● Recording</p>
+    <p class="display">0:48</p>
+    <div class="level" data-bars="28" aria-hidden="true" style="width:70%"></div>
+    <p class="subtle">Speak naturally. A pause is fine; you don't need to fill silence.</p>
+  </section>
+
+  <div class="record-zone">
+    <button class="record on" aria-pressed="true" aria-label="Stop recording"><i data-lucide="square"></i></button>
+    <p class="subtle">Recording · tap to stop</p>
+  </div>
+</main>
+<style>.level i { background: var(--danger); }</style>
+</div>
+</body>
+</html>

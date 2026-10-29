@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Read · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar"><h1>Read</h1><button class="icon-btn" aria-label="Add book"><i data-lucide="plus"></i></button></header>
+
+  <section class="card">
+    <p class="label">Current book</p>
+    <div class="row" style="align-items:flex-start">
+      <div style="width:64px;height:92px;border-radius:6px;background:var(--raised);display:grid;place-items:center;flex:none" aria-hidden="true"><i data-lucide="book" class="subtle"></i></div>
+      <div class="stack" style="gap:4px">
+        <p class="title" style="font-size:18px">The Art of Public Speaking</p>
+        <p class="muted" style="font-size:15px">Dale Carnegie</p>
+        <p class="subtle num">Page 86 of 412 · 21%</p>
+      </div>
+    </div>
+    <div class="bar"><i style="width:21%"></i></div>
+  </section>
+
+  <section class="card">
+    <div class="row between"><p class="label">Today</p><span class="chip success"><i data-lucide="check"></i>Complete</span></div>
+    <p class="display">12 <span class="muted" style="font-size:20px;font-weight:500">/ 10 pages</span></p>
+    <div class="bar done"><i style="width:100%"></i></div>
+  </section>
+
+  <section class="card">
+    <p class="label">Log pages</p>
+    <div class="row">
+      <div class="field" style="flex:1"><label for="sp">Start page</label><input id="sp" class="input num" inputmode="numeric" value="74"></div>
+      <div class="field" style="flex:1"><label for="ep">End page</label><input id="ep" class="input num" inputmode="numeric" value="86"></div>
+    </div>
+    <div class="field"><label for="note">One thing I learned (optional)</label><input id="note" class="input" placeholder="A sentence is enough"></div>
+    <button class="btn btn-primary btn-block">Save session · 12 pages</button>
+  </section>
+
+  <section class="card" style="flex-direction:row;justify-content:space-between;text-align:center">
+    <div><p class="title num">58</p><p class="subtle">This week</p></div>
+    <div><p class="title num">241</p><p class="subtle">This month</p></div>
+    <div><p class="title num">3</p><p class="subtle">Books done</p></div>
+  </section>
+</main>
+<nav class="bottomnav" aria-label="Main">
+<a href="01-today.html" ><i data-lucide="sun"></i>Today</a>
+<a href="02-speak.html" ><i data-lucide="mic"></i>Speak</a>
+<a href="07-journal.html" ><i data-lucide="notebook-pen"></i>Journal</a>
+<a href="08-read.html" aria-current="page"><i data-lucide="book-open"></i>Read</a>
+</nav>
+</div>
+</body>
+</html>

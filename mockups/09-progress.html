@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Progress · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <a class="icon-btn" href="01-today.html" aria-label="Back to Today"><i data-lucide="chevron-left"></i></a>
+    <h1>Progress</h1>
+  </header>
+
+  <div class="segmented" role="group" aria-label="Period">
+    <button aria-pressed="true">Week</button>
+    <button aria-pressed="false">Month</button>
+  </div>
+
+  <section class="card">
+    <p class="label">This week</p>
+    <div class="row between"><span>Articulation</span><span class="num" style="font-weight:600">6 / 7 days</span></div>
+    <div class="row between"><span>Journal</span><span class="num" style="font-weight:600">5 / 7 days</span></div>
+    <div class="row between"><span>Reading</span><span class="num" style="font-weight:600">78 / 70 pages</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><p class="label">October</p><p class="subtle">Targets met per day</p></div>
+    <div class="cal" aria-label="Consistency calendar">
+      <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
+      <span class="d3">20</span><span class="d3">21</span><span class="d2">22</span><span class="d3">23</span><span class="d1">24</span><span class="d3">25</span><span class="d2">26</span>
+      <span class="d3">27</span><span class="d3">28</span><span class="d1 today">29</span><span>30</span><span>31</span><span></span><span></span>
+    </div>
+    <div class="row subtle" style="gap:16px;flex-wrap:wrap"><span><span class="cal" style="display:inline"><span class="d3" style="display:inline-block;width:12px;height:12px;aspect-ratio:auto;vertical-align:-1px"></span></span> 3 of 3</span><span><span class="cal" style="display:inline"><span class="d2" style="display:inline-block;width:12px;height:12px;aspect-ratio:auto;vertical-align:-1px"></span></span> 2 of 3</span><span><span class="cal" style="display:inline"><span class="d1" style="display:inline-block;width:12px;height:12px;aspect-ratio:auto;vertical-align:-1px"></span></span> 1 of 3</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><p class="label">Fillers per response</p><span class="chip success">↓ 62% in 4 weeks</span></div>
+    <svg class="spark" viewBox="0 0 300 72" preserveAspectRatio="none" role="img" aria-label="Fillers per response: 8, 7, 6, 6, 5, 4, 3">
+      <line class="grid" x1="0" y1="71" x2="300" y2="71"/>
+      <path class="area" d="M0 8 L50 16 L100 24 L150 24 L200 34 L250 44 L300 52 L300 72 L0 72Z"/>
+      <path class="line" d="M0 8 L50 16 L100 24 L150 24 L200 34 L250 44 L300 52"/>
+    </svg>
+  </section>
+
+  <section class="card">
+    <p class="label">Articulation trends</p>
+    <div class="row between"><span>Sentence restarts</span><span class="chip success">↓ 4 → 2</span></div>
+    <div class="row between"><span>Hesitation pauses</span><span class="chip success">↓ 5 → 3</span></div>
+    <div class="row between"><span>Pace consistency</span><span class="chip">Steady</span></div>
+    <div class="row between"><span>Main point stated first</span><span class="chip success">↑ 3 of 7 → 6 of 7</span></div>
+    <div class="divider"></div>
+    <p class="subtle">Recurring weakness</p>
+    <p>Packing several ideas into one sentence during technical explanations.</p>
+  </section>
+</main>
+<nav class="bottomnav" aria-label="Main">
+<a href="01-today.html" aria-current="page"><i data-lucide="sun"></i>Today</a>
+<a href="02-speak.html" ><i data-lucide="mic"></i>Speak</a>
+<a href="07-journal.html" ><i data-lucide="notebook-pen"></i>Journal</a>
+<a href="08-read.html" ><i data-lucide="book-open"></i>Read</a>
+</nav>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speak · Compare attempts · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <a class="icon-btn" href="05-feedback.html" aria-label="Back"><i data-lucide="chevron-left"></i></a>
+    <div style="flex:1"><p class="subtle">Unexpected questions</p><p class="title">Attempt 1 vs Attempt 2</p></div>
+  </header>
+
+  <section class="card">
+    <table class="cmp">
+      <thead><tr><th scope="col">Dimension</th><th scope="col">1</th><th scope="col">2</th><th scope="col">Change</th></tr></thead>
+      <tbody>
+        <tr><td>Fillers</td><td>8</td><td>3</td><td class="chg">↓ 5 fewer</td></tr>
+        <tr><td>Restarts</td><td>4</td><td>1</td><td class="chg">↓ 3 fewer</td></tr>
+        <tr><td>Long hesitations</td><td>3</td><td>1</td><td class="chg">↓ 2 fewer</td></tr>
+        <tr><td>Repeated ideas</td><td>2</td><td>0</td><td class="chg">↓ 2 fewer</td></tr>
+        <tr><td>Pace (wpm)</td><td>142</td><td>136</td><td class="chg same">Steadier</td></tr>
+        <tr><td>Main point</td><td style="font-size:13px">Late</td><td style="font-size:13px">First</td><td class="chg">Clearer</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <p class="label">Listen back</p>
+    <div class="row"><button class="play" style="width:44px;height:44px" aria-label="Play attempt 1"><i data-lucide="play" style="width:18px;height:18px"></i></button><div class="grow" style="flex:1"><p>Attempt 1</p><p class="subtle num">0:42</p></div></div>
+    <div class="row"><button class="play" style="width:44px;height:44px" aria-label="Play attempt 2"><i data-lucide="play" style="width:18px;height:18px"></i></button><div style="flex:1"><p>Attempt 2</p><p class="subtle num">0:38</p></div></div>
+    <p class="subtle">Only available when "Keep recordings on this device" is on.</p>
+  </section>
+
+  <section class="card">
+    <p class="fb-num">What improved</p>
+    <p class="muted">You opened with your main point and used silence where fillers were before.</p>
+    <div class="divider"></div>
+    <p class="fb-num">What still needs work</p>
+    <p class="muted">Your example came in one long sentence. Split the cause and the effect.</p>
+    <div class="divider"></div>
+    <p class="fb-num">Next priority</p>
+    <p>One idea per sentence when giving examples.</p>
+  </section>
+
+  <a class="btn btn-primary btn-block" href="02-speak.html">Continue session<i data-lucide="arrow-right"></i></a>
+</main>
+</div>
+</body>
+</html>

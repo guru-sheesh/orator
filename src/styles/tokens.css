@@ -1,0 +1,135 @@
+/*
+ * Orator design tokens (Tailwind CSS v4).
+ * Source of truth: design-system.md. Components use semantic tokens only,
+ * never raw hex values. Dark is the default theme; light is opt-in via
+ * <html data-theme="light">.
+ */
+@import "tailwindcss";
+
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #121315;
+  --surface: #1a1b1e;
+  --raised: #222327;
+  --border: #34363b;          /* decorative dividers */
+  --border-strong: #6e7178;   /* inputs, controls (3:1 min) */
+
+  /* Text */
+  --text: #eceae5;            /* 15.5:1 on bg */
+  --text-muted: #a8a49d;      /* 7.5:1 on bg */
+  --text-subtle: #938f88;     /* 4.9:1 on raised */
+
+  /* Brand + status */
+  --primary: #e2a65a;         /* brass: primary actions, progress */
+  --on-primary: #1a1206;
+  --primary-soft: rgb(226 166 90 / 0.14);
+  --success: #86bc93;         /* "Complete" states */
+  --success-soft: rgb(134 188 147 / 0.14);
+  --danger: #ee8274;          /* recording, destructive */
+  --on-danger: #1a0b08;
+  --danger-soft: rgb(238 130 116 / 0.14);
+  --info: #8fb8de;            /* pauses, neutral analysis markers */
+  --info-soft: rgb(143 184 222 / 0.14);
+  --focus: #e2a65a;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f5f1;
+  --surface: #ffffff;
+  --raised: #efece6;
+  --border: #d9d4cb;
+  --border-strong: #8c867c;
+  --text: #1c1b19;
+  --text-muted: #57534d;
+  --text-subtle: #6b665f;
+  --primary: #8a3d0c;
+  --on-primary: #ffffff;
+  --primary-soft: rgb(138 61 12 / 0.1);
+  --success: #2e6a3e;
+  --success-soft: rgb(46 106 62 / 0.1);
+  --danger: #b3261e;
+  --on-danger: #ffffff;
+  --danger-soft: rgb(179 38 30 / 0.08);
+  --info: #1e5a8c;
+  --info-soft: rgb(30 90 140 / 0.08);
+  --focus: #8a3d0c;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-focus: var(--focus);
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Lora", ui-serif, Georgia, serif;
+
+  /* Type scale (rem at 16px base) */
+  --text-caption: 0.8125rem;   /* 13px labels, meta */
+  --text-caption--line-height: 1.4;
+  --text-body: 1rem;           /* 16px */
+  --text-body--line-height: 1.55;
+  --text-transcript: 1.125rem; /* 18px serif transcripts, passages */
+  --text-transcript--line-height: 1.7;
+  --text-title: 1.25rem;       /* 20px card / section titles */
+  --text-title--line-height: 1.35;
+  --text-headline: 1.625rem;   /* 26px screen titles */
+  --text-headline--line-height: 1.25;
+  --text-display: 2.5rem;      /* 40px timers, key numbers */
+  --text-display--line-height: 1.1;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Elevation: dark mode relies on surface steps, not shadows */
+  --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 0.35);
+
+  /* Motion: subtle, functional only */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+}
+
+/* Spacing uses Tailwind's 4px scale; allowed steps: 1 2 3 4 5 6 8 10 12 16 */
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* Keep focused elements clear of the sticky bottom nav */
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+  }
+}

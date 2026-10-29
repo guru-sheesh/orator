@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speak · Session · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar"><h1>Speak</h1><a class="icon-btn" href="09-progress.html" aria-label="Trends"><i data-lucide="trending-down"></i></a></header>
+
+  <section class="card" style="align-items:center;text-align:center;gap:8px">
+    <p class="label">Today's session</p>
+    <div class="ring lg" style="--p:40" role="progressbar" aria-valuenow="12" aria-valuemax="30" aria-label="Session minutes">
+      <div><p class="display" style="font-size:32px">12:04</p><p class="subtle">of 30:00</p></div>
+    </div>
+    <p class="muted" style="font-size:15px">2 of 6 tasks done. A retry follows the feedback.</p>
+  </section>
+
+  <section class="card" style="gap:0;padding-top:8px;padding-bottom:8px">
+    <a class="task done" href="#"><span class="n"><i data-lucide="check" style="width:16px;height:16px"></i></span><div class="grow"><p class="t">Word description</p><p class="subtle">3 words · 2 min</p></div><span class="subtle num">2:10</span></a>
+    <a class="task done" href="#"><span class="n"><i data-lucide="check" style="width:16px;height:16px"></i></span><div class="grow"><p class="t">Unexpected questions</p><p class="subtle">2 questions · 3 min</p></div><span class="subtle num">3:22</span></a>
+    <a class="task current" href="04-shadowing.html" aria-current="step"><span class="n">3</span><div class="grow"><p class="t">Speech shadowing</p><p class="subtle">Listen · Repeat · Shadow · Deliver · 5 min</p></div><i data-lucide="chevron-right" class="subtle"></i></a>
+    <div class="task"><span class="n">4</span><div class="grow"><p class="t">Paraphrase the speaker</p><p class="subtle">3 min</p></div></div>
+    <div class="task"><span class="n">5</span><div class="grow"><p class="t">Read → Hide → Explain</p><p class="subtle">6 min</p></div></div>
+    <div class="task"><span class="n">6</span><div class="grow"><p class="t">Impromptu speaking</p><p class="subtle">4 min</p></div></div>
+    <div class="task"><span class="n"><i data-lucide="repeat" style="width:16px;height:16px"></i></span><div class="grow"><p class="t">Feedback and retry</p><p class="subtle">7 min</p></div></div>
+  </section>
+
+  <a class="btn btn-primary btn-block" href="04-shadowing.html"><i data-lucide="play"></i>Continue with task 3</a>
+</main>
+<nav class="bottomnav" aria-label="Main">
+<a href="01-today.html" ><i data-lucide="sun"></i>Today</a>
+<a href="02-speak.html" aria-current="page"><i data-lucide="mic"></i>Speak</a>
+<a href="07-journal.html" ><i data-lucide="notebook-pen"></i>Journal</a>
+<a href="08-read.html" ><i data-lucide="book-open"></i>Read</a>
+</nav>
+</div>
+</body>
+</html>

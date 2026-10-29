@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  # Serverless functions (speech token, AI coach) arrive in later phases.
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The service worker must never be cached, or app updates won't reach installed phones.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

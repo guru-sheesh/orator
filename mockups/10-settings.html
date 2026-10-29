@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Settings · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <a class="icon-btn" href="01-today.html" aria-label="Back to Today"><i data-lucide="chevron-left"></i></a>
+    <h1>Settings</h1>
+  </header>
+
+  <section class="card">
+    <p class="label">Speech analysis usage · October</p>
+    <div class="meter-big"><span class="display" style="font-size:32px">3h 12m</span><span class="muted">of 5h free</span></div>
+    <div class="bar" role="progressbar" aria-valuenow="192" aria-valuemax="300" aria-label="Azure minutes used"><i style="width:64%"></i></div>
+    <p class="subtle">Near the limit, the app switches to the browser's own speech recognition: you still get a transcript, but no pause, pace or pronunciation analysis.</p>
+  </section>
+
+  <section class="card" style="gap:0">
+    <p class="label" style="margin-bottom:4px">AI coach</p>
+    <div class="setting"><div class="grow"><p>Provider</p><p class="subtle">Gemini (free tier)</p></div><button class="btn btn-secondary" style="min-height:40px">Change</button></div>
+    <div class="notice" style="margin:8px 0"><i data-lucide="shield-alert"></i><span>Gemini's free tier may use what you send to improve Google's products. Only transcripts and metrics are sent, never audio or journal entries.</span></div>
+  </section>
+
+  <section class="card" style="gap:0">
+    <p class="label" style="margin-bottom:4px">Privacy</p>
+    <div class="setting"><div class="grow"><p>Keep recordings on this device</p><p class="subtle">Needed to replay Attempt 1 vs 2</p></div><button class="switch" role="switch" aria-checked="false" aria-label="Keep recordings on this device"></button></div>
+    <div class="setting"><div class="grow"><p>Appearance</p><p class="subtle">Dark</p></div><i data-lucide="chevron-right" class="subtle"></i></div>
+  </section>
+
+  <section class="card" style="gap:0">
+    <p class="label" style="margin-bottom:4px">Source library</p>
+    <a class="setting" href="#"><div class="grow"><p>Manage sources</p><p class="subtle">4 verified · 2 awaiting your check</p></div><i data-lucide="chevron-right" class="subtle"></i></a>
+    <a class="setting" href="#"><div class="grow"><p>Shadowing audio</p><p class="subtle">2 files · 14 segments</p></div><i data-lucide="chevron-right" class="subtle"></i></a>
+  </section>
+
+  <section class="card" style="gap:0">
+    <p class="label" style="margin-bottom:4px">Your data</p>
+    <p class="subtle" style="padding:4px 0 8px">Everything is stored only on this phone. Last backup: 6 days ago.</p>
+    <button class="setting" style="width:100%;text-align:left"><i data-lucide="download"></i><span class="grow">Export all data (JSON)</span></button>
+    <button class="setting btn-danger-ghost" style="width:100%;text-align:left"><i data-lucide="trash-2"></i><span class="grow">Delete all data</span></button>
+  </section>
+</main>
+<nav class="bottomnav" aria-label="Main">
+<a href="01-today.html" aria-current="page"><i data-lucide="sun"></i>Today</a>
+<a href="02-speak.html" ><i data-lucide="mic"></i>Speak</a>
+<a href="07-journal.html" ><i data-lucide="notebook-pen"></i>Journal</a>
+<a href="08-read.html" ><i data-lucide="book-open"></i>Read</a>
+</nav>
+</div>
+</body>
+</html>

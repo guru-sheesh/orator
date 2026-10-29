@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Journal · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <div style="flex:1"><p class="subtle">Thursday, 29 October</p><h1>Journal</h1></div>
+    <button class="icon-btn" aria-label="Search entries"><i data-lucide="search"></i></button>
+    <button class="icon-btn" aria-label="Calendar history"><i data-lucide="calendar"></i></button>
+  </header>
+
+  <div class="segmented" role="group" aria-label="Entry mode">
+    <button aria-pressed="true">Prompted</button>
+    <button aria-pressed="false">Free write</button>
+  </div>
+
+  <section class="card">
+    <div class="field"><label for="q1">What happened today?</label><textarea id="q1" class="input">Site visit for the inverter commissioning. Took longer than planned because of a BMS comms fault.</textarea></div>
+    <div class="field"><label for="q2">What went well?</label><textarea id="q2" class="input">Explained the fault clearly to the client without rushing.</textarea></div>
+    <div class="field"><label for="q3">What could I have handled better?</label><textarea id="q3" class="input" placeholder="Write a few lines"></textarea></div>
+    <div class="field"><label for="q4">What did I learn today?</label><textarea id="q4" class="input" placeholder="Write a few lines"></textarea></div>
+    <div class="field"><label for="q5">What is important tomorrow?</label><textarea id="q5" class="input" placeholder="Write a few lines"></textarea></div>
+  </section>
+
+  <div class="row between">
+    <p class="subtle"><i data-lucide="cloud-off" style="width:14px;height:14px;vertical-align:-2px"></i> Saved on this device · 9:38</p>
+    <button class="btn btn-primary">Mark complete</button>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><p class="label">Earlier entries</p><button class="btn btn-ghost" style="min-height:44px;font-size:14px">See all</button></div>
+    <a class="row between" href="#" style="min-height:44px"><span>Wednesday, 28 October</span><i data-lucide="chevron-right" class="subtle"></i></a>
+    <a class="row between" href="#" style="min-height:44px"><span>Tuesday, 27 October</span><i data-lucide="chevron-right" class="subtle"></i></a>
+  </section>
+</main>
+<nav class="bottomnav" aria-label="Main">
+<a href="01-today.html" ><i data-lucide="sun"></i>Today</a>
+<a href="02-speak.html" ><i data-lucide="mic"></i>Speak</a>
+<a href="07-journal.html" aria-current="page"><i data-lucide="notebook-pen"></i>Journal</a>
+<a href="08-read.html" ><i data-lucide="book-open"></i>Read</a>
+</nav>
+</div>
+</body>
+</html>

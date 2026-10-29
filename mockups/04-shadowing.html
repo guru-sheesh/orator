@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speak · Shadowing · Orator mockup</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="mockup.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="statusbar" aria-hidden="true"><span class="num">9:41</span><span class="row" style="gap:6px"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+<main class="screen">
+  <header class="appbar">
+    <a class="icon-btn" href="02-speak.html" aria-label="Back to session"><i data-lucide="chevron-left"></i></a>
+    <div style="flex:1"><p class="subtle">Task 3 of 6 · Speech shadowing</p></div>
+    <span class="chip num"><i data-lucide="timer"></i>4:05 left</span>
+  </header>
+
+  <div class="segmented" role="group" aria-label="Stage">
+    <button aria-pressed="false">Listen</button>
+    <button aria-pressed="false">Repeat</button>
+    <button aria-pressed="true">Shadow</button>
+    <button aria-pressed="false">Deliver</button>
+  </div>
+
+  <section class="card">
+    <div>
+      <p class="title" style="font-size:17px">[Speech title]</p>
+      <p class="meta"><span>[Speaker]</span><span>[Date]</span><span>Segment 2 of 4</span></p>
+    </div>
+    <div class="wave" data-bars="56" data-played=".42" role="img" aria-label="Waveform, 42 percent played"></div>
+    <div class="row between subtle num"><span>0:25</span><span>1:00</span></div>
+    <div class="player-controls">
+      <button class="icon-btn" aria-label="Back 5 seconds"><i data-lucide="rotate-ccw"></i></button>
+      <button class="play" aria-label="Pause"><i data-lucide="pause"></i></button>
+      <button class="icon-btn" aria-label="Forward 5 seconds"><i data-lucide="rotate-cw"></i></button>
+      <button class="chip" style="height:36px" aria-label="Playback speed">1×</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row between"><p class="label">Transcript</p><span class="chip info"><i data-lucide="pause"></i>Pauses shown</span></div>
+    <p class="transcript">
+      <span class="w-past">Placeholder transcript text appears here, highlighted</span>
+      <span class="pause">‖ 0.8s</span>
+      <span class="w-past">word by</span> <span class="w-now">word</span>
+      <span class="w-future">as the speaker reads it. Real segments are imported by you and transcribed once.</span>
+    </p>
+  </section>
+
+  <section class="card" style="flex-direction:row;align-items:center">
+    <i data-lucide="info" style="color:var(--info)"></i>
+    <p class="muted" style="font-size:14px">Speak along with the recording. Copy the rhythm, timing and pauses, not the speaker's accent.</p>
+  </section>
+
+  <div class="record-zone">
+    <button class="record" aria-pressed="false" aria-label="Start recording"><i data-lucide="mic"></i></button>
+    <p class="subtle">Record while shadowing</p>
+  </div>
+</main>
+</div>
+</body>
+</html>
