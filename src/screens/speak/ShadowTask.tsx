@@ -1,9 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Headphones, Info } from 'lucide-react'
 import { db, type ShadowStage } from '../../data/db'
 import { assignShadow, TIMING, useAttempts } from '../../data/speech'
+import { ensureClipTranscript } from '../../data/transcription'
+import { TranscriptText } from '../../components/Transcript'
+import type { TranscriptWord } from '../../lib/transcribe'
 import { splitPhrases } from '../../lib/audioAnalysis'
 import { ClipPlayer, type ClipPlayerHandle } from '../../components/ClipPlayer'
 import { PromptRecorder } from '../../components/PromptRecorder'
@@ -62,7 +65,16 @@ function ShadowStages({
   envelope,
   segment,
   segmentLabel,
-}: TaskProps & { title: string; speaker: string; blob: Blob; envelope: Uint8Array; segment: { start: number; end: number }; segmentLabel: string }) {
+  clipWords,
+}: TaskProps & {
+  title: string
+  speaker: string
+  blob: Blob
+  envelope: Uint8Array
+  segment: { start: number; end: number }
+  segmentLabel: string
+  clipWords?: TranscriptWord[]
+}) {
   const [stage, setStage] = useState<Stage>('listen')
   const [phraseIndex, setPhraseIndex] = useState(0)
   const player = useRef<ClipPlayerHandle>(null)
@@ -72,6 +84,18 @@ function ShadowStages({
   const delivered = attempts?.some((a) => a.stage === 'deliver')
   const clipSec = segment.end - segment.start
   const phrase = phrases[Math.min(phraseIndex, phrases.length - 1)]
+  const transcript = clipWords ? { words: clipWords, offset: segment.start } : undefined
+  const [transcriptStatus, setTranscriptStatus] = useState<'idle' | 'loading' | 'failed'>('idle')
+
+  // Transcribe the clip on first use (cached afterwards) for word highlighting and as the shadowing reference.
+  useEffect(() => {
+    if (clipWords) return
+    const { sourceId, segment: index } = session.plan.shadow!
+    setTranscriptStatus('loading')
+    ensureClipTranscript(sourceId, index)
+      .then((clip) => setTranscriptStatus(clip ? 'idle' : 'failed'))
+      .catch(() => setTranscriptStatus('failed'))
+  }, [clipWords, session.plan.shadow])
 
   return (
     <>
@@ -85,7 +109,7 @@ function ShadowStages({
 
         {stage === 'listen' && (
           <>
-            <ClipPlayer blob={blob} envelope={envelope} range={segment} label="Clip" />
+            <ClipPlayer blob={blob} envelope={envelope} range={segment} label="Clip" transcript={transcript} />
             <p className="text-sm text-muted">Listen without speaking. Notice the pauses, which words are stressed, and where the pace changes.</p>
           </>
         )}
@@ -102,7 +126,7 @@ function ShadowStages({
 
         {stage === 'shadow' && (
           <>
-            <ClipPlayer ref={player} blob={blob} envelope={envelope} range={segment} label="Clip" hideControls />
+            <ClipPlayer ref={player} blob={blob} envelope={envelope} range={segment} label="Clip" hideControls transcript={transcript} />
             <p className="flex gap-2 text-sm text-muted">
               <Headphones size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
               Use headphones. Recording starts the clip; speak along almost at the same time, copying timing and emphasis.
@@ -111,9 +135,19 @@ function ShadowStages({
         )}
 
         {stage === 'deliver' && (
-          <p className="text-sm text-muted">The audio is off now. Deliver the passage yourself, keeping the rhythm and pauses you practised. A transcript to read from arrives with transcription.</p>
+          <>
+            <p className="text-sm text-muted">The audio is off now. Deliver the passage yourself, keeping the rhythm and pauses you practised.</p>
+            {clipWords && (
+              <details className="rounded-md bg-raised px-4 py-2">
+                <summary className="min-h-11 cursor-pointer content-center text-sm font-medium">Show the transcript</summary>
+                <TranscriptText words={clipWords} className="pb-2 text-base" />
+              </details>
+            )}
+          </>
         )}
 
+        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Transcribing this clip…</p>}
+        {transcriptStatus === 'failed' && <p className="text-caption text-subtle">The clip transcript isn’t available right now; practice works without it.</p>}
         <p className="flex gap-2 text-caption text-subtle">
           <Info size={14} strokeWidth={1.75} className="mt-0.5 flex-none" aria-hidden="true" />
           Copy the rhythm and timing, not the speaker’s accent.

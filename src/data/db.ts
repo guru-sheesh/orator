@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { Transcription, TranscriptWord } from '../lib/transcribe'
 
 /** Local calendar date, `YYYY-MM-DD`. All daily records key on this. */
 export type DateKey = string
@@ -10,6 +11,8 @@ export interface Settings {
   keepRecordings: boolean
   /** Epoch ms of the last JSON export; drives the weekly backup reminder. */
   lastExportAt?: number
+  /** Azure audio seconds used, per calendar month (`YYYY-MM`), for the free-tier meter (§0.6). */
+  azureUsage?: { month: string; seconds: number }
 }
 
 export interface DailyStatus {
@@ -84,8 +87,12 @@ export interface SpeechAttempt {
   attemptNumber: number
   durationMs: number
   mimeType: string
-  /** Filled in by transcription (phase 7). */
+  transcription?: 'pending' | 'done' | 'failed' | 'skipped'
+  transcriptionError?: string
   transcript?: string
+  words?: TranscriptWord[]
+  /** Azure utterance scores, for analysis only; never shown as a headline score (§0.5). */
+  pronunciation?: Transcription['scores']
   createdAt: number
 }
 
@@ -115,6 +122,8 @@ export interface ShadowSource {
   segments: ShadowSegment[]
   /** Loudness envelope, 20 values per second (0-255), for the waveform and phrase splitting. */
   envelope: Uint8Array
+  /** Clip transcripts by segment index, transcribed on first use and cached. Times are relative to the clip. */
+  clipTranscripts?: Record<number, { text: string; words: TranscriptWord[] }>
   createdAt: number
 }
 

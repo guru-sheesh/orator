@@ -3,6 +3,8 @@ import { Pause, Play, RotateCcw } from 'lucide-react'
 import type { ShadowSegment } from '../data/db'
 import { ENVELOPE_RATE } from '../lib/audioAnalysis'
 import { formatClock } from './recording'
+import { TranscriptText } from './Transcript'
+import type { TranscriptWord } from '../lib/transcribe'
 
 export interface ClipPlayerHandle {
   play: () => void
@@ -22,6 +24,7 @@ export function ClipPlayer({
   label,
   onEnded,
   hideControls,
+  transcript,
   ref,
 }: {
   blob: Blob
@@ -30,6 +33,8 @@ export function ClipPlayer({
   label: string
   onEnded?: () => void
   hideControls?: boolean
+  /** Clip transcript; word times are relative to offset (seconds into the file). */
+  transcript?: { words: TranscriptWord[]; offset: number }
   ref?: Ref<ClipPlayerHandle>
 }) {
   const audio = useRef<HTMLAudioElement>(null)
@@ -110,6 +115,7 @@ export function ClipPlayer({
           <span className="size-11" aria-hidden="true" />
         </div>
       )}
+      {transcript && <ClipWords transcript={transcript} range={range} position={position} />}
       <audio ref={audio} src={url} preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
     </div>
   )
@@ -124,4 +130,13 @@ function waveform(envelope: Uint8Array, range: ShadowSegment): number[] {
     for (let f = Math.floor(from + i * per); f < Math.floor(from + (i + 1) * per) && f < envelope.length; f++) max = Math.max(max, envelope[f])
     return 10 + (max / 255) * 90
   })
+}
+
+/** Transcript of the playing range with the current word highlighted. */
+function ClipWords({ transcript, range, position }: { transcript: { words: TranscriptWord[]; offset: number }; range: ShadowSegment; position: number }) {
+  const words = transcript.words
+    .map((w) => ({ ...w, start: w.start + transcript.offset, end: w.end + transcript.offset }))
+    .filter((w) => w.end > range.start && w.start < range.end)
+  if (!words.length) return null
+  return <TranscriptText words={words} highlightAt={position > range.start ? position : undefined} className="mt-1" />
 }

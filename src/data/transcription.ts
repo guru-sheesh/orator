@@ -1,0 +1,111 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, DEFAULT_SETTINGS, type SpeechAttempt } from './db'
+import { transcribe, TranscriptionError } from '../lib/transcribe'
+
+/** Azure F0 includes 5 hours a month; stop a little short so a long answer can't tip it over. */
+export const MONTHLY_LIMIT_SECONDS = 5 * 3600
+export const SAFETY_MARGIN_SECONDS = 10 * 60
+
+const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+
+export function useAzureUsage() {
+  return useLiveQuery(async () => {
+    const usage = (await db.settings.get('user'))?.azureUsage
+    const seconds = usage?.month === monthKey() ? usage.seconds : 0
+    return { seconds, limit: MONTHLY_LIMIT_SECONDS, nearLimit: seconds >= MONTHLY_LIMIT_SECONDS - SAFETY_MARGIN_SECONDS }
+  })
+}
+
+async function addUsage(seconds: number) {
+  const settings = (await db.settings.get('user')) ?? DEFAULT_SETTINGS
+  const month = monthKey()
+  const current = settings.azureUsage?.month === month ? settings.azureUsage.seconds : 0
+  await db.settings.put({ ...settings, azureUsage: { month, seconds: current + seconds } })
+}
+
+async function usageLeft() {
+  const usage = (await db.settings.get('user'))?.azureUsage
+  const used = usage?.month === monthKey() ? usage.seconds : 0
+  return MONTHLY_LIMIT_SECONDS - SAFETY_MARGIN_SECONDS - used
+}
+
+/** Repeat-stage phrases are short drills: not worth the monthly audio budget. */
+export function shouldTranscribe(attempt: Pick<SpeechAttempt, 'task' | 'stage'>) {
+  return !(attempt.task === 'shadowing' && attempt.stage === 'repeat')
+}
+
+/** The clip's own transcript, used as reference text when assessing shadowing. */
+async function referenceFor(attempt: SpeechAttempt): Promise<string | undefined> {
+  if (attempt.task !== 'shadowing') return undefined
+  const [sourceId, segment] = attempt.promptId.split(':').map(Number)
+  return (await db.shadowSources.get(sourceId))?.clipTranscripts?.[segment]?.text || undefined
+}
+
+const running = new Set<number>()
+
+/**
+ * Transcribes one attempt. The audio is held in `recordings` until this
+ * succeeds, then discarded unless the user keeps recordings (§0.4).
+ */
+export async function transcribeAttempt(attemptId: number): Promise<void> {
+  if (running.has(attemptId)) return
+  running.add(attemptId)
+  try {
+    const [attempt, recording, settings] = await Promise.all([db.speechAttempts.get(attemptId), db.recordings.get(attemptId), db.settings.get('user')])
+    if (!attempt || attempt.transcription === 'done') return
+    if (!recording) {
+      await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: 'The audio for this attempt is no longer on this device.' })
+      return
+    }
+    const durationSec = attempt.durationMs / 1000
+    if ((await usageLeft()) < durationSec) {
+      await db.speechAttempts.update(attemptId, {
+        transcription: 'failed',
+        transcriptionError: 'This month’s free transcription time is used up. It resets on the 1st.',
+      })
+      return
+    }
+
+    await db.speechAttempts.update(attemptId, { transcription: 'pending', transcriptionError: undefined })
+    const result = await transcribe(recording.blob, { referenceText: await referenceFor(attempt) })
+    await addUsage(result.audioSeconds)
+    await db.speechAttempts.update(attemptId, {
+      transcription: 'done',
+      transcript: result.text,
+      words: result.words,
+      pronunciation: result.scores,
+    })
+    if (!(settings ?? DEFAULT_SETTINGS).keepRecordings) await db.recordings.delete(attemptId)
+  } catch (err) {
+    const message = err instanceof TranscriptionError ? err.message : 'Transcription failed. It will retry later.'
+    await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message })
+  } finally {
+    running.delete(attemptId)
+  }
+}
+
+/** Retries anything left untranscribed (offline at the time, app closed, etc.). */
+export async function processPendingTranscriptions() {
+  if (!navigator.onLine) return
+  const waiting = await db.speechAttempts.filter((a) => (a.transcription === 'pending' || a.transcription === 'failed') && shouldTranscribe(a)).toArray()
+  for (const a of waiting) {
+    if (!(await db.recordings.get(a.id!))) continue
+    await transcribeAttempt(a.id!)
+  }
+}
+
+/** Transcribes a shadowing clip once and caches it on the source. */
+export async function ensureClipTranscript(sourceId: number, segment: number) {
+  const source = await db.shadowSources.get(sourceId)
+  if (!source || source.clipTranscripts?.[segment]) return source?.clipTranscripts?.[segment]
+  const range = source.segments[segment]
+  if ((await usageLeft()) < range.end - range.start) return undefined
+  const audio = await db.shadowAudio.get(sourceId)
+  if (!audio) return undefined
+  const result = await transcribe(audio.blob, { range })
+  await addUsage(result.audioSeconds)
+  const clip = { text: result.text, words: result.words.map(({ text, start, end }) => ({ text, start, end })) }
+  const fresh = await db.shadowSources.get(sourceId)
+  await db.shadowSources.update(sourceId, { clipTranscripts: { ...fresh?.clipTranscripts, [segment]: clip } })
+  return clip
+}

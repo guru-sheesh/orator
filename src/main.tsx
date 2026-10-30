@@ -12,6 +12,7 @@ import Read from './screens/Read'
 import Books from './screens/Books'
 import BookForm from './screens/BookForm'
 import { NotFound } from './screens/Placeholder'
+import { processPendingTranscriptions } from './data/transcription'
 import SpeakHome from './screens/speak/SpeakHome'
 import TaskScreen from './screens/speak/TaskScreen'
 import { LibraryEdit, LibraryImport, LibraryList } from './screens/speak/Library'
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
     ],
   },
 ])
+
+// Finish transcriptions left over from offline use or a closed app.
+void processPendingTranscriptions()
+window.addEventListener('online', () => void processPendingTranscriptions())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

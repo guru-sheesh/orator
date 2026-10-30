@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight, Download, FileAudio, Trash2, Upload } from '
 import { updateSettings, updateTargets, useSettings } from '../data/daily'
 import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData } from '../data/backup'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import { Card, cx, iconButtonClass, Label, Segmented } from '../components/ui'
+import { Card, cx, iconButtonClass, Label, ProgressBar, Segmented } from '../components/ui'
+import { useAzureUsage } from '../data/transcription'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
 
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
@@ -15,10 +16,16 @@ function describeExport(at?: number) {
   return `Last backup ${relative.format(-days, 'day')}`
 }
 
+function formatHours(seconds: number) {
+  const m = Math.round(seconds / 60)
+  return m < 60 ? `m` : `h m`
+}
+
 type Pending = { kind: 'delete' } | { kind: 'import'; file: File } | null
 
 export default function Settings() {
   const settings = useSettings()
+  const usage = useAzureUsage()
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [pending, setPending] = useState<Pending>(null)
   const [busy, setBusy] = useState(false)
@@ -96,6 +103,21 @@ export default function Settings() {
           </>
         )}
       </Card>
+
+      {usage && (
+        <Card>
+          <Label>Transcription usage · this month</Label>
+          <p className="tabular-nums">
+            <span className="text-[28px] font-semibold">{formatHours(usage.seconds)}</span> <span className="text-muted">of {formatHours(usage.limit)} free</span>
+          </p>
+          <ProgressBar value={Math.round(usage.seconds)} max={usage.limit} label="Azure transcription time used" />
+          <p className="text-caption text-subtle">
+            {usage.nearLimit
+              ? 'The free limit is almost used up. New recordings are saved but not transcribed until the 1st.'
+              : 'Azure’s free tier covers about 5 hours of audio a month. A full daily session uses roughly 10–15 minutes.'}
+          </p>
+        </Card>
+      )}
 
       <Card className="gap-1">
         <Label>Speaking practice</Label>

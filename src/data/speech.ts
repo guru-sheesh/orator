@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type ShadowStage, type SpeechSession, type TaskId, type TaskStatus } from './db'
 import { toDateKey } from '../lib/date'
+import { shouldTranscribe, transcribeAttempt } from './transcription'
 import words from '../content/words.json'
 import questions from '../content/questions.json'
 import impromptu from '../content/impromptu.json'
@@ -215,7 +216,8 @@ export async function saveAttempt(input: {
   durationMs: number
 }): Promise<number> {
   const keep = ((await db.settings.get('user')) ?? DEFAULT_SETTINGS).keepRecordings
-  return db.transaction('rw', db.speechAttempts, db.recordings, async () => {
+  const transcribeIt = shouldTranscribe(input)
+  const id = await db.transaction('rw', db.speechAttempts, db.recordings, async () => {
     const previous = await db.speechAttempts
       .where('sessionId')
       .equals(input.session.id!)
@@ -231,12 +233,19 @@ export async function saveAttempt(input: {
       attemptNumber: previous + 1,
       durationMs: Math.round(input.durationMs),
       mimeType: input.mimeType,
+      transcription: transcribeIt ? 'pending' : 'skipped',
       createdAt: Date.now(),
     })) as number
-    // Audio is kept only with the user's opt-in (CLAUDE.md §0.4); otherwise it lives in memory for this screen.
-    if (keep) await db.recordings.put({ attemptId: id, blob: input.blob })
+    // Audio is held until transcribed, then kept only with the user's opt-in (CLAUDE.md §0.4).
+    if (keep || transcribeIt) await db.recordings.put({ attemptId: id, blob: input.blob })
     return id
   })
+  if (transcribeIt) void transcribeAttempt(id)
+  return id
+}
+
+export function useAttempt(id: number | null | undefined) {
+  return useLiveQuery(async () => (id == null ? null : ((await db.speechAttempts.get(id)) ?? null)), [id])
 }
 
 export function useAttempts(sessionId: number | undefined, task: TaskId) {

@@ -4,6 +4,7 @@ import type { ShadowStage, SpeechSession, TaskId } from '../data/db'
 import { saveAttempt } from '../data/speech'
 import { useRecorder } from '../hooks/useRecorder'
 import { AttemptPlayer, Countdown, formatClock, LevelMeter, RecordButton } from './recording'
+import { AttemptTranscript } from './Transcript'
 import { buttonClass, cx } from './ui'
 
 type Phase = 'ready' | 'prep' | 'recording' | 'done'
@@ -40,6 +41,7 @@ export function PromptRecorder({
   const [phase, setPhase] = useState<Phase>('ready')
   const [last, setLast] = useState<{ blob: Blob; durationMs: number } | null>(null)
   const [saveError, setSaveError] = useState(false)
+  const [attemptId, setAttemptId] = useState<number | null>(null)
 
   const rec = useRecorder({
     maxMs: maxSec * 1000,
@@ -48,7 +50,7 @@ export function PromptRecorder({
       setLast({ blob: result.blob, durationMs: result.durationMs })
       setPhase('done')
       try {
-        await saveAttempt({ session, task, promptId, prompt, stage, ...result })
+        setAttemptId(await saveAttempt({ session, task, promptId, prompt, stage, ...result }))
         setSaveError(false)
         onSaved?.()
       } catch {
@@ -99,13 +101,15 @@ export function PromptRecorder({
       {phase === 'done' && last && (
         <div className="flex w-full flex-col gap-3 rounded-md bg-raised p-4">
           <AttemptPlayer blob={last.blob} durationMs={last.durationMs} label="Your answer" />
+          {attemptId !== null && <AttemptTranscript attemptId={attemptId} />}
           <p className="text-caption text-subtle">
-            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : 'Saved. Transcript and feedback arrive in a later update.'}
+            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : 'Saved. Feedback arrives in a later update.'}
           </p>
           <button
             type="button"
             onClick={() => {
               setLast(null)
+              setAttemptId(null)
               setPhase('ready')
             }}
             className={cx(buttonClass.secondary, 'min-h-11 text-sm')}
