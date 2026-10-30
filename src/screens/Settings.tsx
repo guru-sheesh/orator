@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ChevronLeft, Download, Trash2, Upload } from 'lucide-react'
-import { updateTargets, useSettings } from '../data/daily'
+import { ChevronLeft, ChevronRight, Download, FileAudio, Trash2, Upload } from 'lucide-react'
+import { updateSettings, updateTargets, useSettings } from '../data/daily'
 import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData } from '../data/backup'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Card, cx, iconButtonClass, Label, Segmented } from '../components/ui'
@@ -95,6 +95,35 @@ export default function Settings() {
             </div>
           </>
         )}
+      </Card>
+
+      <Card className="gap-1">
+        <Label>Speaking practice</Label>
+        {settings && (
+          <label htmlFor="keep-recordings" className="flex min-h-14 cursor-pointer items-center gap-3">
+            <span className="flex-1">
+              <span className="block">Keep recordings on this device</span>
+              <span className="block text-caption text-subtle">Off: audio is discarded after each task. On: needed to replay Attempt 1 vs 2 later.</span>
+            </span>
+            <input
+              id="keep-recordings"
+              type="checkbox"
+              role="switch"
+              checked={settings.keepRecordings}
+              onChange={(e) => void updateSettings({ keepRecordings: e.target.checked })}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className="relative h-8 w-13 flex-none rounded-pill border border-border-strong bg-raised transition-colors peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus after:absolute after:top-[3px] after:left-[3px] after:size-6 after:rounded-full after:bg-muted after:transition-transform peer-checked:after:translate-x-5 peer-checked:after:bg-on-primary"
+            />
+          </label>
+        )}
+        <Link to="/speak/library" className="-mx-2 flex min-h-12 items-center gap-3 rounded-md px-2 hover:bg-raised">
+          <FileAudio size={20} strokeWidth={1.75} aria-hidden="true" />
+          <span className="flex-1">Shadowing audio</span>
+          <ChevronRight size={20} strokeWidth={1.75} className="text-subtle" aria-hidden="true" />
+        </Link>
       </Card>
 
       <Card>

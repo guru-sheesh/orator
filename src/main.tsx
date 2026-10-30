@@ -11,17 +11,21 @@ import JournalHistory from './screens/JournalHistory'
 import Read from './screens/Read'
 import Books from './screens/Books'
 import BookForm from './screens/BookForm'
-import Placeholder, { NotFound } from './screens/Placeholder'
+import { NotFound } from './screens/Placeholder'
+import SpeakHome from './screens/speak/SpeakHome'
+import TaskScreen from './screens/speak/TaskScreen'
+import { LibraryEdit, LibraryImport, LibraryList } from './screens/speak/Library'
 
 const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
       { index: true, element: <Today /> },
-      {
-        path: 'speak',
-        element: <Placeholder title="Speak" phase="phases 5–11" description="Recording, the six-task session, transcription, analysis, coaching and retry." />,
-      },
+      { path: 'speak', element: <SpeakHome /> },
+      { path: 'speak/library', element: <LibraryList /> },
+      { path: 'speak/library/new', element: <LibraryImport /> },
+      { path: 'speak/library/:id', element: <LibraryEdit /> },
+      { path: 'speak/:task', element: <TaskScreen /> },
       { path: 'journal', element: <Journal /> },
       { path: 'journal/history', element: <JournalHistory /> },
       { path: 'read', element: <Read /> },

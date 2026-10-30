@@ -1,4 +1,8 @@
-import { db, DEFAULT_SETTINGS } from './db'
+import { AUDIO_TABLES, db, DEFAULT_SETTINGS } from './db'
+
+// Audio (and the imported-audio index, useless without its audio) stays out of JSON backups.
+const NOT_IN_BACKUP = new Set<string>([...AUDIO_TABLES, 'shadowSources'])
+const backedUpTables = () => db.tables.filter((t) => !NOT_IN_BACKUP.has(t.name))
 
 const APP = 'orator'
 const FORMAT_VERSION = 1
@@ -13,7 +17,7 @@ interface BackupFile {
 
 export async function exportAllData(): Promise<Blob> {
   const tables: Record<string, unknown[]> = {}
-  for (const table of db.tables) tables[table.name] = await table.toArray()
+  for (const table of backedUpTables()) tables[table.name] = await table.toArray()
 
   const file: BackupFile = {
     app: APP,
@@ -46,8 +50,8 @@ export async function importAllData(text: string): Promise<void> {
     throw new Error('This backup comes from a newer version of Orator. Update the app, then try again.')
   }
 
-  await db.transaction('rw', db.tables, async () => {
-    for (const table of db.tables) {
+  await db.transaction('rw', backedUpTables(), async () => {
+    for (const table of backedUpTables()) {
       await table.clear()
       const rows = file.tables[table.name]
       if (Array.isArray(rows) && rows.length) await table.bulkAdd(rows)

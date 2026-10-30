@@ -1,0 +1,602 @@
+[
+  {
+    "id": "q001",
+    "text": "Why do people enjoy watching sports they will never play?",
+    "level": 1
+  },
+  {
+    "id": "q002",
+    "text": "What makes a good neighbour?",
+    "level": 1
+  },
+  {
+    "id": "q003",
+    "text": "Why do some people prefer cities to villages?",
+    "level": 1
+  },
+  {
+    "id": "q004",
+    "text": "What makes a meal memorable?",
+    "level": 1
+  },
+  {
+    "id": "q005",
+    "text": "Why do people keep things they never use?",
+    "level": 1
+  },
+  {
+    "id": "q006",
+    "text": "How has the mobile phone changed daily life in Uganda?",
+    "level": 1
+  },
+  {
+    "id": "q007",
+    "text": "What makes someone trustworthy?",
+    "level": 1
+  },
+  {
+    "id": "q008",
+    "text": "Why is preventive maintenance important?",
+    "level": 1
+  },
+  {
+    "id": "q009",
+    "text": "Why do people queue even when no one enforces it?",
+    "level": 1
+  },
+  {
+    "id": "q010",
+    "text": "What makes a good teacher?",
+    "level": 1
+  },
+  {
+    "id": "q011",
+    "text": "Why do children ask so many questions?",
+    "level": 1
+  },
+  {
+    "id": "q012",
+    "text": "What makes a holiday restful?",
+    "level": 1
+  },
+  {
+    "id": "q013",
+    "text": "Why do people like to collect things?",
+    "level": 1
+  },
+  {
+    "id": "q014",
+    "text": "How do you know when a friendship is strong?",
+    "level": 1
+  },
+  {
+    "id": "q015",
+    "text": "Why is punctuality valued more in some places than others?",
+    "level": 1
+  },
+  {
+    "id": "q016",
+    "text": "What makes a market busy?",
+    "level": 1
+  },
+  {
+    "id": "q017",
+    "text": "Why do people save money?",
+    "level": 1
+  },
+  {
+    "id": "q018",
+    "text": "What makes a home comfortable?",
+    "level": 1
+  },
+  {
+    "id": "q019",
+    "text": "Why do people enjoy songs in languages they do not understand?",
+    "level": 1
+  },
+  {
+    "id": "q020",
+    "text": "How does a boda boda rider decide which route to take?",
+    "level": 1
+  },
+  {
+    "id": "q021",
+    "text": "What makes a good first impression?",
+    "level": 1
+  },
+  {
+    "id": "q022",
+    "text": "Why do some people choose to wake up early?",
+    "level": 1
+  },
+  {
+    "id": "q023",
+    "text": "Why is clean water so important for a community?",
+    "level": 1
+  },
+  {
+    "id": "q024",
+    "text": "What makes a story worth retelling?",
+    "level": 1
+  },
+  {
+    "id": "q025",
+    "text": "Why do people keep pets?",
+    "level": 1
+  },
+  {
+    "id": "q026",
+    "text": "Why do frequent power outages frustrate small businesses so much?",
+    "level": 1
+  },
+  {
+    "id": "q027",
+    "text": "Why do people enjoy cooking for others?",
+    "level": 1
+  },
+  {
+    "id": "q028",
+    "text": "What makes a good leader in a small team?",
+    "level": 1
+  },
+  {
+    "id": "q029",
+    "text": "Why is it hard to learn a new language as an adult?",
+    "level": 1
+  },
+  {
+    "id": "q030",
+    "text": "What makes a town easy to walk around?",
+    "level": 1
+  },
+  {
+    "id": "q031",
+    "text": "Why do people follow fashion trends?",
+    "level": 1
+  },
+  {
+    "id": "q032",
+    "text": "Why should electrical installations be earthed?",
+    "level": 1
+  },
+  {
+    "id": "q033",
+    "text": "What makes a good book hard to put down?",
+    "level": 1
+  },
+  {
+    "id": "q034",
+    "text": "Why do families gather for celebrations?",
+    "level": 1
+  },
+  {
+    "id": "q035",
+    "text": "How does the rainy season change daily life?",
+    "level": 1
+  },
+  {
+    "id": "q036",
+    "text": "Why do people stay loyal to certain brands?",
+    "level": 1
+  },
+  {
+    "id": "q037",
+    "text": "What makes a workplace pleasant?",
+    "level": 1
+  },
+  {
+    "id": "q038",
+    "text": "Why do people plant trees?",
+    "level": 1
+  },
+  {
+    "id": "q039",
+    "text": "Why do phone batteries hold less charge as they get older?",
+    "level": 1
+  },
+  {
+    "id": "q040",
+    "text": "What makes a good conversation?",
+    "level": 1
+  },
+  {
+    "id": "q041",
+    "text": "Why do intelligent people sometimes make poor decisions?",
+    "level": 2
+  },
+  {
+    "id": "q042",
+    "text": "Why do networks experience congestion?",
+    "level": 2
+  },
+  {
+    "id": "q043",
+    "text": "Why do rumours spread faster than corrections?",
+    "level": 2
+  },
+  {
+    "id": "q044",
+    "text": "How does access to electricity change a rural village?",
+    "level": 2
+  },
+  {
+    "id": "q045",
+    "text": "Why do some habits form easily while others never stick?",
+    "level": 2
+  },
+  {
+    "id": "q046",
+    "text": "Why do people trust online reviews from strangers?",
+    "level": 2
+  },
+  {
+    "id": "q047",
+    "text": "What makes an engineer effective?",
+    "level": 2
+  },
+  {
+    "id": "q048",
+    "text": "Why is it sometimes harder to explain something you know well?",
+    "level": 2
+  },
+  {
+    "id": "q049",
+    "text": "Why do young people leave rural areas for towns?",
+    "level": 2
+  },
+  {
+    "id": "q050",
+    "text": "Why do cheap products sometimes cost more in the long run?",
+    "level": 2
+  },
+  {
+    "id": "q051",
+    "text": "How has mobile money changed the way people do business?",
+    "level": 2
+  },
+  {
+    "id": "q052",
+    "text": "Why do some meetings achieve nothing?",
+    "level": 2
+  },
+  {
+    "id": "q053",
+    "text": "Why do people resist change at work?",
+    "level": 2
+  },
+  {
+    "id": "q054",
+    "text": "Why do projects often take longer than planned?",
+    "level": 2
+  },
+  {
+    "id": "q055",
+    "text": "What makes advice easy to accept?",
+    "level": 2
+  },
+  {
+    "id": "q056",
+    "text": "Why do some traditions survive for centuries?",
+    "level": 2
+  },
+  {
+    "id": "q057",
+    "text": "Why is solar energy growing quickly across Africa?",
+    "level": 2
+  },
+  {
+    "id": "q058",
+    "text": "Why do people remember stories better than facts?",
+    "level": 2
+  },
+  {
+    "id": "q059",
+    "text": "Why do some students do well in exams but struggle at work?",
+    "level": 2
+  },
+  {
+    "id": "q060",
+    "text": "How does traffic congestion affect a city's economy?",
+    "level": 2
+  },
+  {
+    "id": "q061",
+    "text": "Why is it difficult to give honest feedback?",
+    "level": 2
+  },
+  {
+    "id": "q062",
+    "text": "Why do many small businesses fail in their first year?",
+    "level": 2
+  },
+  {
+    "id": "q063",
+    "text": "Why does documentation matter on a technical project?",
+    "level": 2
+  },
+  {
+    "id": "q064",
+    "text": "Why do people put off important tasks?",
+    "level": 2
+  },
+  {
+    "id": "q065",
+    "text": "How has social media changed the way news is shared?",
+    "level": 2
+  },
+  {
+    "id": "q066",
+    "text": "Why do languages borrow words from each other?",
+    "level": 2
+  },
+  {
+    "id": "q067",
+    "text": "Why do customers stay loyal to a business?",
+    "level": 2
+  },
+  {
+    "id": "q068",
+    "text": "Why is it important to measure before you try to fix something?",
+    "level": 2
+  },
+  {
+    "id": "q069",
+    "text": "What makes a skill transferable between jobs?",
+    "level": 2
+  },
+  {
+    "id": "q070",
+    "text": "Why do people buy things they cannot afford?",
+    "level": 2
+  },
+  {
+    "id": "q071",
+    "text": "Why do public spaces get neglected?",
+    "level": 2
+  },
+  {
+    "id": "q072",
+    "text": "How does the growth of Kampala affect the towns around it?",
+    "level": 2
+  },
+  {
+    "id": "q073",
+    "text": "Why do experts sometimes disagree?",
+    "level": 2
+  },
+  {
+    "id": "q074",
+    "text": "Why does deep discharging shorten the life of many batteries?",
+    "level": 2
+  },
+  {
+    "id": "q075",
+    "text": "Why is listening often harder than speaking?",
+    "level": 2
+  },
+  {
+    "id": "q076",
+    "text": "Why do some apps become popular while similar ones fail?",
+    "level": 2
+  },
+  {
+    "id": "q077",
+    "text": "Why do many farmers in Uganda grow several different crops?",
+    "level": 2
+  },
+  {
+    "id": "q078",
+    "text": "Why is safety training often ignored until an accident happens?",
+    "level": 2
+  },
+  {
+    "id": "q079",
+    "text": "What makes a good apprenticeship?",
+    "level": 2
+  },
+  {
+    "id": "q080",
+    "text": "Why do people trust some institutions more than others?",
+    "level": 2
+  },
+  {
+    "id": "q081",
+    "text": "Is it ever right to break a promise?",
+    "level": 3
+  },
+  {
+    "id": "q082",
+    "text": "Why do societies value some kinds of work more than others?",
+    "level": 3
+  },
+  {
+    "id": "q083",
+    "text": "What does it mean to be successful?",
+    "level": 3
+  },
+  {
+    "id": "q084",
+    "text": "Can technology make people lonelier?",
+    "level": 3
+  },
+  {
+    "id": "q085",
+    "text": "Should tradition ever limit progress?",
+    "level": 3
+  },
+  {
+    "id": "q086",
+    "text": "Is it possible to be completely objective?",
+    "level": 3
+  },
+  {
+    "id": "q087",
+    "text": "Why do people fear failure more than they value success?",
+    "level": 3
+  },
+  {
+    "id": "q088",
+    "text": "What do we owe future generations?",
+    "level": 3
+  },
+  {
+    "id": "q089",
+    "text": "Can a person be both kind and ruthless?",
+    "level": 3
+  },
+  {
+    "id": "q090",
+    "text": "Is convenience making us less capable?",
+    "level": 3
+  },
+  {
+    "id": "q091",
+    "text": "Should machines make decisions that affect people's lives?",
+    "level": 3
+  },
+  {
+    "id": "q092",
+    "text": "What is the difference between knowledge and wisdom?",
+    "level": 3
+  },
+  {
+    "id": "q093",
+    "text": "Why do people disagree about what is fair?",
+    "level": 3
+  },
+  {
+    "id": "q094",
+    "text": "Is ambition a strength or a weakness?",
+    "level": 3
+  },
+  {
+    "id": "q095",
+    "text": "Can a country develop without heavy industry?",
+    "level": 3
+  },
+  {
+    "id": "q096",
+    "text": "What makes information trustworthy when there is so much of it?",
+    "level": 3
+  },
+  {
+    "id": "q097",
+    "text": "Is it better to be a specialist or a generalist?",
+    "level": 3
+  },
+  {
+    "id": "q098",
+    "text": "Should every child learn to code?",
+    "level": 3
+  },
+  {
+    "id": "q099",
+    "text": "Does being busy mean being productive?",
+    "level": 3
+  },
+  {
+    "id": "q100",
+    "text": "Why is reliability often valued only after it is lost?",
+    "level": 3
+  },
+  {
+    "id": "q101",
+    "text": "What makes a decision ethical rather than merely legal?",
+    "level": 3
+  },
+  {
+    "id": "q102",
+    "text": "Should Africa build more of its own technology rather than import it?",
+    "level": 3
+  },
+  {
+    "id": "q103",
+    "text": "Is privacy still possible?",
+    "level": 3
+  },
+  {
+    "id": "q104",
+    "text": "Why do people often prefer confident answers to honest uncertainty?",
+    "level": 3
+  },
+  {
+    "id": "q105",
+    "text": "Can rules ever replace good judgement?",
+    "level": 3
+  },
+  {
+    "id": "q106",
+    "text": "What is the value of boredom?",
+    "level": 3
+  },
+  {
+    "id": "q107",
+    "text": "Should engineers be held responsible for how their designs are used?",
+    "level": 3
+  },
+  {
+    "id": "q108",
+    "text": "Is competition or cooperation more important for progress?",
+    "level": 3
+  },
+  {
+    "id": "q109",
+    "text": "Can you truly understand a culture you were not raised in?",
+    "level": 3
+  },
+  {
+    "id": "q110",
+    "text": "Why is simplicity so hard to achieve?",
+    "level": 3
+  },
+  {
+    "id": "q111",
+    "text": "Should internet access be considered a basic need?",
+    "level": 3
+  },
+  {
+    "id": "q112",
+    "text": "What does it mean to own an idea?",
+    "level": 3
+  },
+  {
+    "id": "q113",
+    "text": "Is it better to be respected or liked?",
+    "level": 3
+  },
+  {
+    "id": "q114",
+    "text": "Does history repeat itself?",
+    "level": 3
+  },
+  {
+    "id": "q115",
+    "text": "What is lost when a language disappears?",
+    "level": 3
+  },
+  {
+    "id": "q116",
+    "text": "Can efficiency ever be harmful?",
+    "level": 3
+  },
+  {
+    "id": "q117",
+    "text": "Should cities grow upward or outward?",
+    "level": 3
+  },
+  {
+    "id": "q118",
+    "text": "Is it fair to judge the past by today's values?",
+    "level": 3
+  },
+  {
+    "id": "q119",
+    "text": "What makes a risk worth taking?",
+    "level": 3
+  },
+  {
+    "id": "q120",
+    "text": "Why do people seem to trust experts less than they used to?",
+    "level": 3
+  }
+]

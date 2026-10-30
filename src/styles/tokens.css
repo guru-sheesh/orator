@@ -128,6 +128,7 @@
     scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
   h1, h2, h3 { text-wrap: balance; }
+  @keyframes pulse-ring { 50% { opacity: 0.15; } }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }

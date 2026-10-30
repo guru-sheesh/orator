@@ -54,7 +54,23 @@ This section fixes the technical choices. Sections 1-22 below define the product
 - Each imported file gets editable metadata: speaker, title, date, source, licence/rights note (matching the section 8 fields). Mark user imports as `rights: "personal use, user-provided"`.
 - Show a waveform with a playhead and word-by-word transcript highlighting during playback.
 
-## 0.8 Source library: anti-fabrication rules (sections 7-9)
+## 0.8a Coaching decisions (user, 2026-10-30) — SUPERSEDES 0.8 and sections 7-9 where they conflict
+
+The user decided feedback does NOT need citations. Replace the source library with:
+
+- Feedback order: What you did well → What went wrong (evidence from the user's own words) → Why it weakened the answer → **How you could have handled it** (a short example version of the user's own answer, labelled "Example answer (AI-written)") → **Watch this** (one recommended talk/speech) → Retry targets (2-3) → retry.
+- "Watch this" recommendations come ONLY from a curated **talk list** stored in the app (title, speaker, official link, technique tags, one line on what to notice, in our own words). Claude Code builds the starter list (~20-30 real talks from official sources such as TED.com, presidential libraries, official channels) and checks every link resolves. The AI picks by ID; it never names a talk free-hand. The user can add favourites in Settings. No timestamps unless checked.
+- Safeguard kept: the AI must never invent quotations or claim a real person said/did something specific. Generic technique names ("point first") are fine.
+- Step 9 (source library + verification admin) is dropped; it becomes the talk-list screen.
+- No book recommendations for now.
+
+## 0.9a Practice content decisions (user, 2026-10-30)
+
+- Read → Hide → Explain passages: ~300 trimmed (not rewritten) Wikipedia excerpts, 150-250 words, topics in `content/passage-topics.md` — deliberately NEW territory, no solar/electrical/telecom. Show "Source: Wikipedia, [article] (CC BY-SA)" with a link. Loaded lazily, cached offline. Gemini may add more later (labelled AI-generated).
+- Word, unexpected-question and impromptu banks are built in (labelled "AI-generated practice material"), with rotation so items don't repeat until exhausted, and difficulty rising over time. Impromptu keeps a minority of professional/technical work scenarios; the rest is new territory. The user can add their own questions.
+- Shadowing audio: the user imports their own files (personal use, no verification needed). Copyrighted audio is never committed or bundled.
+
+## 0.8 Source library: anti-fabrication rules (sections 7-9) — see 0.8a
 
 - The coaching AI may ONLY cite sources that exist in the app's `SourceReference` table, by ID. It must never write a citation, quotation, author or page number free-hand.
 - `/api/coach` sends the AI the list of available sources (ID, title, author, technique tags, short technique summary written in our own words, NOT copyrighted text). The AI returns a source ID or `null`.

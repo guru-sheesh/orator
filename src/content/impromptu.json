@@ -1,0 +1,1052 @@
+[
+  {
+    "id": "i001",
+    "text": "Describe the place where you grew up.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i002",
+    "text": "Describe a typical morning at a busy market in your town.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i003",
+    "text": "Describe the best teacher you ever had.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i004",
+    "text": "Describe a journey you remember well.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i005",
+    "text": "Describe a tool you could not work without.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i006",
+    "text": "Describe your ideal weekend.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i007",
+    "text": "Describe a meal that reminds you of home.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i008",
+    "text": "Describe a building you admire.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i009",
+    "text": "Describe a public place where you enjoy spending time.",
+    "type": "description",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i010",
+    "text": "Describe a workplace where people can perform effectively.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i011",
+    "text": "Describe a skill you learned the hard way and how you learned it.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i012",
+    "text": "Describe a city you would like to live in and why.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i013",
+    "text": "Describe a moment when you changed your mind about something important.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i014",
+    "text": "Describe how a busy taxi park works.",
+    "type": "description",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i015",
+    "text": "Describe the qualities of a good manager you have worked with.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i016",
+    "text": "Describe a community project that made a real difference.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i017",
+    "text": "Describe what a good day at work looks like for you.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i018",
+    "text": "Describe a piece of technology that changed the way your family lives.",
+    "type": "description",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i019",
+    "text": "Describe the kind of person you want to be in ten years.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i020",
+    "text": "Describe what a fair society would look like.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i021",
+    "text": "Describe the culture of an organisation people are proud to work for.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i022",
+    "text": "Describe the role of tradition in modern Ugandan life.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i023",
+    "text": "Describe how your idea of success has changed over time.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i024",
+    "text": "Describe a future Kampala that works well for everyone who lives in it.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i025",
+    "text": "Describe what trust looks like inside a team.",
+    "type": "description",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i026",
+    "text": "Is working from home better than working from an office?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i027",
+    "text": "Is it better to live in a city or in a village?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i028",
+    "text": "Should children have their own mobile phones?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i029",
+    "text": "Is it better to read books or listen to them?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i030",
+    "text": "Are team sports better than individual sports?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i031",
+    "text": "Is it better to cook at home or eat out?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i032",
+    "text": "Is it better to rent or to own a home?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i033",
+    "text": "Should schools teach practical skills like cooking and basic repairs?",
+    "type": "opinion",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i034",
+    "text": "Is a university degree still necessary for a good career?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i035",
+    "text": "Should people change jobs often early in their careers?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i036",
+    "text": "Is social media doing more good than harm?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i037",
+    "text": "Is it better to start a business or to work for an established company?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i038",
+    "text": "Should public transport be free?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i039",
+    "text": "Is it better to adopt new technology early or to wait until it matures?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i040",
+    "text": "Are online courses as valuable as classroom learning?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i041",
+    "text": "Should everyone learn a second local language?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i042",
+    "text": "Is it better to save money or to spend it on experiences?",
+    "type": "opinion",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i043",
+    "text": "Is it more important to be right or to be kind?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i044",
+    "text": "Does hard work always lead to success?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i045",
+    "text": "Should people be paid according to the value they create or the effort they put in?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i046",
+    "text": "Is it ever acceptable to bend the rules to get a job done?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i047",
+    "text": "Is human creativity at risk from artificial intelligence?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i048",
+    "text": "Does globalisation strengthen or weaken local cultures?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i049",
+    "text": "Should people aim for happiness or for meaning?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i050",
+    "text": "Is ambition more useful than contentment?",
+    "type": "opinion",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i051",
+    "text": "Explain how a refrigerator keeps food cold.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i052",
+    "text": "Explain how rain forms.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i053",
+    "text": "Explain how mobile money works to someone who has never used it.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i054",
+    "text": "Explain how to plan a simple household budget.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i055",
+    "text": "Explain how the gears on a bicycle make cycling easier.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i056",
+    "text": "Explain why some parts of the world have four seasons while places near the equator do not.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i057",
+    "text": "Explain how vaccines help protect people from disease.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i058",
+    "text": "Explain how a library organises its books so they can be found.",
+    "type": "explanation",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i059",
+    "text": "Why do technically strong projects sometimes fail?",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i060",
+    "text": "Explain how the internet delivers a web page to your phone.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i061",
+    "text": "Explain how inflation affects ordinary households.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i062",
+    "text": "Explain how a solar panel turns sunlight into electricity.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i063",
+    "text": "Explain why compound interest matters for long-term saving.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i064",
+    "text": "Explain how coffee travels from a Ugandan farm to a cup in another country.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i065",
+    "text": "Explain how a bank typically decides whether to approve a loan.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i066",
+    "text": "Explain why some soils are more fertile than others.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i067",
+    "text": "Explain how a GPS receiver works out where you are.",
+    "type": "explanation",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i068",
+    "text": "Explain why trust is essential for an economy to function.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i069",
+    "text": "Explain how habits are formed and how they can be changed.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i070",
+    "text": "Explain why some countries industrialised earlier than others.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i071",
+    "text": "Explain how misinformation spreads and why it is hard to correct.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i072",
+    "text": "Explain why a diversity of ideas can improve decision-making.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i073",
+    "text": "Explain how encryption keeps online communication private.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i074",
+    "text": "Explain why an electricity grid must balance supply and demand at every moment.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i075",
+    "text": "Explain how changing rainfall patterns affect agriculture in East Africa.",
+    "type": "explanation",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i076",
+    "text": "Should companies offer flexible working hours?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i077",
+    "text": "Should towns create more pedestrian-only streets?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i078",
+    "text": "Should every household separate its waste for recycling?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i079",
+    "text": "Should schools start later in the morning?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i080",
+    "text": "Should every workplace train its staff in basic first aid?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i081",
+    "text": "Should employers pay for their staff's professional training?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i082",
+    "text": "Should shops stop giving out single-use plastic bags?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i083",
+    "text": "Should every home have a smoke alarm?",
+    "type": "argument",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i084",
+    "text": "Should companies prioritise reliability over short-term cost savings?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i085",
+    "text": "Should rural electrification focus on mini-grids rather than extending the national grid?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i086",
+    "text": "Should solar home systems be subsidised to speed up adoption?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i087",
+    "text": "Should all new buildings be required to include rainwater harvesting?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i088",
+    "text": "Should employees have a say in choosing their managers?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i089",
+    "text": "Should apprenticeships be valued as highly as university degrees?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i090",
+    "text": "Should companies publish the salary range for every role?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i091",
+    "text": "Should cash payments be phased out in favour of digital payments?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i092",
+    "text": "Should engineers be required to keep learning to renew their professional registration?",
+    "type": "argument",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i093",
+    "text": "Should artificial intelligence be allowed to make hiring decisions?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i094",
+    "text": "Should wealthy countries pay for climate adaptation in poorer ones?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i095",
+    "text": "Should data about people's behaviour be treated as their property?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i096",
+    "text": "Should economic growth be pursued even when it harms the environment?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i097",
+    "text": "Should long-term infrastructure planning be protected from short-term budget pressures?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i098",
+    "text": "Should organisations that want innovation reward well-planned failures?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i099",
+    "text": "Should a company be held responsible for what its customers do with its products?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i100",
+    "text": "Should manufacturers be legally required to make electronic products repairable?",
+    "type": "argument",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i101",
+    "text": "Give your manager a short update on a task you finished today.",
+    "type": "professional",
+    "level": 1,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i102",
+    "text": "Introduce yourself to a new team at your first meeting.",
+    "type": "professional",
+    "level": 1,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i103",
+    "text": "Explain to a colleague how your team's weekly reporting works.",
+    "type": "professional",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i104",
+    "text": "Tell your team you will be away next week and how your work will be covered.",
+    "type": "professional",
+    "level": 1,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i105",
+    "text": "Confirm to a client that their installation is scheduled for next Tuesday and what they need to prepare.",
+    "type": "professional",
+    "level": 1,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i106",
+    "text": "Show a new colleague where to find tools, documents and safety equipment on their first day.",
+    "type": "professional",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i107",
+    "text": "Give a quick end-of-shift handover to the colleague taking over from you.",
+    "type": "professional",
+    "level": 1,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i108",
+    "text": "Confirm to a supplier what was received in today's delivery and what is still missing.",
+    "type": "professional",
+    "level": 1,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i109",
+    "text": "Give your manager a progress update on a solar installation that is two weeks behind schedule.",
+    "type": "professional",
+    "level": 2,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i110",
+    "text": "Explain to your manager a delay caused by a supplier failing to deliver equipment on time.",
+    "type": "professional",
+    "level": 2,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i111",
+    "text": "A client is unhappy that their system is producing less energy than they expected. Respond to them on a call.",
+    "type": "professional",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i112",
+    "text": "Onboard a new technician on how your company handles a site visit from start to finish.",
+    "type": "professional",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i113",
+    "text": "Present the results of a site survey to a client with no technical background.",
+    "type": "professional",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i114",
+    "text": "Explain to your team why a new safety procedure is being introduced.",
+    "type": "professional",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i115",
+    "text": "Report a minor safety incident on site to your supervisor.",
+    "type": "professional",
+    "level": 2,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i116",
+    "text": "A colleague missed a deadline that affects your work. Raise it with them constructively.",
+    "type": "professional",
+    "level": 2,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i117",
+    "text": "Ask your manager for additional people on a project that is understaffed.",
+    "type": "professional",
+    "level": 2,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i118",
+    "text": "Tell a client that the budget they approved will not cover the design they want.",
+    "type": "professional",
+    "level": 3,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i119",
+    "text": "Recommend to management that the company replace an unreliable supplier.",
+    "type": "professional",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i120",
+    "text": "Explain to senior management why a project went over budget and what you will do differently.",
+    "type": "professional",
+    "level": 3,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i121",
+    "text": "Respond to a client who is threatening to cancel a contract after repeated service outages.",
+    "type": "professional",
+    "level": 3,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i122",
+    "text": "Negotiate a revised deadline with a client while keeping their trust.",
+    "type": "professional",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i123",
+    "text": "Give feedback to a team member whose quality of work has dropped.",
+    "type": "professional",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i124",
+    "text": "Brief a new project manager who is taking over a troubled project from you.",
+    "type": "professional",
+    "level": 3,
+    "structure": "situation-impact-action-status-next"
+  },
+  {
+    "id": "i125",
+    "text": "Pitch a maintenance contract to a client who believes maintenance is unnecessary.",
+    "type": "professional",
+    "level": 3,
+    "structure": "point-reason-example-conclusion"
+  },
+  {
+    "id": "i126",
+    "text": "Explain to a homeowner how a solar PV system works, from the panels to the sockets.",
+    "type": "technical",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i127",
+    "text": "A customer says their Wi-Fi is slow in one room only. Explain how you would investigate.",
+    "type": "technical",
+    "level": 1,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i128",
+    "text": "Explain the difference between a fuse and a circuit breaker.",
+    "type": "technical",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i129",
+    "text": "A circuit breaker in a house trips every time the kettle is switched on. Explain the possible causes and what you would check.",
+    "type": "technical",
+    "level": 1,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i130",
+    "text": "Explain why solar panels should be kept clean and how you would decide how often to clean them.",
+    "type": "technical",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i131",
+    "text": "A customer's router shows a red internet light. Explain how you would troubleshoot it.",
+    "type": "technical",
+    "level": 1,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i132",
+    "text": "Explain what an inverter does in a solar system.",
+    "type": "technical",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i133",
+    "text": "Explain why earthing is important in an electrical installation.",
+    "type": "technical",
+    "level": 1,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i134",
+    "text": "A customer reports intermittent internet connectivity. Explain how you would investigate the problem.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i135",
+    "text": "A solar system's batteries are draining overnight much faster than expected. Explain the possible causes and your troubleshooting approach.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i136",
+    "text": "A residual-current device (RCD) trips at random during heavy rain. Explain how you would find the fault.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i137",
+    "text": "Explain how you would size a solar system for a small rural clinic.",
+    "type": "technical",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i138",
+    "text": "A fibre link shows high loss after a recent repair. Explain how you would locate the problem.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i139",
+    "text": "Explain the difference between on-grid, off-grid and hybrid solar systems, and when each is appropriate.",
+    "type": "technical",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i140",
+    "text": "A water pump motor at the end of a long cable run fails to start because the voltage is too low. Explain the possible causes and solutions.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i141",
+    "text": "Users on one floor of an office cannot obtain IP addresses while other floors work normally. Explain how you would investigate.",
+    "type": "technical",
+    "level": 2,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i142",
+    "text": "Explain how you would plan a point-to-point wireless link between two buildings.",
+    "type": "technical",
+    "level": 2,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i143",
+    "text": "A solar inverter repeatedly reports a BMS communication fault. Explain the possible causes and your troubleshooting approach.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i144",
+    "text": "A grid-tied inverter keeps disconnecting around midday on sunny days. Explain the possible causes and how you would investigate.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i145",
+    "text": "One string in a solar array produces much less current than the other strings. Explain how you would diagnose it.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i146",
+    "text": "A site network suffers packet loss only during business hours. Explain how you would find the root cause.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i147",
+    "text": "A three-phase motor runs hot and draws unbalanced current. Explain the possible causes and your investigation.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i148",
+    "text": "The cells in a lithium battery bank keep drifting out of balance. Explain the possible causes and your approach.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  },
+  {
+    "id": "i149",
+    "text": "Explain how you would design backup power for a telecom tower site with an unreliable grid supply.",
+    "type": "technical",
+    "level": 3,
+    "structure": "what-how-why-example"
+  },
+  {
+    "id": "i150",
+    "text": "After a lightning storm, several devices at a site have failed. Explain how you would assess the damage and reduce the risk of it happening again.",
+    "type": "technical",
+    "level": 3,
+    "structure": "problem-evidence-cause-action"
+  }
+]

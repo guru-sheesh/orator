@@ -41,6 +41,11 @@ export function useDailySummary(date: DateKey): DailySummary | undefined {
   }, [date])
 }
 
+export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>) {
+  const current = (await db.settings.get('user')) ?? DEFAULT_SETTINGS
+  await db.settings.put({ ...current, ...patch })
+}
+
 export async function updateTargets(patch: Partial<Settings['targets']>) {
   const current = (await db.settings.get('user')) ?? DEFAULT_SETTINGS
   await db.settings.put({ ...current, targets: { ...current.targets, ...patch } })

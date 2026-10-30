@@ -50,6 +50,87 @@ export interface ReadingSession {
   note?: string
 }
 
+export type TaskId = 'words' | 'questions' | 'shadowing' | 'paraphrase' | 'explain' | 'impromptu'
+export type TaskStatus = 'pending' | 'done' | 'skipped'
+
+/** One day's articulation session; the plan is fixed at creation so a reload resumes the same prompts. */
+export interface SpeechSession {
+  id?: number
+  date: DateKey
+  createdAt: number
+  /** Time spent on task screens while visible. Drives the articulation minutes. */
+  activeMs: number
+  completedAt?: number
+  plan: {
+    words: string[]
+    questions: string[]
+    impromptu: string
+    passage?: string
+    shadow?: { sourceId: number; segment: number }
+  }
+  tasks: Record<TaskId, TaskStatus>
+}
+
+export type ShadowStage = 'repeat' | 'shadow' | 'deliver'
+
+export interface SpeechAttempt {
+  id?: number
+  sessionId: number
+  date: DateKey
+  task: TaskId
+  promptId: string
+  prompt: string
+  stage?: ShadowStage
+  attemptNumber: number
+  durationMs: number
+  mimeType: string
+  /** Filled in by transcription (phase 7). */
+  transcript?: string
+  createdAt: number
+}
+
+/** Audio blobs live apart from their metadata so lists never load audio. Only kept when the user opts in. */
+export interface Recording {
+  attemptId: number
+  blob: Blob
+}
+
+export interface ShadowSegment {
+  start: number
+  end: number
+}
+
+/** A user-imported speech for shadowing (CLAUDE.md §0.7). Audio stays on this device. */
+export interface ShadowSource {
+  id?: number
+  title: string
+  speaker: string
+  date?: string
+  source?: string
+  rights: string
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  durationSec: number
+  segments: ShadowSegment[]
+  /** Loudness envelope, 20 values per second (0-255), for the waveform and phrase splitting. */
+  envelope: Uint8Array
+  createdAt: number
+}
+
+export interface ShadowAudio {
+  sourceId: number
+  blob: Blob
+}
+
+/** Rotation bookkeeping so practice prompts don't repeat until a bank is exhausted. */
+export interface ContentUsage {
+  key: string
+  kind: string
+  count: number
+  usedAt: number
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   id: 'user',
   name: '',
@@ -57,14 +138,18 @@ export const DEFAULT_SETTINGS: Settings = {
   keepRecordings: false,
 }
 
-// Speech exercise, attempt, analysis and source tables arrive with the
-// articulation phases; Dexie upgrades the schema with a new version().
 export const db = new Dexie('orator') as Dexie & {
   settings: EntityTable<Settings, 'id'>
   dailyStatus: EntityTable<DailyStatus, 'date'>
   journal: EntityTable<JournalEntry, 'date'>
   books: EntityTable<Book, 'id'>
   readingSessions: EntityTable<ReadingSession, 'id'>
+  speechSessions: EntityTable<SpeechSession, 'id'>
+  speechAttempts: EntityTable<SpeechAttempt, 'id'>
+  recordings: EntityTable<Recording, 'attemptId'>
+  shadowSources: EntityTable<ShadowSource, 'id'>
+  shadowAudio: EntityTable<ShadowAudio, 'sourceId'>
+  contentUsage: EntityTable<ContentUsage, 'key'>
 }
 
 db.version(1).stores({
@@ -74,3 +159,15 @@ db.version(1).stores({
   books: '++id, completedOn',
   readingSessions: '++id, date, bookId',
 })
+
+db.version(2).stores({
+  speechSessions: '++id, date',
+  speechAttempts: '++id, sessionId, date, task',
+  recordings: 'attemptId',
+  shadowSources: '++id',
+  shadowAudio: 'sourceId',
+  contentUsage: 'key, kind',
+})
+
+/** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
+export const AUDIO_TABLES = ['recordings', 'shadowAudio'] as const
