@@ -25,7 +25,8 @@ interface ClipCatalogue {
 let catalogue: Promise<ClipCatalogue | null> | null = null
 
 export function loadClipCatalogue(): Promise<ClipCatalogue | null> {
-  catalogue ??= fetch('/audio/clips.json')
+  // no-cache: older builds served this file as immutable for a year, so always recheck it.
+  catalogue ??= fetch('/audio/clips.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? (r.json() as Promise<ClipCatalogue>) : null))
     .catch(() => null)
   void catalogue.then((c) => {
@@ -50,13 +51,17 @@ export function decodeEnvelope(b64: string) {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
 }
 
+const isAudio = (blob: Blob) => !blob.type.startsWith('text/') && blob.size > 0
+
 /** Clip audio from the device, downloading it the first time. */
 export async function getClipAudio(clip: BuiltInClip): Promise<Blob> {
   const cached = await db.clipAudio.get(clip.id)
-  if (cached) return cached.blob
+  if (cached && isAudio(cached.blob)) return cached.blob
   const res = await fetch(clip.file)
   if (!res.ok) throw new Error('download failed')
   const blob = await res.blob()
+  // A missing file can come back as the app's HTML page; never keep that as audio.
+  if (!isAudio(blob)) throw new Error('download failed')
   await db.clipAudio.put({ clipId: clip.id, blob })
   // Keep only the last few clips so storage doesn't grow without limit.
   const all = await db.clipAudio.toCollection().primaryKeys()

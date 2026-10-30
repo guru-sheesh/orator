@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { clipIdFromPrompt } from './clips'
 import { db, type SpeechAttempt } from './db'
 import { loadPassages, WORDS } from './speech'
-import type { CoachRequest, FillerPosition, SpeechAnalysis } from '../lib/analysisTypes'
+import { TECHNIQUE_TAGS, type CoachRequest, type FillerPosition, type SpeechAnalysis } from '../lib/analysisTypes'
 import type { SpeechMetrics } from '../lib/metrics'
 import type { TranscriptWord } from '../lib/transcribe'
 import { requestFeedback } from './feedback'
@@ -63,6 +63,12 @@ const MESSAGES: Record<string, string> = {
   offline: 'You’re offline. Analysis runs when you’re back online.',
 }
 
+/** The server's error code; Netlify's own gateway timeouts (502/504) carry none. */
+export function errorCode(res: Response | null, body: { error?: string }): string {
+  if (body.error) return body.error
+  return res && res.status >= 500 ? 'timeout' : 'provider'
+}
+
 export async function analyseAttempt(attemptId: number): Promise<void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
@@ -92,7 +98,7 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
       void requestFeedback(attemptId)
       return
     }
-    const code: string = body.error ?? 'provider'
+    const code = errorCode(res, body)
     await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: MESSAGES[code] ?? 'The analysis failed. You can try again.' })
     // Busy or slow: try again automatically a few times.
     const n = retries.get(attemptId) ?? 0
@@ -100,6 +106,9 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
       retries.set(attemptId, n + 1)
       setTimeout(() => void analyseAttempt(attemptId), RETRY_DELAY_MS * (n + 1))
     }
+  } catch {
+    // Never leave it stuck on "pending": show the error with a Try again button.
+    await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: 'The analysis failed. You can try again.' }).catch(() => {})
   } finally {
     running.delete(attemptId)
   }
@@ -136,7 +145,8 @@ function sanitise(raw: SpeechAnalysis, words: TranscriptWord[], metrics: SpeechM
     ...raw,
     fillers: withPureFillers((raw.fillers ?? []).filter((f) => ok(f.wordIndex)), words, metrics),
     strengths: raw.strengths ?? [],
-    techniqueTags: raw.techniqueTags ?? [],
+    techniqueTags: (raw.techniqueTags ?? []).filter((t) => (TECHNIQUE_TAGS as readonly string[]).includes(t)),
+    organisation: { mainPoint: raw.organisation?.mainPoint ?? 'missing', structure: raw.organisation?.structure ?? '', issues: raw.organisation?.issues ?? [] },
     soundFillers: raw.soundFillers ?? [],
     repetitions: (raw.repetitions ?? []).map((r) => ({ ...r, wordIndexes: (r.wordIndexes ?? []).filter(ok) })),
     restarts: (raw.restarts ?? []).filter((r) => ok(r.wordIndex)),

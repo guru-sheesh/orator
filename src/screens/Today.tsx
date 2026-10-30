@@ -2,11 +2,12 @@ import { Link } from 'react-router'
 import { BookOpen, ChartNoAxesColumn, Check, ChevronRight, HardDriveDownload, Mic, NotebookPen, Settings, type LucideIcon } from 'lucide-react'
 import { useBackupDue, useDailySummary } from '../data/daily'
 import { TECHNIQUE_FOCUS, useTrends } from '../data/trends'
-import { formatLongDate, toDateKey } from '../lib/date'
+import { formatLongDate } from '../lib/date'
+import { useToday } from '../hooks/useToday'
 import { buttonClass, Card, cx, iconButtonClass, Label, PageHeader, ProgressBar, ProgressRing } from '../components/ui'
 
 export default function Today() {
-  const summary = useDailySummary(toDateKey())
+  const summary = useDailySummary(useToday())
   const backupDue = useBackupDue()
   const trends = useTrends()
   const focus = trends?.recurring ? TECHNIQUE_FOCUS[trends.recurring.tag] : null

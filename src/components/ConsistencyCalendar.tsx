@@ -1,5 +1,6 @@
 import type { DayProgress } from '../data/progress'
-import { formatShortDate, fromDateKey, toDateKey } from '../lib/date'
+import { formatShortDate, fromDateKey } from '../lib/date'
+import { useToday } from '../hooks/useToday'
 import { cx } from './ui'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -15,7 +16,7 @@ const LEVEL_CLASS = [
 
 /** Day grid, Monday first. `days` must be contiguous; leading blanks pad the first week. */
 export function ConsistencyCalendar({ days }: { days: DayProgress[] }) {
-  const today = toDateKey()
+  const today = useToday()
   const lead = days.length ? (fromDateKey(days[0].date).getDay() + 6) % 7 : 0
 
   return (

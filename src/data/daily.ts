@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type DateKey, type Settings } from './db'
+import { toDateKey } from '../lib/date'
 
 export interface DailySummary {
   articulation: { minutes: number; target: number; done: boolean }
@@ -49,6 +50,8 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>) {
 export async function updateTargets(patch: Partial<Settings['targets']>) {
   const current = (await db.settings.get('user')) ?? DEFAULT_SETTINGS
   await db.settings.put({ ...current, targets: { ...current.targets, ...patch } })
+  // Re-judge today against the new target.
+  if (patch.articulationMinutes !== undefined) await (await import('./speech')).refreshDailyStatus(toDateKey())
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000

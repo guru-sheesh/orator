@@ -8,16 +8,17 @@ import { deleteSession, logPages, setBookCompleted, useBooks, useSessionsOn, val
 import { BookCover } from '../components/BookCover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { buttonClass, Card, cx, iconButtonClass, Label, PageHeader, ProgressBar } from '../components/ui'
-import { addDays, endOfMonth, startOfMonth, startOfWeek, toDateKey } from '../lib/date'
+import { addDays, endOfMonth, fromDateKey, startOfMonth, startOfWeek } from '../lib/date'
+import { useToday } from '../hooks/useToday'
 
 const inputClass = 'h-12 w-full rounded-sm border border-border-strong bg-raised px-3.5 placeholder:text-subtle'
 
 export default function Read() {
-  const today = toDateKey()
+  const today = useToday()
   const books = useBooks()
   const summary = useDailySummary(today)
   const sessions = useSessionsOn(today)
-  const now = new Date()
+  const now = fromDateKey(today)
   const week = usePeriodProgress(startOfWeek(now), addDays(startOfWeek(now), 6))
   const month = usePeriodProgress(startOfMonth(now), endOfMonth(now))
   const [selectedId, setSelectedId] = useState<number>()
@@ -200,6 +201,7 @@ function LogForm({
   onSelectBook: (id: number) => void
   onSaved: (pages: number, finished: boolean) => void
 }) {
+  const today = useToday()
   const [pages, setPages] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -211,7 +213,7 @@ function LogForm({
     if (problem) return setError(problem)
     setBusy(true)
     try {
-      const result = await logPages(book, toDateKey(), n)
+      const result = await logPages(book, today, n)
       if (!result.ok) return setError(result.error)
       onSaved(result.pages, result.finished)
       // The form remounts to reset; put focus back where the user was typing.

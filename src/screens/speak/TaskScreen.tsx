@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
-import type { SpeechSession, TaskId } from '../../data/db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type SpeechSession, type TaskId } from '../../data/db'
 import { nextPendingTask, setTaskStatus, TASKS, useTodaySession } from '../../data/speech'
 import { useActiveTime } from '../../hooks/useActiveTime'
 import { formatClock } from '../../components/recording'
@@ -18,8 +19,14 @@ export interface TaskProps {
 
 export default function TaskScreen() {
   const { task } = useParams()
-  const session = useTodaySession()
-  useActiveTime(session?.id)
+  const todays = useTodaySession()
+  // Stay on the session this screen opened with, even if midnight passes mid-task.
+  const [openedId, setOpenedId] = useState<number>()
+  if (openedId === undefined && todays?.id !== undefined) setOpenedId(todays.id)
+  // Tagged with its id: a live query briefly keeps its previous result when the id changes.
+  const opened = useLiveQuery(async () => (openedId === undefined ? undefined : { id: openedId, session: (await db.speechSessions.get(openedId)) ?? null }), [openedId])
+  const session = openedId === undefined ? todays : opened?.id === openedId ? opened.session : undefined
+  useActiveTime(session?.id ?? undefined)
 
   const meta = TASKS.find((t) => t.id === task)
   if (!meta) return <Navigate to="/speak" replace />

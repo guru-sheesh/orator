@@ -23,7 +23,10 @@ function Sequence({
   const attempts = useAttempts(session.id, task)
   const recorded = new Set(attempts?.map((a) => a.promptId))
   const firstOpen = items.findIndex((i) => !recorded.has(i.id))
-  const [index, setIndex] = useState(firstOpen < 0 ? 0 : firstOpen)
+  // Resume at the first unrecorded prompt, once the attempts have loaded.
+  const [chosen, setIndex] = useState<number>()
+  if (chosen === undefined && attempts) setIndex(firstOpen < 0 ? 0 : firstOpen)
+  const index = chosen ?? 0
   const item = items[index]
   const last = index === items.length - 1
   const promptRef = useRef<HTMLDivElement>(null)
@@ -31,7 +34,7 @@ function Sequence({
   useEffect(() => {
     if (advanced.current) promptRef.current?.focus()
   }, [index])
-  if (!attempts || !item) return null
+  if (chosen === undefined || !item) return null
 
   return (
     <>

@@ -3,7 +3,7 @@ import { clipIdFromPrompt } from './clips'
 import { db, type SpeechAttempt, type Talk } from './db'
 import builtInTalks from '../content/talks.json'
 import type { CoachingFeedback, FeedbackRequest, SpeechAnalysis } from '../lib/analysisTypes'
-import { cleanEvidence, encodeTranscript } from './analysis'
+import { cleanEvidence, encodeTranscript, errorCode } from './analysis'
 import { loadPassages, WORDS } from './speech'
 import { speakerHistory } from './trends'
 
@@ -39,7 +39,7 @@ function summarise(a: SpeechAnalysis, attempt: SpeechAttempt): string {
     `Pauses: ${m.pauses.map((p) => `${p.kind} ${p.seconds}s`).join(', ') || 'none'}; pace ${m.wpm ?? '?'} wpm, variation ${m.paceVariation ?? 'n/a'}%`,
     `Restarts: ${a.restarts.map((r) => r.note).join('; ') || 'none'}`,
     `Repetition: ${a.repetitions.map((r) => `${r.deliberate ? 'deliberate' : 'accidental'} "${r.text}"`).join('; ') || 'none'}`,
-    `Organisation: main point ${a.organisation.mainPoint}; ${a.organisation.structure}; ${a.organisation.issues.join('; ')}`,
+    `Organisation: main point ${a.organisation?.mainPoint ?? 'unclear'}; ${a.organisation?.structure ?? ''}; ${(a.organisation?.issues ?? []).join('; ')}`,
     a.grammar.length ? `Grammar: ${a.grammar.map((g) => `"${g.said}" -> "${g.better}"`).join('; ')}` : '',
     a.content ? `Content: missed ${a.content.missed.join('; ') || 'nothing'}; incorrect ${a.content.incorrect.join('; ') || 'nothing'}; copied ${a.content.copiedPhrases.join('; ') || 'nothing'}` : '',
     a.saidTargetWord ? 'The speaker said the target word.' : '',
@@ -94,7 +94,7 @@ export async function requestFeedback(attemptId: number): Promise<void> {
       retries.delete(attemptId)
       return
     }
-    const code: string = body.error ?? 'provider'
+    const code = errorCode(res, body)
     const busy = code === 'rate-limited' || code === 'timeout'
     await db.speechAttempts.update(attemptId, {
       feedbackStatus: 'failed',
@@ -105,6 +105,8 @@ export async function requestFeedback(attemptId: number): Promise<void> {
       retries.set(attemptId, n + 1)
       setTimeout(() => void requestFeedback(attemptId), 60_000 * (n + 1))
     }
+  } catch {
+    await db.speechAttempts.update(attemptId, { feedbackStatus: 'failed', feedbackError: 'Feedback couldn’t be generated. You can try again.' }).catch(() => {})
   } finally {
     running.delete(attemptId)
   }

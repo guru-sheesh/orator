@@ -48,6 +48,20 @@ if ('requestIdleCallback' in window) requestIdleCallback(resume, { timeout: 5000
 else setTimeout(resume, 2000)
 window.addEventListener('online', resume)
 
+// After a deploy, an app left open still asks for the old screen files, which are gone: reload once into the new version.
+window.addEventListener('vite:preloadError', (e) => {
+  if (sessionStorage.getItem('reloaded-for-update')) return
+  e.preventDefault()
+  sessionStorage.setItem('reloaded-for-update', '1')
+  location.reload()
+})
+window.addEventListener('load', () => setTimeout(() => sessionStorage.removeItem('reloaded-for-update'), 10_000))
+
+// Installed apps are resumed rather than reloaded, so check for a new version when the app comes back.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void navigator.serviceWorker?.getRegistration().then((r) => r?.update())
+})
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />

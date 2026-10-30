@@ -101,7 +101,7 @@ export function ClipPlayer({
         <span>{formatClock((position - range.start) * 1000)}</span>
         <span>{formatClock((range.end - range.start) * 1000)}</span>
       </div>
-      {!hideControls && (
+      {(!hideControls || blocked) && (
         <div className="flex items-center justify-center gap-4">
           <button type="button" onClick={() => play(true)} aria-label={`Restart ${label}`} className="grid size-11 place-items-center rounded-md text-muted hover:bg-raised active:bg-raised">
             <RotateCcw size={20} strokeWidth={1.75} aria-hidden="true" />

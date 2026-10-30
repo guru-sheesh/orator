@@ -3,12 +3,13 @@ import { Check, ChevronLeft, ChevronRight, NotebookPen } from 'lucide-react'
 import { setJournaled, useJournaledDates } from '../data/journal'
 import { Card, cx, iconButtonClass, PageHeader } from '../components/ui'
 import { dateKeysBetween, endOfMonth, formatLongDate, formatMonthYear, fromDateKey, startOfMonth, toDateKey } from '../lib/date'
+import { useToday } from '../hooks/useToday'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 /** One tap to record that you journaled today; tap past days to fix a missed mark. */
 export default function Journal() {
-  const today = toDateKey()
+  const today = useToday()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const from = toDateKey(month)
   const to = toDateKey(endOfMonth(month))

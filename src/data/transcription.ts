@@ -101,7 +101,8 @@ export async function processPendingTranscriptions() {
   if (!navigator.onLine) return
   const waiting = await db.speechAttempts.filter((a) => (a.transcription === 'pending' || a.transcription === 'failed') && shouldTranscribe(a)).toArray()
   for (const a of waiting) {
-    if (!(await db.recordings.get(a.id!))) continue
+    // Without its audio (e.g. restored from a backup) it can't be transcribed; transcribeAttempt marks it failed once.
+    if (!(await db.recordings.get(a.id!)) && a.transcription === 'failed') continue
     await transcribeAttempt(a.id!)
   }
   await processPendingAnalyses()
@@ -131,7 +132,7 @@ export async function ensureClipTranscript(sourceId: number, segment: number) {
 export async function ensureBuiltInClipTranscript(clip: BuiltInClip, blob: Blob) {
   const cached = await db.clipTranscripts.get(clip.id)
   if (cached) return cached
-  const shipped = await fetch(`/audio/transcripts/${clip.id}.json`)
+  const shipped = await fetch(`/audio/transcripts/${clip.id}.json`, { cache: 'no-cache' })
     .then((r) => (r.ok ? (r.json() as Promise<{ text: string; words: TranscriptWord[] }>) : null))
     .catch(() => null)
   if (shipped?.words?.length) {

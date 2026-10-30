@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type ShadowStage, type SpeechSession, type TaskId, type TaskStatus } from './db'
 import { toDateKey } from '../lib/date'
+import { useToday } from '../hooks/useToday'
 import { shouldTranscribe, transcribeAttempt } from './transcription'
 import { clipForNewSession, loadClipCatalogue } from './clips'
 import words from '../content/words.json'
@@ -123,7 +124,7 @@ async function pickShadowSegment(): Promise<SpeechSession['plan']['shadow']> {
 // ---------- Sessions ----------
 
 export function useTodaySession(): SpeechSession | null | undefined {
-  const today = toDateKey()
+  const today = useToday()
   return useLiveQuery(async () => (await db.speechSessions.where('date').equals(today).last()) ?? null, [today])
 }
 
@@ -187,7 +188,7 @@ export async function assignShadow(sessionId: number) {
  * Recomputes the day's articulation status. It counts as complete when all six
  * tasks were actually done (not skipped), or when practice time reaches the target.
  */
-async function refreshDailyStatus(date: string) {
+export async function refreshDailyStatus(date: string) {
   const [sessions, settings] = await Promise.all([db.speechSessions.where('date').equals(date).toArray(), db.settings.get('user')])
   const minutes = Math.floor(sessions.reduce((sum, s) => sum + s.activeMs, 0) / 60_000)
   const target = (settings ?? DEFAULT_SETTINGS).targets.articulationMinutes

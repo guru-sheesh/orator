@@ -219,5 +219,14 @@ db.version(3).stores({ talks: 'id' })
 
 db.version(4).stores({ clipAudio: 'clipId', clipTranscripts: 'clipId' })
 
+// Clips were pruned and renumbered after the first release, so audio and
+// transcripts saved under the old ids may belong to a different clip now.
+db.version(5)
+  .stores({})
+  .upgrade(async (tx) => {
+    await tx.table('clipAudio').clear()
+    await tx.table('clipTranscripts').clear()
+  })
+
 /** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
 export const AUDIO_TABLES = ['recordings', 'shadowAudio', 'clipAudio'] as const

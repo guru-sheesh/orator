@@ -5,7 +5,7 @@ import { Headphones, Info } from 'lucide-react'
 import { db, type ShadowStage } from '../../data/db'
 import { assignBuiltInClip, assignShadow, TIMING, useAttempts } from '../../data/speech'
 import { ensureBuiltInClipTranscript, ensureClipTranscript } from '../../data/transcription'
-import { clipPromptId, decodeEnvelope, findClip, getClipAudio, useClipTranscript, type BuiltInClip } from '../../data/clips'
+import { clipPromptId, decodeEnvelope, getClipAudio, loadClipCatalogue, useClipTranscript, type BuiltInClip } from '../../data/clips'
 import { TranscriptText } from '../../components/Transcript'
 import type { TranscriptWord } from '../../lib/transcribe'
 import { splitPhrases } from '../../lib/audioAnalysis'
@@ -63,27 +63,38 @@ function AssignClip(props: TaskProps) {
 /** Today's built-in clip: downloaded once, then kept on the device. */
 function BuiltInShadow({ session, finish, clipId }: TaskProps & { clipId: string }) {
   const [state, setState] = useState<{ clip: BuiltInClip; blob: Blob; envelope: Uint8Array } | 'loading' | 'failed'>('loading')
+  const [attempt, setAttempt] = useState(0)
   const transcript = useClipTranscript(clipId)
   useEffect(() => {
     let cancelled = false
+    setState('loading')
     ;(async () => {
-      const clip = await findClip(clipId)
-      if (!clip) throw new Error('missing')
+      const cat = await loadClipCatalogue()
+      if (!cat) throw new Error('offline')
+      const clip = cat.clips.find((c) => c.id === clipId)
+      // The clip was removed from the app since this session started: pick today's clip again.
+      if (!clip) return void (await db.speechSessions.update(session.id!, { 'plan.clip': undefined }))
       const blob = await getClipAudio(clip)
       if (!cancelled) setState({ clip, blob, envelope: decodeEnvelope(clip.envelope) })
     })().catch(() => !cancelled && setState('failed'))
     return () => {
       cancelled = true
     }
-  }, [clipId])
+  }, [clipId, session.id, attempt])
 
-  if (state === 'loading') return <p className="text-muted">Loading today’s clip…</p>
+  if (state === 'loading') return <p role="status" className="text-muted">Loading today’s clip…</p>
   if (state === 'failed')
     return (
-      <Card>
-        <p className="font-semibold">Today’s clip couldn’t download</p>
-        <p className="text-muted">Connect to the internet once; after that it stays on your phone.</p>
-      </Card>
+      <>
+        <Card>
+          <p className="font-semibold">Today’s clip couldn’t download</p>
+          <p className="text-muted">Check your internet connection and try again. Once downloaded, the clip stays on your phone.</p>
+          <button type="button" onClick={() => setAttempt((n) => n + 1)} className={buttonClass.primary}>
+            Try again
+          </button>
+        </Card>
+        <ImportedShadow session={session} finish={finish} />
+      </>
     )
   const { clip, blob, envelope } = state
   return (

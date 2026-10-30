@@ -127,7 +127,7 @@ export async function speakerHistory(): Promise<string | undefined> {
   const t = await computeTrends()
   const parts = [
     t.topFillers.length ? `habitual fillers: ${t.topFillers.map((f) => `"${f.text}" (${f.count})`).join(', ')}` : '',
-    t.recurring ? `recurring weakness over the last two weeks: ${TECHNIQUE_FOCUS[t.recurring.tag].label.toLowerCase()} (${t.recurring.share}% of answers)` : '',
+    t.recurring ? `recurring weakness over the last two weeks: ${(TECHNIQUE_FOCUS[t.recurring.tag]?.label ?? t.recurring.tag).toLowerCase()} (${t.recurring.share}% of answers)` : '',
   ].filter(Boolean)
   return parts.length ? parts.join('; ') : undefined
 }

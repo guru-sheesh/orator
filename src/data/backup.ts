@@ -26,7 +26,6 @@ export async function exportAllData(): Promise<Blob> {
     exportedAt: new Date().toISOString(),
     tables,
   }
-  await markExported()
   return new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' })
 }
 

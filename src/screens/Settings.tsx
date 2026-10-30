@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { ChevronLeft, ChevronRight, Download, FileAudio, ShieldAlert, Trash2, Upload } from 'lucide-react'
 import { updateSettings, updateTargets, useSettings } from '../data/daily'
-import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData } from '../data/backup'
+import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData, markExported } from '../data/backup'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Card, cx, iconButtonClass, Label, ProgressBar, Segmented } from '../components/ui'
 import { useAzureUsage } from '../data/transcription'
@@ -42,6 +42,7 @@ export default function Settings() {
   async function handleExport() {
     try {
       downloadBlob(await exportAllData(), backupFileName())
+      await markExported()
       setMessage({ text: 'Backup downloaded. Keep it somewhere other than this phone, such as cloud storage or email to yourself.' })
     } catch {
       setMessage({ text: 'The export failed. Try again; if it keeps failing, restart the app.', error: true })
