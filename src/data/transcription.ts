@@ -4,6 +4,7 @@ import { transcribe, TranscriptionError } from '../lib/transcribe'
 import { profileAudio } from '../lib/audioAnalysis'
 import { computeMetrics } from '../lib/metrics'
 import { analyseAttempt, processPendingAnalyses, shouldAnalyse } from './analysis'
+import { clipIdFromPrompt, type BuiltInClip } from './clips'
 
 /** Azure F0 includes 5 hours a month; stop a little short so a long answer can't tip it over. */
 export const MONTHLY_LIMIT_SECONDS = 5 * 3600
@@ -40,6 +41,8 @@ export function shouldTranscribe(attempt: Pick<SpeechAttempt, 'task' | 'stage'>)
 /** The clip's own transcript, used as reference text when assessing shadowing. */
 async function referenceFor(attempt: SpeechAttempt): Promise<string | undefined> {
   if (attempt.task !== 'shadowing') return undefined
+  const clipId = clipIdFromPrompt(attempt.promptId)
+  if (clipId) return (await db.clipTranscripts.get(clipId))?.text || undefined
   const [sourceId, segment] = attempt.promptId.split(':').map(Number)
   return (await db.shadowSources.get(sourceId))?.clipTranscripts?.[segment]?.text || undefined
 }
@@ -118,4 +121,17 @@ export async function ensureClipTranscript(sourceId: number, segment: number) {
   const fresh = await db.shadowSources.get(sourceId)
   await db.shadowSources.update(sourceId, { clipTranscripts: { ...fresh?.clipTranscripts, [segment]: clip } })
   return clip
+}
+
+
+/** Transcribes a built-in clip once and caches it (whole clip, ~1 minute). */
+export async function ensureBuiltInClipTranscript(clip: BuiltInClip, blob: Blob) {
+  const cached = await db.clipTranscripts.get(clip.id)
+  if (cached) return cached
+  if ((await usageLeft()) < clip.durationSec) return undefined
+  const result = await transcribe(blob)
+  await addUsage(result.audioSeconds)
+  const entry = { clipId: clip.id, text: result.text, words: result.words.map(({ text, start, end, punct }) => ({ text, start, end, punct })) }
+  await db.clipTranscripts.put(entry)
+  return entry
 }

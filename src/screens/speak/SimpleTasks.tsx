@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useAttempts, IMPROMPTU, QUESTIONS, STRUCTURE_STEPS, TIMING, WORDS } from '../../data/speech'
 import { PromptRecorder } from '../../components/PromptRecorder'
+import { clipPromptId } from '../../data/clips'
 import { buttonClass, Card, Label } from '../../components/ui'
 import type { TaskProps } from './TaskScreen'
 
@@ -112,8 +113,9 @@ export function ImpromptuTask({ session, finish }: TaskProps) {
 export function ParaphraseTask({ session, finish }: TaskProps) {
   const attempts = useAttempts(session.id, 'paraphrase')
   const shadow = session.plan.shadow
+  const clip = session.plan.clip
   if (!attempts) return null
-  if (!shadow)
+  if (!shadow && !clip)
     return (
       <Card>
         <p className="font-semibold">This task follows shadowing</p>
@@ -124,7 +126,7 @@ export function ParaphraseTask({ session, finish }: TaskProps) {
       </Card>
     )
 
-  const promptId = `${shadow.sourceId}:${shadow.segment}`
+  const promptId = clip ? clipPromptId(clip) : `${shadow!.sourceId}:${shadow!.segment}`
   return (
     <>
       <Card>

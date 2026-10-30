@@ -72,6 +72,8 @@ export interface SpeechSession {
     impromptu: string
     passage?: string
     shadow?: { sourceId: number; segment: number }
+    /** Built-in clip of the day (public/audio/clips.json), preferred over imported audio. */
+    clip?: string
   }
   tasks: Record<TaskId, TaskStatus>
 }
@@ -151,6 +153,19 @@ export interface Talk {
   notice: string
 }
 
+/** Built-in clip audio, downloaded on first use and kept for offline practice. */
+export interface ClipAudio {
+  clipId: string
+  blob: Blob
+}
+
+/** Transcript of a built-in clip, transcribed once. Times are relative to the clip. */
+export interface ClipTranscript {
+  clipId: string
+  text: string
+  words: TranscriptWord[]
+}
+
 /** Rotation bookkeeping so practice prompts don't repeat until a bank is exhausted. */
 export interface ContentUsage {
   key: string
@@ -179,6 +194,8 @@ export const db = new Dexie('orator') as Dexie & {
   shadowAudio: EntityTable<ShadowAudio, 'sourceId'>
   contentUsage: EntityTable<ContentUsage, 'key'>
   talks: EntityTable<Talk, 'id'>
+  clipAudio: EntityTable<ClipAudio, 'clipId'>
+  clipTranscripts: EntityTable<ClipTranscript, 'clipId'>
 }
 
 db.version(1).stores({
@@ -200,5 +217,7 @@ db.version(2).stores({
 
 db.version(3).stores({ talks: 'id' })
 
+db.version(4).stores({ clipAudio: 'clipId', clipTranscripts: 'clipId' })
+
 /** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
-export const AUDIO_TABLES = ['recordings', 'shadowAudio'] as const
+export const AUDIO_TABLES = ['recordings', 'shadowAudio', 'clipAudio'] as const

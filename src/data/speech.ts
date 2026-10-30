@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type ShadowStage, type SpeechSession, type TaskId, type TaskStatus } from './db'
 import { toDateKey } from '../lib/date'
 import { shouldTranscribe, transcribeAttempt } from './transcription'
+import { clipForNewSession } from './clips'
 import words from '../content/words.json'
 import questions from '../content/questions.json'
 import impromptu from '../content/impromptu.json'
@@ -132,12 +133,14 @@ export function useSession(id: number | undefined) {
 
 export async function startSession(): Promise<number> {
   const level = await currentLevel()
+  // The built-in clip of the day comes first; imported audio is the fallback.
+  const clip = await clipForNewSession()
   const [w, q, [imp], passages, shadow] = await Promise.all([
     pick('word', WORDS, 3, level),
     pick('question', QUESTIONS, 2, level),
     pick('impromptu', IMPROMPTU, 1, level),
     loadPassages().catch(() => [] as Passage[]),
-    pickShadowSegment(),
+    clip ? undefined : pickShadowSegment(),
   ])
   const [passage] = passages.length ? await pick('passage', passages, 1) : []
 
@@ -152,7 +155,7 @@ export async function startSession(): Promise<number> {
     date: toDateKey(),
     createdAt: Date.now(),
     activeMs: 0,
-    plan: { words: w.map((x) => x.id), questions: q.map((x) => x.id), impromptu: imp.id, passage: passage?.id, shadow },
+    plan: { words: w.map((x) => x.id), questions: q.map((x) => x.id), impromptu: imp.id, passage: passage?.id, shadow, clip },
     tasks: { ...EMPTY_TASKS },
   }) as Promise<number>
 }

@@ -75,6 +75,12 @@ The user decided feedback does NOT need citations. Replace the source library wi
 - Journal: the user journals elsewhere. The app only records "I journaled today" (one tap, with undo) and shows a month calendar where past days can be marked/unmarked. No prompts, free write, autosave, search or entry text.
 - Reading: a book is title, author (optional), total pages (optional) and an optional cover. No "current page" or "date started" fields. Logging asks only "Pages read" for today; the app keeps its own running page count per book for the progress bar. No "one thing I learned" note.
 
+## 0.9c Built-in shadowing audio (user, 2026-10-30) — SUPERSEDES 0.7 where it conflicts
+
+- The user chose to have their downloaded speeches built into the app, publicly hosted with no access lock, after being told they are copyrighted and downloadable by anyone with the link. Kept out of search engines with `X-Robots-Tag: noindex` on `/audio/*`.
+- `tools/build-clips.ts` cuts the prepared speeches ("Speaker — Title (part x of y).m4a") into ~1-minute clips at natural pauses (skipping intros/applause and clips under 30 s) into `public/audio/clips/`, with `public/audio/clips.json` holding metadata, loudness envelopes and a fixed shuffled daily order (no speaker two days running).
+- Each practice day gets the next clip in that order (one short clip a day). Only that clip is downloaded and kept on the device; clips are excluded from the PWA precache. Each clip is transcribed once on first use. Importing your own audio remains as a fallback.
+
 ## 0.8 Source library: anti-fabrication rules (sections 7-9) — see 0.8a
 
 - The coaching AI may ONLY cite sources that exist in the app's `SourceReference` table, by ID. It must never write a citation, quotation, author or page number free-hand.

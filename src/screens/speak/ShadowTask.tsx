@@ -4,7 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Headphones, Info } from 'lucide-react'
 import { db, type ShadowStage } from '../../data/db'
 import { assignShadow, TIMING, useAttempts } from '../../data/speech'
-import { ensureClipTranscript } from '../../data/transcription'
+import { ensureBuiltInClipTranscript, ensureClipTranscript } from '../../data/transcription'
+import { clipPromptId, decodeEnvelope, findClip, getClipAudio, useClipTranscript, type BuiltInClip } from '../../data/clips'
 import { TranscriptText } from '../../components/Transcript'
 import type { TranscriptWord } from '../../lib/transcribe'
 import { splitPhrases } from '../../lib/audioAnalysis'
@@ -22,7 +23,54 @@ const STAGES: { value: Stage; label: string }[] = [
   { value: 'deliver', label: 'Deliver' },
 ]
 
-export function ShadowTask({ session, finish }: TaskProps) {
+export function ShadowTask(props: TaskProps) {
+  return props.session.plan.clip ? <BuiltInShadow {...props} clipId={props.session.plan.clip} /> : <ImportedShadow {...props} />
+}
+
+/** Today's built-in clip: downloaded once, then kept on the device. */
+function BuiltInShadow({ session, finish, clipId }: TaskProps & { clipId: string }) {
+  const [state, setState] = useState<{ clip: BuiltInClip; blob: Blob; envelope: Uint8Array } | 'loading' | 'failed'>('loading')
+  const transcript = useClipTranscript(clipId)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const clip = await findClip(clipId)
+      if (!clip) throw new Error('missing')
+      const blob = await getClipAudio(clip)
+      if (!cancelled) setState({ clip, blob, envelope: decodeEnvelope(clip.envelope) })
+    })().catch(() => !cancelled && setState('failed'))
+    return () => {
+      cancelled = true
+    }
+  }, [clipId])
+
+  if (state === 'loading') return <p className="text-muted">Loading today’s clip…</p>
+  if (state === 'failed')
+    return (
+      <Card>
+        <p className="font-semibold">Today’s clip couldn’t download</p>
+        <p className="text-muted">Connect to the internet once; after that it stays on your phone.</p>
+      </Card>
+    )
+  const { clip, blob, envelope } = state
+  return (
+    <ShadowStages
+      session={session}
+      finish={finish}
+      title={clip.title}
+      speaker={clip.speaker}
+      blob={blob}
+      envelope={envelope}
+      segment={{ start: 0, end: clip.durationSec }}
+      segmentLabel={`Clip ${clip.index} of ${clip.of}`}
+      clipWords={transcript?.words}
+      promptBase={clipPromptId(clipId)}
+      ensureTranscript={() => ensureBuiltInClipTranscript(clip, blob)}
+    />
+  )
+}
+
+function ImportedShadow({ session, finish }: TaskProps) {
   const plan = session.plan.shadow
   const sourceCount = useLiveQuery(() => db.shadowSources.count())
   const source = useLiveQuery(async () => (plan ? ((await db.shadowSources.get(plan.sourceId)) ?? null) : null), [plan?.sourceId])
@@ -53,7 +101,10 @@ export function ShadowTask({ session, finish }: TaskProps) {
   }
 
   const segment = source.segments[plan.segment] ?? source.segments[0]
-  return <ShadowStages session={session} finish={finish} title={source.title} speaker={source.speaker} blob={audio.blob} envelope={source.envelope} segment={segment} segmentLabel={`Clip ${plan.segment + 1} of ${source.segments.length}`} clipWords={source.clipTranscripts?.[plan.segment]?.words} />
+  return <ShadowStages session={session} finish={finish} title={source.title} speaker={source.speaker} blob={audio.blob} envelope={source.envelope} segment={segment} segmentLabel={`Clip ${plan.segment + 1} of ${source.segments.length}`} clipWords={source.clipTranscripts?.[plan.segment]?.words}
+      promptBase={`${plan.sourceId}:${plan.segment}`}
+      ensureTranscript={() => ensureClipTranscript(plan.sourceId, plan.segment)}
+    />
 }
 
 function ShadowStages({
@@ -66,6 +117,8 @@ function ShadowStages({
   segment,
   segmentLabel,
   clipWords,
+  promptBase,
+  ensureTranscript,
 }: TaskProps & {
   title: string
   speaker: string
@@ -74,13 +127,16 @@ function ShadowStages({
   segment: { start: number; end: number }
   segmentLabel: string
   clipWords?: TranscriptWord[]
+  /** Identifies the clip in saved attempts. */
+  promptBase: string
+  ensureTranscript: () => Promise<unknown>
 }) {
   const [stage, setStage] = useState<Stage>('listen')
   const [phraseIndex, setPhraseIndex] = useState(0)
   const player = useRef<ClipPlayerHandle>(null)
   const phrases = useMemo(() => splitPhrases(envelope, segment), [envelope, segment])
   const attempts = useAttempts(session.id, 'shadowing')
-  const baseId = `${session.plan.shadow!.sourceId}:${session.plan.shadow!.segment}`
+  const baseId = promptBase
   const delivered = attempts?.some((a) => a.stage === 'deliver')
   const clipSec = segment.end - segment.start
   const phrase = phrases[Math.min(phraseIndex, phrases.length - 1)]
@@ -90,12 +146,12 @@ function ShadowStages({
   // Transcribe the clip on first use (cached afterwards) for word highlighting and as the shadowing reference.
   useEffect(() => {
     if (clipWords) return
-    const { sourceId, segment: index } = session.plan.shadow!
     setTranscriptStatus('loading')
-    ensureClipTranscript(sourceId, index)
+    ensureTranscript()
       .then((clip) => setTranscriptStatus(clip ? 'idle' : 'failed'))
       .catch(() => setTranscriptStatus('failed'))
-  }, [clipWords, session.plan.shadow])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per clip
+  }, [clipWords, promptBase])
 
   return (
     <>
@@ -146,7 +202,7 @@ function ShadowStages({
           </>
         )}
 
-        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Transcribing this clip…</p>}
+        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Transcribing this clip (about 30 seconds, only the first time)…</p>}
         {transcriptStatus === 'failed' && <p className="text-caption text-subtle">The clip transcript isn’t available right now; practice works without it.</p>}
         <p className="flex gap-2 text-caption text-subtle">
           <Info size={14} strokeWidth={1.75} className="mt-0.5 flex-none" aria-hidden="true" />

@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { clipIdFromPrompt } from './clips'
 import { db, type SpeechAttempt } from './db'
 import { loadPassages, WORDS } from './speech'
 import type { CoachRequest, FillerPosition, SpeechAnalysis } from '../lib/analysisTypes'
@@ -42,6 +43,8 @@ async function referenceFor(a: SpeechAttempt): Promise<string | undefined> {
   if (a.task === 'words') return WORDS.find((w) => w.id === a.promptId)?.word
   if (a.task === 'explain') return (await loadPassages()).find((p) => p.id === a.promptId)?.text
   if (a.task === 'paraphrase' || a.task === 'shadowing') {
+    const clipId = clipIdFromPrompt(a.promptId)
+    if (clipId) return (await db.clipTranscripts.get(clipId))?.text
     const [sourceId, segment] = a.promptId.split(':').map(Number)
     return (await db.shadowSources.get(sourceId))?.clipTranscripts?.[segment]?.text
   }
