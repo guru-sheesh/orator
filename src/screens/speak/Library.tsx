@@ -8,6 +8,8 @@ import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { formatClock } from '../../components/recording'
 import { buttonClass, Card, cx, iconButtonClass, Label } from '../../components/ui'
 import { NotFound } from '../Placeholder'
+import { useBuiltInSpeeches } from '../../data/clips'
+import { useTodaySession } from '../../data/speech'
 
 const RIGHTS = 'personal use, user-provided'
 const MAX_BYTES = 80 * 1024 * 1024
@@ -38,13 +40,15 @@ export function LibraryList() {
           </Link>
         }
       />
+      <BuiltInSpeeches />
+      <Label>Your recordings</Label>
       <p className="text-sm text-muted">
-        Recordings you import stay on this phone. Each one is split into one-minute clips at natural pauses, and the session gives you a new clip each day.
+        Optional. Recordings you import stay on this phone and are used when a built-in clip can’t load.
       </p>
       {sources?.length === 0 && (
-        <Link to="/speak/library/new" className={buttonClass.primary}>
+        <Link to="/speak/library/new" className={buttonClass.secondary}>
           <Plus size={20} strokeWidth={1.75} aria-hidden="true" />
-          Import your first recording
+          Import a recording
         </Link>
       )}
       {sources?.map((s) => (
@@ -62,6 +66,44 @@ export function LibraryList() {
         </Link>
       ))}
       <p className="text-caption text-subtle">Audio isn’t included in “Export all data”, so keep your original files.</p>
+    </>
+  )
+}
+
+/** The speeches built into the app: one of their clips is today's shadowing task. */
+function BuiltInSpeeches() {
+  const speeches = useBuiltInSpeeches()
+  const today = useTodaySession()
+  if (speeches === undefined) return <p role="status" className="text-sm text-muted">Loading the built-in speeches…</p>
+  if (speeches === null) return <p className="text-sm text-muted">The built-in speeches couldn’t load. Check your internet connection.</p>
+  const clipCount = speeches.reduce((n, s) => n + s.clips.length, 0)
+  const todays = today?.plan.clip
+  return (
+    <>
+      <Label>Built into the app</Label>
+      <p className="text-sm text-muted">
+        {speeches.length} speeches, {clipCount} one-minute clips. Each practice day gives you the next clip in a fixed shuffled order, so you never get the same speaker two days running. Only that day’s clip is downloaded.
+      </p>
+      <ul className="flex flex-col gap-2">
+        {speeches.map((s) => {
+          const isToday = s.clips.some((c) => c.id === todays)
+          const minutes = Math.round(s.clips.reduce((n, c) => n + c.durationSec, 0) / 60)
+          return (
+            <li key={s.speaker + s.title} className={cx('flex items-center gap-3 rounded-lg bg-surface px-4 py-3 light:border light:border-border', isToday && 'ring-1 ring-primary')}>
+              <span className="grid size-10 flex-none place-items-center rounded-md bg-raised text-muted">
+                <FileAudio size={20} strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{s.title}</span>
+                <span className="block truncate text-caption text-subtle">
+                  {s.speaker} · {s.clips.length} {s.clips.length === 1 ? 'clip' : 'clips'} · {minutes} min
+                </span>
+              </span>
+              {isToday && <span className="flex-none text-caption font-medium text-primary">Today</span>}
+            </li>
+          )
+        })}
+      </ul>
     </>
   )
 }

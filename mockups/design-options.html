@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orator design options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Varela+Round&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Page chrome (neutral, not part of any option) ---------- */
+  :root { --page-bg: #e9e9ea; --page-text: #18181b; --page-muted: #55555c; --page-card: #fff; }
+  body.dark-page { --page-bg: #09090b; --page-text: #f4f4f5; --page-muted: #a1a1aa; --page-card: #18181b; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--page-bg); color: var(--page-text); font: 15px/1.5 Inter, system-ui, sans-serif; padding: 24px 16px 64px; }
+  .intro { max-width: 860px; margin: 0 auto 28px; }
+  .intro h1 { font-size: 26px; margin-bottom: 6px; }
+  .intro p { color: var(--page-muted); }
+  .switch { margin-top: 14px; display: inline-flex; background: var(--page-card); border-radius: 999px; padding: 4px; gap: 4px; }
+  .switch button { border: 0; background: none; color: var(--page-muted); font: 600 14px Inter, sans-serif; padding: 10px 18px; border-radius: 999px; cursor: pointer; min-height: 44px; }
+  .switch button[aria-pressed="true"] { background: var(--page-text); color: var(--page-bg); }
+  section.option { max-width: 860px; margin: 0 auto 44px; }
+  .option-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 4px; }
+  .option-head .num { font: 700 14px Inter, sans-serif; background: var(--page-text); color: var(--page-bg); border-radius: 999px; width: 28px; height: 28px; display: grid; place-items: center; flex: none; }
+  .option-head h2 { font-size: 21px; }
+  .option-desc { color: var(--page-muted); margin: 0 0 6px 40px; max-width: 640px; }
+  .option-spec { color: var(--page-muted); font-size: 13px; margin: 0 0 14px 40px; }
+  .phones { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+
+  /* ---------- Phone frame ---------- */
+  .phone { width: 100%; max-width: 360px; height: 740px; border-radius: 36px; overflow: hidden; position: relative; background: var(--bg); color: var(--text);
+    font-family: var(--font-ui); font-size: var(--fs, 15px); box-shadow: 0 0 0 8px #0b0b0c, 0 20px 40px rgb(0 0 0 / .25); display: flex; flex-direction: column; }
+  .screen { flex: 1; overflow: hidden; padding: 22px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .status { display: flex; justify-content: space-between; font: 600 12px var(--font-ui); color: var(--text); padding: 12px 24px 0; }
+  .eyebrow { font-size: .8em; color: var(--muted); text-transform: var(--eyebrow-case, uppercase); letter-spacing: var(--eyebrow-track, .08em); font-family: var(--font-label, var(--font-ui)); }
+  h3.title { font-family: var(--font-head); font-weight: var(--head-weight, 700); font-size: var(--title-size, 30px); line-height: 1.1; letter-spacing: var(--head-track, -0.01em); }
+  .card { background: var(--surface); border: var(--card-border, 1px solid var(--border)); border-radius: var(--r-card); padding: 16px; box-shadow: var(--shadow, none); }
+  .muted { color: var(--muted); }
+  .num { font-family: var(--font-num, var(--font-ui)); font-variant-numeric: tabular-nums; }
+
+  /* Today */
+  .summary { display: flex; align-items: center; gap: 16px; }
+  .ring { width: 74px; height: 74px; flex: none; }
+  .ring .track { stroke: var(--raised); }
+  .ring .bar { stroke: var(--primary); stroke-linecap: var(--cap, round); }
+  .ring text { fill: var(--text); font: 700 18px var(--font-num, var(--font-ui)); }
+  .rows { display: flex; flex-direction: column; gap: var(--row-gap, 10px); }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .row .ico { width: 40px; height: 40px; border-radius: var(--r-ico); display: grid; place-items: center; background: var(--raised); color: var(--text); flex: none; }
+  .row .ico.done { background: var(--success-soft); color: var(--success); }
+  .row .body { flex: 1; min-width: 0; }
+  .row .name { font-weight: 600; }
+  .row .val { font-size: .87em; color: var(--muted); }
+  .bar-h { height: var(--bar-h, 6px); background: var(--raised); border-radius: 999px; margin-top: 6px; overflow: hidden; }
+  .bar-h i { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+  .tick { color: var(--success); font-weight: 700; font-size: .87em; }
+  .btn { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: var(--r-btn); background: var(--primary); color: var(--on-primary); font-weight: 600; font-family: var(--font-btn, var(--font-ui)); border: var(--btn-border, 0); text-transform: var(--btn-case, none); letter-spacing: var(--btn-track, 0); }
+  .next h4 { font-family: var(--font-head); font-size: 1.15em; font-weight: var(--head-weight, 700); margin-bottom: 2px; }
+  .next p { margin-bottom: 12px; }
+
+  /* Bottom nav */
+  nav.tabs { display: flex; justify-content: space-around; padding: 8px 6px 22px; border-top: 1px solid var(--border); background: var(--nav-bg, var(--bg)); }
+  nav.tabs span { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); min-width: 64px; }
+  nav.tabs span.on { color: var(--nav-on, var(--primary)); font-weight: 600; }
+  svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Recording */
+  .topline { display: flex; justify-content: space-between; align-items: center; }
+  .chip { font-size: .8em; padding: 4px 10px; border-radius: 999px; background: var(--raised); color: var(--muted); }
+  .quote { font-family: var(--font-quote); font-size: 1.45em; line-height: 1.35; }
+  .timer { text-align: center; font-family: var(--font-num, var(--font-ui)); font-size: 46px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .timer small { display: block; font-size: 13px; color: var(--muted); font-weight: 400; letter-spacing: 0; font-family: var(--font-ui); }
+  .wave { display: flex; align-items: center; gap: 3px; height: 64px; justify-content: center; }
+  .wave b { width: var(--wave-w, 4px); border-radius: 2px; background: var(--wave, var(--primary)); opacity: .9; }
+  .wave b.dim { background: var(--raised); }
+  .rec-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  .rec { width: 84px; height: 84px; border-radius: 50%; background: var(--danger); display: grid; place-items: center; box-shadow: var(--rec-shadow, 0 0 0 8px var(--danger-soft)); }
+  .rec i { width: 28px; height: 28px; border-radius: var(--stop-r, 6px); background: var(--on-danger); display: block; }
+  .meter { display: flex; gap: 3px; }
+  .meter b { width: 10px; height: 6px; border-radius: 1px; background: var(--raised); }
+  .meter b.on { background: var(--success); }
+  .meter b.hot { background: #e8b931; }
+
+  /* ---------- 1. Current: Brass ---------- */
+  .t-brass { --bg:#121315; --surface:#1a1b1e; --raised:#222327; --border:#34363b; --text:#eceae5; --muted:#a8a49d; --primary:#e2a65a; --on-primary:#1a1206; --success:#86bc93; --success-soft:rgb(134 188 147/.14); --danger:#ee8274; --on-danger:#1a0b08; --danger-soft:rgb(238 130 116/.18);
+    --font-ui:Inter,sans-serif; --font-head:Inter,sans-serif; --font-quote:Lora,serif; --r-card:16px; --r-btn:12px; --r-ico:12px; }
+  .light .t-brass { --bg:#f7f5f1; --surface:#fff; --raised:#efece6; --border:#d9d4cb; --text:#1c1b19; --muted:#57534d; --primary:#8a3d0c; --on-primary:#fff; --success:#2e6a3e; --success-soft:rgb(46 106 62/.1); --danger:#b3261e; --on-danger:#fff; --danger-soft:rgb(179 38 30/.1); }
+
+  /* ---------- 2. Editorial ---------- */
+  .t-editorial { --bg:#1b1814; --surface:#221e19; --raised:#2e2922; --border:#40382e; --text:#efe6d6; --muted:#b8ab95; --primary:#e0957a; --on-primary:#1b1814; --success:#a9c79a; --success-soft:rgb(169 199 154/.13); --danger:#e2806f; --on-danger:#1b1814; --danger-soft:rgb(226 128 111/.16);
+    --font-ui:'Libre Baskerville',serif; --font-head:'Cormorant Garamond',serif; --font-quote:'Cormorant Garamond',serif; --font-label:Inter,sans-serif; --font-num:'Cormorant Garamond',serif; --font-btn:Inter,sans-serif;
+    --fs:14px; --title-size:38px; --head-weight:600; --head-track:0; --r-card:3px; --r-btn:3px; --r-ico:50%; --eyebrow-track:.18em; --card-border:0; --btn-case:uppercase; --btn-track:.12em; --bar-h:2px; --cap:butt; --stop-r:2px; }
+  .t-editorial .card { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: transparent; padding: 16px 2px; }
+  .t-editorial .quote { font-size: 1.9em; font-style: italic; }
+  .t-editorial .ring text { font-size: 24px; }
+  .light .t-editorial { --bg:#f6f0e4; --surface:#fbf6ec; --raised:#e9dfcc; --border:#d6c8ae; --text:#2a2118; --muted:#665845; --primary:#8b2e1f; --on-primary:#fff; --success:#3d6b35; --success-soft:rgb(61 107 53/.1); --danger:#a3261b; --on-danger:#fff; --danger-soft:rgb(163 38 27/.1); }
+
+  /* ---------- 3. Minimal monochrome ---------- */
+  .t-mono { --bg:#0b0b0c; --surface:#0b0b0c; --raised:#1f1f22; --border:#2c2c30; --text:#f5f5f5; --muted:#9b9ba1; --primary:#f5f5f5; --on-primary:#0b0b0c; --success:#f5f5f5; --success-soft:transparent; --danger:#ff5a4f; --on-danger:#0b0b0c; --danger-soft:rgb(255 90 79/.15);
+    --font-ui:Inter,sans-serif; --font-head:Inter,sans-serif; --font-quote:Inter,sans-serif; --title-size:44px; --head-weight:700; --head-track:-.035em; --r-card:0; --r-btn:999px; --r-ico:0; --card-border:0; --bar-h:2px; --cap:butt; --row-gap:0; --eyebrow-track:.04em; --eyebrow-case:none; }
+  .t-mono .card { padding: 14px 0; border-top: 1px solid var(--border); }
+  .t-mono .row { padding: 12px 0; border-top: 1px solid var(--border); }
+  .t-mono .row .ico { background: none; width: 24px; }
+  .t-mono .row .ico.done { border: 0; }
+  .t-mono .quote { font-weight: 600; letter-spacing: -.02em; font-size: 1.6em; }
+  .t-mono .timer { font-size: 64px; font-weight: 300; }
+  .t-mono .chip { background: none; border: 1px solid var(--border); }
+  .light .t-mono { --bg:#fff; --surface:#fff; --raised:#ececee; --border:#e1e1e4; --text:#0b0b0c; --muted:#5f5f66; --primary:#0b0b0c; --on-primary:#fff; --success:#0b0b0c; --danger:#d92d20; --on-danger:#fff; --danger-soft:rgb(217 45 32/.1); }
+
+  /* ---------- 4. Soft modern ---------- */
+  .t-soft { --bg:#191c24; --surface:#222632; --raised:#2c3142; --border:#2c3142; --text:#e9ecf5; --muted:#a5adc2; --primary:#9db2ff; --on-primary:#141826; --success:#8fd3b6; --success-soft:rgb(143 211 182/.15); --danger:#ff8f8f; --on-danger:#2a1012; --danger-soft:rgb(255 143 143/.18);
+    --font-ui:'Nunito Sans',sans-serif; --font-head:'Varela Round',sans-serif; --font-quote:'Nunito Sans',sans-serif; --head-weight:400; --r-card:22px; --r-btn:16px; --r-ico:14px; --card-border:0; --shadow:0 6px 18px rgb(0 0 0/.25); --bar-h:8px; --eyebrow-case:none; --eyebrow-track:0; --nav-bg:#222632; --stop-r:8px; }
+  .t-soft .quote { font-weight: 600; }
+  .t-soft nav.tabs { border: 0; border-radius: 24px 24px 0 0; }
+  .light .t-soft { --bg:#f1f3f9; --surface:#fff; --raised:#e7ebf5; --border:#e7ebf5; --text:#1d2233; --muted:#586078; --primary:#3d55c4; --on-primary:#fff; --success:#1f7a57; --success-soft:rgb(31 122 87/.1); --danger:#c43d3d; --on-danger:#fff; --danger-soft:rgb(196 61 61/.12); --shadow:0 6px 18px rgb(29 34 51/.08); --nav-bg:#fff; }
+
+  /* ---------- 5. High-contrast focus ---------- */
+  .t-contrast { --bg:#000; --surface:#000; --raised:#262626; --border:#8a8a8a; --text:#fff; --muted:#e0e0e0; --primary:#ffd60a; --on-primary:#000; --success:#5ee38f; --success-soft:rgb(94 227 143/.18); --danger:#ff6b5b; --on-danger:#000; --danger-soft:rgb(255 107 91/.25);
+    --font-ui:'Atkinson Hyperlegible',sans-serif; --font-head:'Atkinson Hyperlegible',sans-serif; --font-quote:'Atkinson Hyperlegible',sans-serif; --fs:17px; --title-size:34px; --r-card:12px; --r-btn:12px; --r-ico:10px; --card-border:2px solid var(--border); --bar-h:10px; --wave-w:6px; }
+  .t-contrast .btn { min-height: 56px; font-size: 1.05em; }
+  .t-contrast .rec { width: 96px; height: 96px; }
+  .light .t-contrast { --bg:#fff; --surface:#fff; --raised:#e6e6e6; --border:#000; --text:#000; --muted:#262626; --primary:#0033cc; --on-primary:#fff; --success:#0a6b2e; --success-soft:rgb(10 107 46/.12); --danger:#b00020; --on-danger:#fff; --danger-soft:rgb(176 0 32/.12); }
+
+  /* ---------- 6. Studio ---------- */
+  .t-studio { --bg:#101214; --surface:#16191c; --raised:#22272c; --border:#2b3036; --text:#e6e9ec; --muted:#929ca6; --primary:#3ddc97; --on-primary:#062417; --success:#3ddc97; --success-soft:rgb(61 220 151/.13); --danger:#ff4d4d; --on-danger:#fff; --danger-soft:rgb(255 77 77/.2);
+    --font-ui:'IBM Plex Sans',sans-serif; --font-head:'IBM Plex Sans',sans-serif; --font-quote:'IBM Plex Sans',sans-serif; --font-num:'JetBrains Mono',monospace; --font-label:'JetBrains Mono',monospace; --head-weight:600; --title-size:28px;
+    --r-card:6px; --r-btn:6px; --r-ico:6px; --eyebrow-track:.12em; --bar-h:4px; --cap:butt; --wave:var(--primary); --wave-w:3px; --stop-r:3px;
+    --rec-shadow:0 0 0 6px #22272c, 0 0 0 7px #3a4148, 0 0 24px rgb(255 77 77/.45); }
+  .t-studio .timer { font-size: 52px; color: var(--primary); }
+  .t-studio .chip { font-family: 'JetBrains Mono', monospace; border-radius: 4px; }
+  .light .t-studio { --bg:#eef0f2; --surface:#fff; --raised:#dfe3e7; --border:#cfd4da; --text:#15181b; --muted:#535c66; --primary:#0f7a50; --on-primary:#fff; --success:#0f7a50; --success-soft:rgb(15 122 80/.1); --danger:#c62828; --on-danger:#fff; --danger-soft:rgb(198 40 40/.12);
+    --rec-shadow:0 0 0 6px #dfe3e7, 0 0 0 7px #b8bfc7; }
+</style>
+</head>
+<body>
+  <div class="intro">
+    <h1>Orator design options</h1>
+    <p>Six looks for the same app. Each shows the Today screen and the recording screen at phone size. Only the look changes: screens, buttons and features stay as they are. Switch between dark and light to see both versions.</p>
+    <div class="switch" role="group" aria-label="Colour mode">
+      <button type="button" aria-pressed="true" data-mode="dark">Dark</button>
+      <button type="button" aria-pressed="false" data-mode="light">Light</button>
+    </div>
+  </div>
+  <div id="options"></div>
+
+<script>
+const I = {
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  mic: '<path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+}
+const icon = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`
+const nav = (on) => `<nav class="tabs">${[['home','Today'],['mic','Speak'],['pen','Journal'],['book','Read']].map(([i,l]) => `<span class="${l===on?'on':''}">${icon(i)}${l}</span>`).join('')}</nav>`
+const status = '<div class="status"><span class="num">9:41</span><span>●●● ▮</span></div>'
+const C = 2 * Math.PI * 30
+
+function today() {
+  return `<div class="phone">${status}<div class="screen">
+    <div><p class="eyebrow">Friday, October 30</p><h3 class="title">Today</h3></div>
+    <div class="card summary">
+      <svg class="ring" viewBox="0 0 74 74" role="img" aria-label="1 of 3 done"><circle class="track" cx="37" cy="37" r="30" fill="none" stroke-width="7"/><circle class="bar" cx="37" cy="37" r="30" fill="none" stroke-width="7" stroke-dasharray="${C/3} ${C}" transform="rotate(-90 37 37)"/><text x="37" y="43" text-anchor="middle">1/3</text></svg>
+      <div><p class="eyebrow">Daily progress</p><p style="font-weight:600">2 targets left today</p></div>
+    </div>
+    <div class="card rows">
+      <div class="row"><span class="ico">${icon('mic')}</span><div class="body"><p class="name">Articulation</p><p class="val num">12 / 30 min</p><div class="bar-h"><i style="width:40%"></i></div></div></div>
+      <div class="row"><span class="ico done">${icon('check')}</span><div class="body"><p class="name">Journal</p><p class="tick">Done</p></div></div>
+      <div class="row"><span class="ico">${icon('book')}</span><div class="body"><p class="name">Reading</p><p class="val num">4 / 10 pages</p><div class="bar-h"><i style="width:40%"></i></div></div></div>
+    </div>
+    <div class="card next"><p class="eyebrow">Up next</p><h4>Articulation practice</h4><p class="muted">18 minutes left today.</p><span class="btn">Continue session</span></div>
+  </div>${nav('Today')}</div>`
+}
+
+function recording() {
+  const bars = Array.from({ length: 34 }, (_, i) => {
+    const h = 10 + Math.round(Math.abs(Math.sin(i * 1.7) * 38 + Math.sin(i * .45) * 12))
+    return `<b class="${i > 25 ? 'dim' : ''}" style="height:${Math.min(h, 60)}px"></b>`
+  }).join('')
+  const meter = Array.from({ length: 12 }, (_, i) => `<b class="${i < 7 ? 'on' : i < 9 ? 'hot' : ''}"></b>`).join('')
+  return `<div class="phone">${status}<div class="screen">
+    <div class="topline"><p class="eyebrow">Task 2 of 6</p><span class="chip num">Session 12:40</span></div>
+    <h3 class="title" style="font-size:calc(var(--title-size,30px) * .8)">Unexpected questions</h3>
+    <div class="card"><p class="eyebrow" style="margin-bottom:8px">Question 1 of 2</p><p class="quote">What makes someone trustworthy?</p></div>
+    <div class="rec-wrap">
+      <p class="timer">0:42<small>of 1:30 · recording</small></p>
+      <div class="wave" aria-hidden="true">${bars}</div>
+      <div class="meter" aria-hidden="true">${meter}</div>
+      <span class="rec" role="img" aria-label="Stop recording"><i></i></span>
+      <p class="muted" style="font-size:.85em">Tap to stop</p>
+    </div>
+  </div>${nav('Speak')}</div>`
+}
+
+const OPTIONS = [
+  ['t-brass', 'Brass (current)', 'What you have now: calm charcoal with a warm brass accent, a clean sans for the interface and a serif for prompts and transcripts.', 'Fonts: Inter + Lora · Corners: medium · Feel: calm, professional'],
+  ['t-editorial', 'Editorial', 'Like a well-set book: warm paper tones, classic serif type, thin rules instead of boxes. Fits the reading and speaking focus; feels slow and considered.', 'Fonts: Cormorant Garamond + Libre Baskerville · Corners: square · Feel: literary, quiet'],
+  ['t-mono', 'Minimal monochrome', 'Black and white only, with red kept for recording. No card boxes, just lines and very large type. The fastest to scan; nothing competes for attention.', 'Fonts: Inter · Corners: none, pill buttons · Feel: stark, precise'],
+  ['t-soft', 'Soft modern', 'Rounded cards with gentle shadows and a soft periwinkle accent. Friendlier and more relaxed while staying serious.', 'Fonts: Varela Round + Nunito Sans · Corners: large · Feel: warm, approachable'],
+  ['t-contrast', 'High-contrast focus', 'Pure black and white with bright yellow actions, bigger text and thick outlines. Built for readability in sunlight and one-handed use.', 'Fonts: Atkinson Hyperlegible (made for legibility) · Corners: medium · Feel: bold, clear'],
+  ['t-studio', 'Studio', 'Inspired by recording equipment: dark panels, monospaced numbers, a green level meter and a hardware-style record button. Makes Speak feel like a practice studio.', 'Fonts: IBM Plex Sans + JetBrains Mono · Corners: small · Feel: technical, focused'],
+]
+
+document.getElementById('options').innerHTML = OPTIONS.map(([cls, name, desc, spec], i) => `
+  <section class="option" aria-labelledby="o${i}">
+    <div class="option-head"><span class="num">${i + 1}</span><h2 id="o${i}">${name}</h2></div>
+    <p class="option-desc">${desc}</p>
+    <p class="option-spec">${spec}</p>
+    <div class="phones ${cls}">${today()}${recording()}</div>
+  </section>`).join('')
+
+document.querySelectorAll('.switch button').forEach((b) => b.addEventListener('click', () => {
+  const light = b.dataset.mode === 'light'
+  document.body.classList.toggle('light', light)
+  document.body.classList.toggle('dark-page', !light)
+  document.querySelectorAll('.switch button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+}))
+document.body.classList.add('dark-page')
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 
@@ -33,6 +34,29 @@ export function loadClipCatalogue(): Promise<ClipCatalogue | null> {
     if (!c) catalogue = null // retry next time (offline on first try)
   })
   return catalogue
+}
+
+/** The built-in speeches, each with its clips in order, plus the clip scheduled for today. */
+export function useBuiltInSpeeches() {
+  const [speeches, setSpeeches] = useState<{ speaker: string; title: string; clips: BuiltInClip[] }[] | null>()
+  useEffect(() => {
+    let cancelled = false
+    void loadClipCatalogue().then((cat) => {
+      if (cancelled) return
+      if (!cat) return setSpeeches(null)
+      const byTitle = new Map<string, { speaker: string; title: string; clips: BuiltInClip[] }>()
+      for (const c of cat.clips) {
+        const key = `${c.speaker}\u0000${c.title}`
+        if (!byTitle.has(key)) byTitle.set(key, { speaker: c.speaker, title: c.title, clips: [] })
+        byTitle.get(key)!.clips.push(c)
+      }
+      setSpeeches([...byTitle.values()].sort((a, b) => a.speaker.localeCompare(b.speaker) || a.title.localeCompare(b.title)))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return speeches
 }
 
 export async function findClip(id: string) {
