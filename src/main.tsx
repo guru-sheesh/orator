@@ -17,6 +17,7 @@ import SpeakHome from './screens/speak/SpeakHome'
 import TaskScreen from './screens/speak/TaskScreen'
 import FeedbackScreen from './screens/speak/FeedbackScreen'
 import TalksScreen from './screens/speak/TalksScreen'
+import CompareScreen from './screens/speak/CompareScreen'
 import { LibraryEdit, LibraryImport, LibraryList } from './screens/speak/Library'
 
 const router = createBrowserRouter([
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: 'speak/library/:id', element: <LibraryEdit /> },
       { path: 'speak/attempt/:id', element: <FeedbackScreen /> },
       { path: 'speak/talks', element: <TalksScreen /> },
+      { path: 'speak/compare/:id', element: <CompareScreen /> },
       { path: 'speak/:task', element: <TaskScreen /> },
       { path: 'journal', element: <Journal /> },
       { path: 'journal/history', element: <JournalHistory /> },

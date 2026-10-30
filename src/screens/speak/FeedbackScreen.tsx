@@ -10,6 +10,7 @@ import { AttemptPlayer } from '../../components/recording'
 import { PromptRecorder } from '../../components/PromptRecorder'
 import { buttonClass, Card, cx, iconButtonClass, Label } from '../../components/ui'
 import { NotFound } from '../Placeholder'
+import { useSiblingAttempts } from './CompareScreen'
 
 /** Coaching for one attempt, in the order of CLAUDE.md §10, then the retry. */
 export default function FeedbackScreen() {
@@ -17,6 +18,7 @@ export default function FeedbackScreen() {
   const attempt = useAttempt(Number(id))
   const session = useSession(attempt?.sessionId)
   const recording = useLiveQuery(async () => (attempt?.id ? ((await db.recordings.get(attempt.id)) ?? null) : null), [attempt?.id])
+  const siblings = useSiblingAttempts(attempt)
 
   if (attempt === undefined) return null
   if (attempt === null) return <NotFound />
@@ -60,6 +62,13 @@ export default function FeedbackScreen() {
             startLabel="Start retry"
           />
         </Card>
+      )}
+
+      {siblings && siblings.length > 1 && (
+        <Link to={`/speak/compare/${attempt.id}`} className={buttonClass.primary}>
+          Compare attempt {siblings[0].attemptNumber} with {siblings.at(-1)!.attemptNumber}
+          <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
+        </Link>
       )}
     </>
   )
