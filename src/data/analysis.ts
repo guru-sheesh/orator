@@ -5,6 +5,7 @@ import type { CoachRequest, FillerPosition, SpeechAnalysis } from '../lib/analys
 import type { SpeechMetrics } from '../lib/metrics'
 import type { TranscriptWord } from '../lib/transcribe'
 import { requestFeedback } from './feedback'
+import { speakerHistory } from './trends'
 
 /** Shadowing is assessed against the clip; only independent delivery gets language analysis. */
 export function shouldAnalyse(a: Pick<SpeechAttempt, 'task' | 'stage'>) {
@@ -77,6 +78,7 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
       reference: await referenceFor(a),
       transcript: encodeTranscript(a.words, a.metrics),
       metrics: describeMetrics(a.metrics),
+      history: await speakerHistory(),
     }
     const res = await fetch('/api/coach', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }).catch(() => null)
     const body = res ? await res.json().catch(() => ({})) : { error: 'offline' }

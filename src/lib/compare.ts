@@ -34,15 +34,15 @@ export function dimensions(a: SpeechAttempt) {
   const an = a.analysis!
   const m = a.metrics!
   return {
-    fillers: an.fillers.length + an.soundFillers.length,
-    restarts: an.restarts.length,
-    hesitations: m.pauses.filter((p) => p.kind === 'hesitation' || p.kind === 'word-search').length,
-    repeated: an.repetitions.filter((r) => !r.deliberate).length,
-    grammar: an.grammar.length,
-    sentenceIssues: an.sentenceIssues.length,
-    paceVariation: m.paceVariation,
+    fillers: (an.fillers?.length ?? 0) + (an.soundFillers?.length ?? 0),
+    restarts: an.restarts?.length ?? 0,
+    hesitations: (m.pauses ?? []).filter((p) => p.kind === 'hesitation' || p.kind === 'word-search').length,
+    repeated: (an.repetitions ?? []).filter((r) => !r.deliberate).length,
+    grammar: an.grammar?.length ?? 0,
+    sentenceIssues: an.sentenceIssues?.length ?? 0,
+    paceVariation: m.paceVariation ?? null,
     wpm: m.wpm,
-    mainPoint: an.organisation.mainPoint,
+    mainPoint: an.organisation?.mainPoint ?? 'missing',
     missed: an.content?.missed.length ?? null,
   }
 }

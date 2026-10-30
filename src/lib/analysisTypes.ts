@@ -55,6 +55,8 @@ export interface CoachRequest {
   /** Transcript with word indices and pause/sound markers, e.g. "0:So 1:the <pause 1.2s> 2:main". */
   transcript: string
   metrics: string
+  /** The speaker's habitual fillers and recurring weakness, learned from past answers (§5A, §12). */
+  history?: string
 }
 
 const str = { type: 'string' }
@@ -107,6 +109,7 @@ export interface FeedbackRequest {
   /** Compact summary of the analysis (priority, fillers, structure…). */
   analysis: string
   talks: { id: string; title: string; speaker: string; tags: string[]; notice: string }[]
+  history?: string
 }
 
 export const FEEDBACK_SCHEMA = obj({

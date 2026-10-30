@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './styles/tokens.css'
 import { AppShell } from './components/AppShell'
+import { RouteError } from './components/RouteError'
 import Today from './screens/Today'
 import Settings from './screens/Settings'
 import Progress from './screens/Progress'
@@ -22,6 +23,7 @@ import { LibraryEdit, LibraryImport, LibraryList } from './screens/speak/Library
 const router = createBrowserRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <Today /> },
       { path: 'speak', element: <SpeakHome /> },

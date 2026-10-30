@@ -55,7 +55,7 @@ interface Prompt {
 }
 
 function analysisPrompt(r: CoachRequest): Prompt {
-  const user = [`TASK: ${r.task}. ${TASK_NOTES[r.task]}`, `PROMPT: ${r.prompt}`, r.reference ? `REFERENCE:\n${r.reference}` : '', `METRICS: ${r.metrics}`, `TRANSCRIPT:\n${r.transcript}`]
+  const user = [`TASK: ${r.task}. ${TASK_NOTES[r.task]}`, `PROMPT: ${r.prompt}`, r.reference ? `REFERENCE:\n${r.reference}` : '', `METRICS: ${r.metrics}`, r.history ? `SPEAKER HISTORY (use to recognise habitual fillers; judge this answer on its own): ${r.history}` : '', `TRANSCRIPT:\n${r.transcript}`]
   return { system: ANALYSIS_SYSTEM, user: user.filter(Boolean).join('\n\n'), schema: ANALYSIS_SCHEMA }
 }
 
@@ -67,6 +67,7 @@ function feedbackPrompt(r: FeedbackRequest): Prompt {
     r.reference ? `REFERENCE:\n${r.reference}` : '',
     `TRANSCRIPT:\n${r.transcript}`,
     `ANALYSIS:\n${r.analysis}`,
+    r.history ? `SPEAKER HISTORY (mention a recurring weakness only if this answer shows it): ${r.history}` : '',
     `CANDIDATE TALKS:\n${talks || '(none)'}`,
   ]
   return { system: FEEDBACK_SYSTEM, user: user.filter(Boolean).join('\n\n'), schema: FEEDBACK_SCHEMA }

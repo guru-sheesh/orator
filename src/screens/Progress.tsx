@@ -1,6 +1,8 @@
 import { Link, useSearchParams } from 'react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePeriodProgress } from '../data/progress'
+import { TECHNIQUE_FOCUS, useTrends, weekLabel, type WeekPoint } from '../data/trends'
+import { TrendChart } from '../components/TrendChart'
 import { ConsistencyCalendar } from '../components/ConsistencyCalendar'
 import { Card, cx, iconButtonClass, Label, Segmented } from '../components/ui'
 import {
@@ -109,12 +111,7 @@ export default function Progress() {
             <ConsistencyCalendar days={data.days} />
           </Card>
 
-          <Card>
-            <Label>Speech trends</Label>
-            <p className="text-muted">
-              Filler, restart, hesitation and pace trends appear here once your recorded sessions have been analysed.
-            </p>
-          </Card>
+          <SpeechTrends />
         </>
       )}
     </>
@@ -140,5 +137,76 @@ function Stat({ label, value, done }: { label: string; value: string; done?: boo
       <span>{label}</span>
       <span className={cx('font-semibold tabular-nums', done && 'text-success')}>{value}</span>
     </div>
+  )
+}
+
+
+/** Long-term articulation trends (CLAUDE.md §12, §16): 8 weeks, first attempts only, no single score. */
+function SpeechTrends() {
+  const t = useTrends()
+  if (!t) return null
+  if (t.totalAnswers < 3)
+    return (
+      <Card>
+        <Label>Speech trends</Label>
+        <p className="text-muted">
+          Trends for fillers, hesitations, restarts and structure appear after {3 - t.totalAnswers} more analysed {3 - t.totalAnswers === 1 ? 'answer' : 'answers'}.
+        </p>
+      </Card>
+    )
+
+  const pts = (k: keyof WeekPoint) => t.weeks.map((w) => ({ label: weekLabel(w.weekStart), value: w[k] as number | null }))
+  const focus = t.recurring ? TECHNIQUE_FOCUS[t.recurring.tag] : null
+
+  return (
+    <>
+      {focus && (
+        <Card>
+          <Label>Recurring weakness · last 2 weeks</Label>
+          <p className="text-title font-semibold">{focus.label}</p>
+          <p className="text-muted">{focus.tip}</p>
+          <p className="text-caption text-subtle">Flagged in {t.recurring!.share}% of your answers.</p>
+        </Card>
+      )}
+
+      <Card className="gap-5">
+        <div className="flex items-baseline justify-between gap-2">
+          <Label>Speech trends · 8 weeks</Label>
+          <p className="text-caption text-subtle tabular-nums">{t.totalAnswers} answers</p>
+        </div>
+        <TrendChart title="Fillers per minute" unit="per minute" points={pts('fillersPerMin')} />
+        <TrendChart title="Hesitations per answer" unit="per answer" points={pts('hesitationsPerAnswer')} />
+        <TrendChart title="Restarts per answer" unit="per answer" points={pts('restartsPerAnswer')} />
+        <TrendChart title="Main point stated early" unit="of answers" points={pts('mainPointEarly')} lowerIsBetter={false} inPoints format={(v) => `${v}%`} />
+        <TrendChart title="Pace variation" unit="(lower is steadier)" points={pts('paceVariation')} inPoints format={(v) => `${v}%`} />
+        <p className="text-caption text-subtle">First attempts only, so retries don’t flatter the trend. Each dimension is tracked separately; there is no overall score.</p>
+      </Card>
+
+      {(t.topFillers.length > 0 || t.retries.pairs > 0) && (
+        <Card>
+          {t.topFillers.length > 0 && (
+            <div>
+              <Label>Your most common fillers</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {t.topFillers.map((f) => (
+                  <span key={f.text} className="rounded-sm bg-raised px-2.5 py-1 text-sm tabular-nums">
+                    “{f.text}” <span className="text-subtle">× {f.count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {t.retries.pairs > 0 && (
+            <div className={cx(t.topFillers.length > 0 && 'border-t border-border pt-3')}>
+              <Label>Retries</Label>
+              <p className="mt-1 text-muted">
+                Of {t.retries.pairs} {t.retries.pairs === 1 ? 'retry' : 'retries'}, {t.retries.fillersImproved} had fewer fillers, {t.retries.hesitationsImproved} had fewer hesitations, and{' '}
+                {t.retries.mainPointImproved} stated the main point earlier.
+              </p>
+            </div>
+          )}
+        </Card>
+      )}
+    </>
   )
 }

@@ -4,6 +4,7 @@ import builtInTalks from '../content/talks.json'
 import type { CoachingFeedback, FeedbackRequest, SpeechAnalysis } from '../lib/analysisTypes'
 import { cleanEvidence, encodeTranscript } from './analysis'
 import { loadPassages, WORDS } from './speech'
+import { speakerHistory } from './trends'
 
 export const BUILT_IN_TALKS = builtInTalks as Talk[]
 
@@ -75,6 +76,7 @@ export async function requestFeedback(attemptId: number): Promise<void> {
       transcript: encodeTranscript(a.words, a.metrics),
       analysis: summarise(a.analysis, a),
       talks: talks.map(({ id, title, speaker, tags, notice }) => ({ id, title, speaker, tags, notice })),
+      history: await speakerHistory(),
     }
     const res = await fetch('/api/coach', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }).catch(() => null)
     const body = res ? await res.json().catch(() => ({})) : { error: 'offline' }

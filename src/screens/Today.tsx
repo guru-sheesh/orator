@@ -1,12 +1,15 @@
 import { Link } from 'react-router'
 import { BookOpen, ChartNoAxesColumn, Check, ChevronRight, HardDriveDownload, Mic, NotebookPen, Settings, type LucideIcon } from 'lucide-react'
 import { useBackupDue, useDailySummary } from '../data/daily'
+import { TECHNIQUE_FOCUS, useTrends } from '../data/trends'
 import { formatLongDate, toDateKey } from '../lib/date'
 import { buttonClass, Card, cx, iconButtonClass, Label, PageHeader, ProgressBar, ProgressRing } from '../components/ui'
 
 export default function Today() {
   const summary = useDailySummary(toDateKey())
   const backupDue = useBackupDue()
+  const trends = useTrends()
+  const focus = trends?.recurring ? TECHNIQUE_FOCUS[trends.recurring.tag] : null
 
   // Dexie resolves within a frame; render nothing rather than a misleading 0/3.
   if (!summary) return null
@@ -77,6 +80,19 @@ export default function Today() {
           <Link to={next.to} className={cx(buttonClass.primary, 'w-full')}>
             {next.cta}
           </Link>
+        </Card>
+      )}
+
+      {focus && (
+        <Card>
+          <div className="flex items-center justify-between gap-2">
+            <Label>Focus this week</Label>
+            <Link to="/progress" className={cx(buttonClass.ghost, 'min-h-11 text-sm')}>
+              Trends
+            </Link>
+          </div>
+          <p className="font-medium">{focus.label}</p>
+          <p className="text-sm text-muted">{focus.tip}</p>
         </Card>
       )}
 
