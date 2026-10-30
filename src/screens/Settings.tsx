@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ChevronLeft, ChevronRight, Download, FileAudio, Trash2, Upload } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, FileAudio, ShieldAlert, Trash2, Upload } from 'lucide-react'
 import { updateSettings, updateTargets, useSettings } from '../data/daily'
 import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData } from '../data/backup'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Card, cx, iconButtonClass, Label, ProgressBar, Segmented } from '../components/ui'
 import { useAzureUsage } from '../data/transcription'
+import { useCoachStatus } from '../data/analysis'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
 
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
@@ -26,6 +27,7 @@ type Pending = { kind: 'delete' } | { kind: 'import'; file: File } | null
 export default function Settings() {
   const settings = useSettings()
   const usage = useAzureUsage()
+  const coach = useCoachStatus()
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [pending, setPending] = useState<Pending>(null)
   const [busy, setBusy] = useState(false)
@@ -118,6 +120,25 @@ export default function Settings() {
           </p>
         </Card>
       )}
+
+      <Card>
+        <Label>AI coach</Label>
+        <div className="flex items-center justify-between gap-3">
+          <span>Provider</span>
+          <span className="text-muted">
+            {coach === undefined ? 'Checking…' : !coach ? 'Unavailable offline' : `${coach.provider === 'claude' ? 'Claude' : 'Gemini'}${coach.configured ? '' : ' · key missing'}`}
+          </span>
+        </div>
+        <p className="flex gap-2 rounded-md bg-info-soft px-3 py-2.5 text-sm">
+          <ShieldAlert size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
+          <span>
+            {coach?.provider === 'claude'
+              ? 'Only transcripts and timing numbers are sent for analysis, never audio or journal entries.'
+              : 'Gemini’s free tier may use what you send to improve Google’s products. Only transcripts and timing numbers are sent, never audio or journal entries.'}{' '}
+            To switch provider, change <code className="font-mono text-xs">AI_PROVIDER</code> and <code className="font-mono text-xs">AI_API_KEY</code> in Netlify’s environment variables.
+          </span>
+        </p>
+      </Card>
 
       <Card className="gap-1">
         <Label>Speaking practice</Label>

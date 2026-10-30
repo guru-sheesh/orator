@@ -4,6 +4,7 @@ import type { TranscriptWord } from '../lib/transcribe'
 import { useAttempt } from '../data/speech'
 import { transcribeAttempt } from '../data/transcription'
 import { buttonClass, cx } from './ui'
+import { analysisMarks, AnalysisPanel } from './Analysis'
 
 /** Gaps between words at least this long are shown as pauses (silence is not an error, §5B). */
 const PAUSE_SEC = 0.7
@@ -20,8 +21,30 @@ export function wordsPerMinute(words: TranscriptWord[]) {
   return minutes > 0 ? Math.round(words.length / minutes) : null
 }
 
-/** Transcript with pause markers and gently flagged unclear words. */
-export function TranscriptText({ words, highlightAt, className }: { words: TranscriptWord[]; highlightAt?: number; className?: string }) {
+/**
+ * Transcript with pause markers and gently flagged unclear words. With analysis,
+ * fillers get a dotted underline and dropped filler sounds show as "(um?)".
+ */
+export function TranscriptText({
+  words,
+  highlightAt,
+  className,
+  fillers,
+  soundsBefore,
+}: {
+  words: TranscriptWord[]
+  highlightAt?: number
+  className?: string
+  fillers?: Set<number>
+  /** Word index → number of likely filler sounds just before it (words.length = at the end). */
+  soundsBefore?: Map<number, number>
+}) {
+  const sound = (n: number) =>
+    Array.from({ length: n }, (_, k) => (
+      <span key={`s${k}`} className="mx-0.5 font-sans text-xs text-danger" title="A sound that was likely a filler such as “um”">
+        (um?)
+      </span>
+    ))
   return (
     <p className={cx('font-serif text-transcript', className)}>
       {words.map((w, i) => {
@@ -30,6 +53,7 @@ export function TranscriptText({ words, highlightAt, className }: { words: Trans
         const current = highlightAt !== undefined && highlightAt >= w.start && highlightAt < w.end + 0.05
         return (
           <Fragment key={i}>
+            {sound(soundsBefore?.get(i) ?? 0)}
             {gap >= PAUSE_SEC && (
               <span
                 className={cx(
@@ -47,14 +71,17 @@ export function TranscriptText({ words, highlightAt, className }: { words: Trans
                 highlightAt !== undefined && !current && w.end <= highlightAt && 'text-text',
                 highlightAt !== undefined && !current && w.start > highlightAt && 'text-muted',
                 unclear && 'underline decoration-info decoration-dashed decoration-[1.5px] underline-offset-4',
+                fillers?.has(i) && 'text-danger underline decoration-danger decoration-dotted decoration-2 underline-offset-4',
               )}
-              title={unclear ? 'This word may be hard to understand' : undefined}
+              title={fillers?.has(i) ? 'Filler' : unclear ? 'This word may be hard to understand' : undefined}
             >
               {w.text}
             </span>
+            {w.punct}
           </Fragment>
         )
       })}
+      {sound(soundsBefore?.get(words.length) ?? 0)}
     </p>
   )
 }
@@ -86,12 +113,17 @@ export function AttemptTranscript({ attemptId }: { attemptId: number }) {
   const wpm = wordsPerMinute(words)
   const pauses = words.filter((w, i) => i > 0 && w.start - words[i - 1].end >= PAUSE_SEC).length
   const unclear = words.filter((w) => w.accuracy !== undefined && w.accuracy < UNCLEAR_ACCURACY).length
+  const marks = analysisMarks(attempt)
 
   return (
     <div className="flex flex-col gap-2" aria-live="polite">
       <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Transcript</p>
-      {words.length ? <TranscriptText words={words} className="text-base" /> : <p className="text-muted">No speech was recognised in this recording.</p>}
-      {words.length > 0 && (
+      {words.length ? (
+        <TranscriptText words={words} className="text-base" fillers={marks.fillers} soundsBefore={marks.soundsBefore} />
+      ) : (
+        <p className="text-muted">No speech was recognised in this recording.</p>
+      )}
+      {words.length > 0 && !attempt.analysis && (
         <div className="flex flex-wrap gap-2 text-caption">
           {wpm && <span className="rounded-sm bg-surface px-2 py-1 text-muted tabular-nums">{wpm} words/min</span>}
           <span className="rounded-sm bg-info-soft px-2 py-1 text-info tabular-nums">
@@ -104,6 +136,7 @@ export function AttemptTranscript({ attemptId }: { attemptId: number }) {
           )}
         </div>
       )}
+      <AnalysisPanel attempt={attempt} />
     </div>
   )
 }

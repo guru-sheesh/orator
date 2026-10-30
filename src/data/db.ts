@@ -1,5 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Transcription, TranscriptWord } from '../lib/transcribe'
+import type { SpeechMetrics } from '../lib/metrics'
+import type { SpeechAnalysis } from '../lib/analysisTypes'
 
 /** Local calendar date, `YYYY-MM-DD`. All daily records key on this. */
 export type DateKey = string
@@ -93,6 +95,10 @@ export interface SpeechAttempt {
   words?: TranscriptWord[]
   /** Azure utterance scores, for analysis only; never shown as a headline score (§0.5). */
   pronunciation?: Transcription['scores']
+  metrics?: SpeechMetrics
+  analysisStatus?: 'pending' | 'done' | 'failed' | 'skipped'
+  analysisError?: string
+  analysis?: SpeechAnalysis
   createdAt: number
 }
 

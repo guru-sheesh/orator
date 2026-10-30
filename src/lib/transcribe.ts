@@ -11,6 +11,8 @@ export interface TranscriptWord {
   end: number
   /** Azure pronunciation accuracy 0-100. Used only to flag possibly unclear words, never as a score. */
   accuracy?: number
+  /** Punctuation Azure placed after this word in its display text (sentence and clause boundaries). */
+  punct?: string
 }
 
 export interface Transcription {
@@ -148,11 +150,26 @@ export async function transcribe(blob: Blob, opts: { referenceText?: string; ran
   for (const r of results) {
     const best = r.NBest?.[0]
     if (!best) continue
-    parts.push(best.Display ?? r.DisplayText ?? '')
+    const display = best.Display ?? r.DisplayText ?? ''
+    parts.push(display)
+    const tokens = display.split(/\s+/).filter(Boolean)
+    let t = 0
     for (const w of best.Words ?? []) {
       // Omissions in scripted mode are words the speaker skipped: not part of what was said.
       if (w.PronunciationAssessment?.ErrorType === 'Omission') continue
-      words.push({ text: w.Word, start: w.Offset / TICKS, end: (w.Offset + w.Duration) / TICKS, accuracy: w.PronunciationAssessment?.AccuracyScore })
+      // Align with the display text to recover capitals and punctuation (sentence boundaries).
+      let text = w.Word
+      let punct: string | undefined
+      for (let look = t; look < Math.min(tokens.length, t + 3); look++) {
+        const m = tokens[look].match(/^(.*?)([.,!?;:]*)$/)!
+        if (normalise(m[1]) === normalise(w.Word)) {
+          text = m[1]
+          punct = m[2] || undefined
+          t = look + 1
+          break
+        }
+      }
+      words.push({ text, punct, start: w.Offset / TICKS, end: (w.Offset + w.Duration) / TICKS, accuracy: w.PronunciationAssessment?.AccuracyScore })
     }
     const p = best.PronunciationAssessment
     if (p) scores.push({ accuracy: p.AccuracyScore, fluency: p.FluencyScore, prosody: p.ProsodyScore, completeness: p.CompletenessScore })
@@ -169,3 +186,5 @@ export async function transcribe(blob: Blob, opts: { referenceText?: string; ran
     audioSeconds: seconds,
   }
 }
+
+const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9']/g, '')

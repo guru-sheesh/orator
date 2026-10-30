@@ -1,6 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type SpeechAttempt } from './db'
 import { transcribe, TranscriptionError } from '../lib/transcribe'
+import { profileAudio } from '../lib/audioAnalysis'
+import { computeMetrics } from '../lib/metrics'
+import { analyseAttempt, processPendingAnalyses, shouldAnalyse } from './analysis'
 
 /** Azure F0 includes 5 hours a month; stop a little short so a long answer can't tip it over. */
 export const MONTHLY_LIMIT_SECONDS = 5 * 3600
@@ -69,13 +72,19 @@ export async function transcribeAttempt(attemptId: number): Promise<void> {
     await db.speechAttempts.update(attemptId, { transcription: 'pending', transcriptionError: undefined })
     const result = await transcribe(recording.blob, { referenceText: await referenceFor(attempt) })
     await addUsage(result.audioSeconds)
+    // Loudness envelope finds voiced sounds Azure dropped (often "um"); needs the audio, so do it before discarding it.
+    const envelope = await profileAudio(recording.blob).then((p) => p.envelope).catch(() => undefined)
+    const analyse = shouldAnalyse(attempt) && result.words.length > 0
     await db.speechAttempts.update(attemptId, {
       transcription: 'done',
       transcript: result.text,
       words: result.words,
       pronunciation: result.scores,
+      metrics: computeMetrics(result.words, result.audioSeconds, envelope),
+      analysisStatus: analyse ? 'pending' : 'skipped',
     })
     if (!(settings ?? DEFAULT_SETTINGS).keepRecordings) await db.recordings.delete(attemptId)
+    if (analyse) void analyseAttempt(attemptId)
   } catch (err) {
     const message = err instanceof TranscriptionError ? err.message : 'Transcription failed. It will retry later.'
     await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message })
@@ -92,6 +101,7 @@ export async function processPendingTranscriptions() {
     if (!(await db.recordings.get(a.id!))) continue
     await transcribeAttempt(a.id!)
   }
+  await processPendingAnalyses()
 }
 
 /** Transcribes a shadowing clip once and caches it on the source. */
