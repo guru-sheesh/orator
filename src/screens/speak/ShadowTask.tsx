@@ -202,7 +202,7 @@ function ShadowStages({
           </>
         )}
 
-        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Transcribing this clip (about 30 seconds, only the first time)…</p>}
+        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Loading the transcript…</p>}
         {transcriptStatus === 'failed' && <p className="text-caption text-subtle">The clip transcript isn’t available right now; practice works without it.</p>}
         <p className="flex gap-2 text-caption text-subtle">
           <Info size={14} strokeWidth={1.75} className="mt-0.5 flex-none" aria-hidden="true" />

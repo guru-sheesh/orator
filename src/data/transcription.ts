@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type SpeechAttempt } from './db'
-import { transcribe, TranscriptionError } from '../lib/transcribe'
+import { transcribe, TranscriptionError, type TranscriptWord } from '../lib/transcribe'
 import { profileAudio } from '../lib/audioAnalysis'
 import { computeMetrics } from '../lib/metrics'
 import { analyseAttempt, processPendingAnalyses, shouldAnalyse } from './analysis'
@@ -124,10 +124,21 @@ export async function ensureClipTranscript(sourceId: number, segment: number) {
 }
 
 
-/** Transcribes a built-in clip once and caches it (whole clip, ~1 minute). */
+/**
+ * A built-in clip's transcript: the ready-made one shipped with the app
+ * (pre-transcribed with Whisper, tools/transcribe-clips.py), else Azure once.
+ */
 export async function ensureBuiltInClipTranscript(clip: BuiltInClip, blob: Blob) {
   const cached = await db.clipTranscripts.get(clip.id)
   if (cached) return cached
+  const shipped = await fetch(`/audio/transcripts/${clip.id}.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<{ text: string; words: TranscriptWord[] }>) : null))
+    .catch(() => null)
+  if (shipped?.words?.length) {
+    const entry = { clipId: clip.id, text: shipped.text, words: shipped.words }
+    await db.clipTranscripts.put(entry)
+    return entry
+  }
   if ((await usageLeft()) < clip.durationSec) return undefined
   const result = await transcribe(blob)
   await addUsage(result.audioSeconds)

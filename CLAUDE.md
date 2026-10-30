@@ -79,7 +79,9 @@ The user decided feedback does NOT need citations. Replace the source library wi
 
 - The user chose to have their downloaded speeches built into the app, publicly hosted with no access lock, after being told they are copyrighted and downloadable by anyone with the link. Kept out of search engines with `X-Robots-Tag: noindex` on `/audio/*`.
 - `tools/build-clips.ts` cuts the prepared speeches ("Speaker — Title (part x of y).m4a") into ~1-minute clips at natural pauses (skipping intros/applause and clips under 30 s) into `public/audio/clips/`, with `public/audio/clips.json` holding metadata, loudness envelopes and a fixed shuffled daily order (no speaker two days running).
-- Each practice day gets the next clip in that order (one short clip a day). Only that clip is downloaded and kept on the device; clips are excluded from the PWA precache. Each clip is transcribed once on first use. Importing your own audio remains as a fallback.
+- Each practice day gets the next clip in that order (one short clip a day). Only that clip is downloaded and kept on the device; clips are excluded from the PWA precache. Importing your own audio remains as a fallback.
+- Transcripts are pre-made locally with Whisper (`tools/transcribe-clips.py`, faster-whisper `small.en`, venv in `%LOCALAPPDATA%\orator-whisper`) into `public/audio/transcripts/<id>.json`, so no Azure time is spent on clips; Azure is only a fallback if one is missing.
+- `tools/prune-clips.ts` then drops clips that aren't the speaker (host introductions, audience Q&A) or aren't suitable to repeat aloud, renumbers them and repairs the order. Rebuild order: build-clips → transcribe-clips → prune-clips.
 
 ## 0.8 Source library: anti-fabrication rules (sections 7-9) — see 0.8a
 
