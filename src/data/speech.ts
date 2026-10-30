@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type ShadowStage, type SpeechSession, type TaskId, type TaskStatus } from './db'
 import { toDateKey } from '../lib/date'
 import { shouldTranscribe, transcribeAttempt } from './transcription'
-import { clipForNewSession } from './clips'
+import { clipForNewSession, loadClipCatalogue } from './clips'
 import words from '../content/words.json'
 import questions from '../content/questions.json'
 import impromptu from '../content/impromptu.json'
@@ -158,6 +158,22 @@ export async function startSession(): Promise<number> {
     plan: { words: w.map((x) => x.id), questions: q.map((x) => x.id), impromptu: imp.id, passage: passage?.id, shadow, clip },
     tasks: { ...EMPTY_TASKS },
   }) as Promise<number>
+}
+
+/**
+ * Gives an existing session today's built-in clip, e.g. one started before the
+ * clips were available or while the clip list couldn't load.
+ */
+export async function assignBuiltInClip(sessionId: number) {
+  const session = await db.speechSessions.get(sessionId)
+  if (!session || session.plan.clip) return session?.plan.clip
+  const cat = await loadClipCatalogue()
+  if (!cat?.order.length) return undefined
+  // Same position as a new session would get: the number of earlier practice days.
+  const earlierDays = new Set((await db.speechSessions.toArray()).map((s) => s.date).filter((d) => d < session.date)).size
+  const clip = cat.order[earlierDays % cat.order.length]
+  await db.speechSessions.update(sessionId, { 'plan.clip': clip })
+  return clip
 }
 
 /** For a session created before any audio was imported. */

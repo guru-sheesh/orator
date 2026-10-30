@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Headphones, Info } from 'lucide-react'
 import { db, type ShadowStage } from '../../data/db'
-import { assignShadow, TIMING, useAttempts } from '../../data/speech'
+import { assignBuiltInClip, assignShadow, TIMING, useAttempts } from '../../data/speech'
 import { ensureBuiltInClipTranscript, ensureClipTranscript } from '../../data/transcription'
 import { clipPromptId, decodeEnvelope, findClip, getClipAudio, useClipTranscript, type BuiltInClip } from '../../data/clips'
 import { TranscriptText } from '../../components/Transcript'
@@ -24,7 +24,40 @@ const STAGES: { value: Stage; label: string }[] = [
 ]
 
 export function ShadowTask(props: TaskProps) {
-  return props.session.plan.clip ? <BuiltInShadow {...props} clipId={props.session.plan.clip} /> : <ImportedShadow {...props} />
+  const { plan } = props.session
+  if (plan.clip) return <BuiltInShadow {...props} clipId={plan.clip} />
+  if (plan.shadow) return <ImportedShadow {...props} />
+  return <AssignClip {...props} />
+}
+
+/** A session without a clip yet (started before clips loaded): fetch today's built-in clip, else offer imported audio. */
+function AssignClip(props: TaskProps) {
+  const [state, setState] = useState<'loading' | 'failed'>('loading')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let cancelled = false
+    setState('loading')
+    assignBuiltInClip(props.session.id!)
+      .then((clip) => !cancelled && !clip && setState('failed'))
+      .catch(() => !cancelled && setState('failed'))
+    return () => {
+      cancelled = true
+    }
+  }, [props.session.id, attempt])
+
+  if (state === 'loading') return <p role="status" className="text-muted">Loading today’s clip…</p>
+  return (
+    <>
+      <Card>
+        <p className="font-semibold">Today’s clip couldn’t load</p>
+        <p className="text-muted">Check your internet connection and try again. Once downloaded, the clip stays on your phone.</p>
+        <button type="button" onClick={() => setAttempt((n) => n + 1)} className={buttonClass.primary}>
+          Try again
+        </button>
+      </Card>
+      <ImportedShadow {...props} />
+    </>
+  )
 }
 
 /** Today's built-in clip: downloaded once, then kept on the device. */
