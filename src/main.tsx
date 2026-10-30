@@ -43,7 +43,11 @@ const router = createBrowserRouter([
 ])
 
 // Finish transcriptions left over from offline use or a closed app, once the first screen is up.
-const resume = () => void import('./data/transcription').then((m) => m.processPendingTranscriptions())
+const resume = () => {
+  void import('./data/transcription').then((m) => m.processPendingTranscriptions())
+  // Have today's shadowing clip on the phone before the session even starts.
+  void Promise.all([import('./data/clips'), import('./lib/date')]).then(([c, d]) => c.prefetchTodaysClip(d.toDateKey())).catch(() => {})
+}
 if ('requestIdleCallback' in window) requestIdleCallback(resume, { timeout: 5000 })
 else setTimeout(resume, 2000)
 window.addEventListener('online', resume)

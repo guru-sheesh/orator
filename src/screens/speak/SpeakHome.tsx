@@ -1,10 +1,55 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Check, ChevronRight, Library, MonitorPlay, Repeat, SkipForward } from 'lucide-react'
+import { AudioLines, Check, ChevronRight, Library, MonitorPlay, Repeat, SkipForward } from 'lucide-react'
 import { useSettings } from '../../data/daily'
 import { nextPendingTask, startSession, TASKS, useTodaySession } from '../../data/speech'
 import { formatClock } from '../../components/recording'
+import { useTodaysClip } from '../../data/clips'
+import { useToday } from '../../hooks/useToday'
 import { buttonClass, Card, cx, iconButtonClass, Label, PageHeader, ProgressRing } from '../../components/ui'
+
+/** Today's built-in clip, shown (and downloaded) before the session starts. */
+function TodaysClip({ hasSession, sessionClip }: { hasSession: boolean; sessionClip: string | undefined }) {
+  const today = useToday()
+  const todays = useTodaysClip(today, sessionClip)
+  const navigate = useNavigate()
+  const [opening, setOpening] = useState(false)
+  if (!todays) return null
+  const { clip, ready } = todays
+
+  async function listen() {
+    setOpening(true)
+    try {
+      if (!hasSession) await startSession()
+      navigate('/speak/shadowing')
+    } finally {
+      setOpening(false)
+    }
+  }
+
+  return (
+    <Card className="gap-3">
+      <div className="flex items-center gap-3">
+        <span className="grid size-10 flex-none place-items-center rounded-md bg-primary-soft text-primary">
+          <AudioLines size={20} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <Label>Today’s clip</Label>
+          <p className="truncate font-medium">{clip.title}</p>
+          <p className="truncate text-caption text-subtle">
+            {clip.speaker} · Clip {clip.index} of {clip.of} · {formatClock(clip.durationSec * 1000)}
+          </p>
+        </div>
+      </div>
+      <p className="text-caption text-subtle" role="status">
+        {ready ? 'Downloaded. It plays even without internet.' : 'Downloading…'}
+      </p>
+      <button type="button" onClick={() => void listen()} disabled={opening} className={buttonClass.secondary}>
+        {opening ? 'Opening…' : 'Go to shadowing'}
+      </button>
+    </Card>
+  )
+}
 
 export default function SpeakHome() {
   const session = useTodaySession()
@@ -64,6 +109,8 @@ export default function SpeakHome() {
               : 'All six tasks done for today.'}
         </p>
       </Card>
+
+      <TodaysClip hasSession={!!session} sessionClip={session?.plan.clip} />
 
       <Card className="gap-0 py-2">
         {TASKS.map((t, i) => {

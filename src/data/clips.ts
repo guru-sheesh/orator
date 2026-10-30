@@ -96,6 +96,51 @@ export async function getClipAudio(clip: BuiltInClip): Promise<Blob> {
   return blob
 }
 
+/** Today's clip: the one today's session has, else the one starting a session would pick. */
+export async function todaysClip(today: string): Promise<BuiltInClip | undefined> {
+  const session = await db.speechSessions.where('date').equals(today).last()
+  if (session && !session.plan.clip) return undefined // today uses imported audio
+  const id = session?.plan.clip ?? (await clipForNewSession())
+  return id ? findClip(id) : undefined
+}
+
+/**
+ * Downloads today's clip and its ready-made transcript ahead of time, so it's
+ * on the phone before the session starts and works offline later in the day.
+ */
+export async function prefetchClip(clip: BuiltInClip) {
+  await getClipAudio(clip)
+  if (await db.clipTranscripts.get(clip.id)) return
+  const shipped = await fetch(`/audio/transcripts/${clip.id}.json`, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null)
+  if (shipped?.words?.length) await db.clipTranscripts.put({ clipId: clip.id, text: shipped.text, words: shipped.words })
+}
+
+export async function prefetchTodaysClip(today: string) {
+  if (!navigator.onLine) return
+  const clip = await todaysClip(today)
+  if (clip) await prefetchClip(clip)
+}
+
+/** Today's clip with whether it's already on the phone; it downloads in the background. */
+export function useTodaysClip(today: string, sessionClip: string | undefined) {
+  const [clip, setClip] = useState<BuiltInClip | null>()
+  useEffect(() => {
+    let cancelled = false
+    void todaysClip(today).then((c) => {
+      if (cancelled) return
+      setClip(c ?? null)
+      if (c && navigator.onLine) void prefetchClip(c).catch(() => {})
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [today, sessionClip])
+  const ready = useLiveQuery(async () => (clip ? !!(await db.clipAudio.get(clip.id)) : false), [clip?.id])
+  return clip === undefined ? undefined : clip && { clip, ready: !!ready }
+}
+
 export function useClipTranscript(clipId: string | undefined) {
   return useLiveQuery(async () => (clipId ? ((await db.clipTranscripts.get(clipId)) ?? null) : null), [clipId])
 }
