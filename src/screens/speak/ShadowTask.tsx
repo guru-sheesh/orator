@@ -53,7 +53,7 @@ export function ShadowTask({ session, finish }: TaskProps) {
   }
 
   const segment = source.segments[plan.segment] ?? source.segments[0]
-  return <ShadowStages session={session} finish={finish} title={source.title} speaker={source.speaker} blob={audio.blob} envelope={source.envelope} segment={segment} segmentLabel={`Clip ${plan.segment + 1} of ${source.segments.length}`} />
+  return <ShadowStages session={session} finish={finish} title={source.title} speaker={source.speaker} blob={audio.blob} envelope={source.envelope} segment={segment} segmentLabel={`Clip ${plan.segment + 1} of ${source.segments.length}`} clipWords={source.clipTranscripts?.[plan.segment]?.words} />
 }
 
 function ShadowStages({
@@ -119,7 +119,7 @@ function ShadowStages({
             <Label aria-live="polite">
               Phrase {phraseIndex + 1} of {phrases.length}
             </Label>
-            <ClipPlayer blob={blob} envelope={envelope} range={phrase} label={`Phrase ${phraseIndex + 1}`} />
+            <ClipPlayer blob={blob} envelope={envelope} range={phrase} label={`Phrase ${phraseIndex + 1}`} transcript={transcript} />
             <p className="text-sm text-muted">Play the phrase, then record yourself repeating it with the same rhythm and pauses.</p>
           </>
         )}

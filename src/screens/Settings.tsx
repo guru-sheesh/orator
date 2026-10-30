@@ -18,7 +18,7 @@ function describeExport(at?: number) {
 
 function formatHours(seconds: number) {
   const m = Math.round(seconds / 60)
-  return m < 60 ? `m` : `h m`
+  return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`
 }
 
 type Pending = { kind: 'delete' } | { kind: 'import'; file: File } | null
