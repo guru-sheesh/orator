@@ -6,7 +6,7 @@ import { db, type ShadowSource } from '../../data/db'
 import { MAX_IMPORT_SECONDS, profileAudio, splitSegments } from '../../lib/audioAnalysis'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { formatClock } from '../../components/recording'
-import { buttonClass, Card, iconButtonClass, Label } from '../../components/ui'
+import { buttonClass, Card, cx, iconButtonClass, Label } from '../../components/ui'
 import { NotFound } from '../Placeholder'
 
 const RIGHTS = 'personal use, user-provided'
@@ -68,71 +68,145 @@ export function LibraryList() {
 
 type Analysed = { file: File; durationSec: number; envelope: Uint8Array; segments: ShadowSource['segments'] }
 
+/** "Speaker — Title (part 1 of 2).m4a" → speaker and title; other names become the title. */
+export function metaFromFileName(name: string): Meta {
+  const base = name.replace(/\.[^.]+$/, '').trim()
+  const [speaker, ...rest] = base.split(/\s+[—–]\s+/)
+  return rest.length ? { speaker: speaker.trim(), title: rest.join(' – ').trim(), date: '', source: '' } : { speaker: '', title: base, date: '', source: '' }
+}
+
+async function analyse(file: File): Promise<Analysed> {
+  if (file.size > MAX_BYTES) throw new Error('Over 80 MB: trim it to 30 minutes or less.')
+  let profile: Awaited<ReturnType<typeof profileAudio>>
+  try {
+    profile = await profileAudio(file)
+  } catch {
+    throw new Error('Couldn’t be read as audio. Use MP3, M4A, AAC or WAV.')
+  }
+  if (profile.durationSec > MAX_IMPORT_SECONDS) throw new Error('Longer than 30 minutes: trim it, then import it again.')
+  return { file, ...profile, segments: splitSegments(profile.envelope, profile.durationSec) }
+}
+
+async function saveSource({ file, durationSec, envelope, segments }: Analysed, meta: Meta) {
+  await db.transaction('rw', db.shadowSources, db.shadowAudio, async () => {
+    const id = (await db.shadowSources.add({
+      ...meta,
+      rights: RIGHTS,
+      fileName: file.name,
+      mimeType: file.type || 'audio/mp4',
+      sizeBytes: file.size,
+      durationSec,
+      segments,
+      envelope,
+      createdAt: Date.now(),
+    })) as number
+    await db.shadowAudio.put({ sourceId: id, blob: file })
+  })
+}
+
+type BatchItem = { name: string; status: 'waiting' | 'working' | 'done' | 'skipped' | 'failed'; note?: string }
+
 export function LibraryImport() {
   const navigate = useNavigate()
   const input = useRef<HTMLInputElement>(null)
   const [analysed, setAnalysed] = useState<Analysed | null>(null)
+  const [batch, setBatch] = useState<BatchItem[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function choose(file: File | undefined) {
-    if (!file) return
+  async function choose(files: File[]) {
+    if (!files.length) return
     setError(null)
-    if (file.size > MAX_BYTES) return setError('That file is over 80 MB. Trim it to the part you want to practise (30 minutes at most).')
-    setBusy(true)
-    try {
-      const { durationSec, envelope } = await profileAudio(file)
-      if (durationSec > MAX_IMPORT_SECONDS) {
-        setError('That recording is longer than 30 minutes. Trim it to the part you want to practise, then import it again.')
-      } else {
-        setAnalysed({ file, durationSec, envelope, segments: splitSegments(envelope, durationSec) })
+    if (files.length === 1) {
+      setBusy(true)
+      try {
+        setAnalysed(await analyse(files[0]))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'That file couldn’t be imported.')
+      } finally {
+        setBusy(false)
       }
-    } catch {
-      setError('This file couldn’t be read as audio. Use MP3, M4A, AAC or WAV.')
-    } finally {
-      setBusy(false)
+      return
     }
+    // Several files: import them one after another with titles taken from the file names.
+    const existing = new Set((await db.shadowSources.toArray()).map((s) => `${s.fileName}|${s.sizeBytes}`))
+    const items: BatchItem[] = files.map((f) => ({ name: f.name, status: 'waiting' }))
+    setBatch([...items])
+    setBusy(true)
+    for (let i = 0; i < files.length; i++) {
+      const update = (patch: Partial<BatchItem>) => {
+        items[i] = { ...items[i], ...patch }
+        setBatch([...items])
+      }
+      if (existing.has(`${files[i].name}|${files[i].size}`)) {
+        update({ status: 'skipped', note: 'Already in your library' })
+        continue
+      }
+      update({ status: 'working' })
+      try {
+        const result = await analyse(files[i])
+        await saveSource(result, metaFromFileName(files[i].name))
+        existing.add(`${files[i].name}|${files[i].size}`) // the same file picked twice in one go
+        update({ status: 'done', note: `${result.segments.length} clips` })
+      } catch (err) {
+        update({ status: 'failed', note: err instanceof Error ? err.message : 'Couldn’t import' })
+      }
+    }
+    setBusy(false)
   }
 
-  async function save(meta: Meta) {
-    if (!analysed) return
-    const { file, durationSec, envelope, segments } = analysed
-    await db.transaction('rw', db.shadowSources, db.shadowAudio, async () => {
-      const id = (await db.shadowSources.add({
-        ...meta,
-        rights: RIGHTS,
-        fileName: file.name,
-        mimeType: file.type || 'audio/mpeg',
-        sizeBytes: file.size,
-        durationSec,
-        segments,
-        envelope,
-        createdAt: Date.now(),
-      })) as number
-      await db.shadowAudio.put({ sourceId: id, blob: file })
-    })
-    navigate('/speak/library', { replace: true })
-  }
+  if (batch)
+    return (
+      <>
+        <BackHeader to="/speak/library" title="Import audio" />
+        <Card className="gap-0 py-2">
+          {batch.map((item) => (
+            <div key={item.name} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm">{item.name.replace(/\.[^.]+$/, '')}</span>
+                {item.note && <span className={cx('block text-caption', item.status === 'failed' ? 'text-danger' : 'text-subtle')}>{item.note}</span>}
+              </span>
+              <span className={cx('flex-none text-caption font-medium', item.status === 'done' ? 'text-success' : item.status === 'failed' ? 'text-danger' : 'text-subtle')}>
+                {item.status === 'waiting' ? 'Waiting' : item.status === 'working' ? 'Analysing…' : item.status === 'done' ? 'Added' : item.status === 'skipped' ? 'Skipped' : 'Failed'}
+              </span>
+            </div>
+          ))}
+        </Card>
+        <p aria-live="polite" className="px-1 text-sm text-muted">
+          {busy
+            ? `Importing ${batch.filter((b) => b.status !== 'waiting' && b.status !== 'working').length + 1} of ${batch.length}… Keep this screen open.`
+            : `Done: ${batch.filter((b) => b.status === 'done').length} added. Titles come from the file names; tap a recording in the library to edit it.`}
+        </p>
+        {!busy && (
+          <Link to="/speak/library" replace className={buttonClass.primary}>
+            Go to library
+          </Link>
+        )}
+      </>
+    )
 
   return (
     <>
       <BackHeader to="/speak/library" title="Import audio" />
       {!analysed ? (
         <Card>
-          <p className="text-muted">Choose a recording of a speaker whose delivery you want to learn from. MP3, M4A, AAC or WAV, up to 30 minutes.</p>
+          <p className="text-muted">
+            Choose recordings of speakers whose delivery you want to learn from: MP3, M4A, AAC or WAV, up to 30 minutes each. Select several at once to import them all.
+          </p>
           <button type="button" onClick={() => input.current?.click()} disabled={busy} className={buttonClass.primary}>
             <FileAudio size={20} strokeWidth={1.75} aria-hidden="true" />
-            {busy ? 'Analysing pauses…' : 'Choose audio file'}
+            {busy ? 'Analysing pauses…' : 'Choose audio files'}
           </button>
           <input
             ref={input}
             type="file"
+            multiple
             accept="audio/*,.mp3,.m4a,.aac,.wav"
             className="sr-only"
             tabIndex={-1}
             aria-hidden="true"
             onChange={(e) => {
-              void choose(e.target.files?.[0])
+              void choose(Array.from(e.target.files ?? []))
               e.target.value = ''
             }}
           />
@@ -150,7 +224,14 @@ export function LibraryImport() {
               {formatClock(analysed.durationSec * 1000)} · split into {analysed.segments.length} clips at natural pauses
             </p>
           </Card>
-          <MetaForm initial={{ title: analysed.file.name.replace(/\.[^.]+$/, ''), speaker: '', date: '', source: '' }} submitLabel="Save to library" onSubmit={save} />
+          <MetaForm
+            initial={metaFromFileName(analysed.file.name)}
+            submitLabel="Save to library"
+            onSubmit={async (meta) => {
+              await saveSource(analysed, meta)
+              navigate('/speak/library', { replace: true })
+            }}
+          />
         </>
       )}
     </>
