@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Check, ChevronRight, Library, Repeat, SkipForward } from 'lucide-react'
+import { Check, ChevronRight, Library, MonitorPlay, Repeat, SkipForward } from 'lucide-react'
 import { useSettings } from '../../data/daily'
 import { nextPendingTask, startSession, TASKS, useTodaySession } from '../../data/speech'
 import { formatClock } from '../../components/recording'
@@ -32,9 +32,14 @@ export default function SpeakHome() {
       <PageHeader
         title="Speak"
         actions={
-          <Link to="/speak/library" aria-label="Shadowing audio library" className={iconButtonClass}>
-            <Library size={20} strokeWidth={1.75} aria-hidden="true" />
-          </Link>
+          <>
+            <Link to="/speak/talks" aria-label="Talks to watch" className={iconButtonClass}>
+              <MonitorPlay size={20} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+            <Link to="/speak/library" aria-label="Shadowing audio library" className={iconButtonClass}>
+              <Library size={20} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+          </>
         }
       />
 
@@ -101,7 +106,7 @@ export default function SpeakHome() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-medium">Feedback and retry</span>
-            <span className="block text-caption">Arrives when transcription and analysis are connected</span>
+            <span className="block text-caption">Under each analysed answer: see feedback, then retry</span>
           </span>
         </div>
       </Card>

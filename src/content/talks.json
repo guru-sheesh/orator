@@ -1,0 +1,225 @@
+[
+ {
+  "id": "t01",
+  "title": "How great leaders inspire action",
+  "speaker": "Simon Sinek",
+  "url": "https://www.ted.com/talks/simon_sinek_how_great_leaders_inspire_action",
+  "tags": [
+   "direct-opening",
+   "controlled-repetition",
+   "explaining-complex-ideas"
+  ],
+  "notice": "The whole talk hangs on one simple model (why, how, what), stated early and returned to again and again."
+ },
+ {
+  "id": "t02",
+  "title": "The danger of a single story",
+  "speaker": "Chimamanda Ngozi Adichie",
+  "url": "https://www.ted.com/talks/chimamanda_ngozi_adichie_the_danger_of_a_single_story",
+  "tags": [
+   "storytelling",
+   "controlled-repetition",
+   "argument-development"
+  ],
+  "notice": "Short personal stories each build towards one idea, and the key phrase returns deliberately rather than by accident."
+ },
+ {
+  "id": "t03",
+  "title": "The best stats you've ever seen",
+  "speaker": "Hans Rosling",
+  "url": "https://www.ted.com/talks/hans_rosling_the_best_stats_you_ve_ever_seen",
+  "tags": [
+   "explaining-complex-ideas",
+   "signposting"
+  ],
+  "notice": "Complex data explained in plain words, one change at a time, with the listener told exactly what to look at."
+ },
+ {
+  "id": "t04",
+  "title": "How to speak so that people want to listen",
+  "speaker": "Julian Treasure",
+  "url": "https://www.ted.com/talks/julian_treasure_how_to_speak_so_that_people_want_to_listen",
+  "tags": [
+   "pace-control",
+   "deliberate-pausing",
+   "strategic-emphasis"
+  ],
+  "notice": "He talks about pace, pitch, volume and silence while demonstrating each one. Listen to how he uses pauses."
+ },
+ {
+  "id": "t05",
+  "title": "Grit: the power of passion and perseverance",
+  "speaker": "Angela Lee Duckworth",
+  "url": "https://www.ted.com/talks/angela_lee_duckworth_grit_the_power_of_passion_and_perseverance",
+  "tags": [
+   "direct-opening",
+   "concise-wording",
+   "explaining-complex-ideas"
+  ],
+  "notice": "A short talk that states its finding plainly and early, then explains it without padding."
+ },
+ {
+  "id": "t06",
+  "title": "Try something new for 30 days",
+  "speaker": "Matt Cutts",
+  "url": "https://www.ted.com/talks/matt_cutts_try_something_new_for_30_days",
+  "tags": [
+   "concise-wording",
+   "short-declaratives",
+   "strong-conclusion"
+  ],
+  "notice": "About three minutes: one idea, short sentences, and a clear challenge to the audience at the end."
+ },
+ {
+  "id": "t07",
+  "title": "How to start a movement",
+  "speaker": "Derek Sivers",
+  "url": "https://www.ted.com/talks/derek_sivers_how_to_start_a_movement",
+  "tags": [
+   "explaining-complex-ideas",
+   "signposting",
+   "concise-wording"
+  ],
+  "notice": "He explains an idea by narrating a single example step by step, then states the lesson in one line."
+ },
+ {
+  "id": "t08",
+  "title": "Do schools kill creativity?",
+  "speaker": "Sir Ken Robinson",
+  "url": "https://www.ted.com/talks/sir_ken_robinson_do_schools_kill_creativity",
+  "tags": [
+   "storytelling",
+   "pace-control",
+   "argument-development"
+  ],
+  "notice": "A relaxed, conversational pace; the stories and humour all serve one argument he keeps coming back to."
+ },
+ {
+  "id": "t09",
+  "title": "The puzzle of motivation",
+  "speaker": "Dan Pink",
+  "url": "https://www.ted.com/talks/dan_pink_the_puzzle_of_motivation",
+  "tags": [
+   "argument-development",
+   "signposting",
+   "strong-conclusion"
+  ],
+  "notice": "He sets out his case like a lawyer: claim, evidence, and clear signposts as he moves from one point to the next."
+ },
+ {
+  "id": "t10",
+  "title": "The power of introverts",
+  "speaker": "Susan Cain",
+  "url": "https://www.ted.com/talks/susan_cain_the_power_of_introverts",
+  "tags": [
+   "argument-development",
+   "storytelling",
+   "strong-conclusion"
+  ],
+  "notice": "One argument developed through a personal story, then research, ending with specific calls to action."
+ },
+ {
+  "id": "t11",
+  "title": "Inside the mind of a master procrastinator",
+  "speaker": "Tim Urban",
+  "url": "https://www.ted.com/talks/tim_urban_inside_the_mind_of_a_master_procrastinator",
+  "tags": [
+   "explaining-complex-ideas",
+   "storytelling"
+  ],
+  "notice": "An abstract idea made concrete with simple characters and everyday examples."
+ },
+ {
+  "id": "t12",
+  "title": "The power of vulnerability",
+  "speaker": "Brené Brown",
+  "url": "https://www.ted.com/talks/brene_brown_the_power_of_vulnerability",
+  "tags": [
+   "storytelling",
+   "pace-control"
+  ],
+  "notice": "Research presented as a personal story, with natural pauses that let key moments land."
+ },
+ {
+  "id": "t13",
+  "title": "TED's secret to great public speaking",
+  "speaker": "Chris Anderson",
+  "url": "https://www.ted.com/talks/chris_anderson_ted_s_secret_to_great_public_speaking",
+  "tags": [
+   "explaining-complex-ideas",
+   "signposting",
+   "direct-opening"
+  ],
+  "notice": "Practical advice on building one idea in a listener's mind, step by step, in plain language."
+ },
+ {
+  "id": "t14",
+  "title": "How I harnessed the wind",
+  "speaker": "William Kamkwamba",
+  "url": "https://www.ted.com/talks/william_kamkwamba_how_i_harnessed_the_wind",
+  "tags": [
+   "storytelling",
+   "short-declaratives"
+  ],
+  "notice": "A simple, chronological story told in short, plain sentences. Clarity doesn't need complicated words."
+ },
+ {
+  "id": "t15",
+  "title": "Inaugural address (1961)",
+  "speaker": "John F. Kennedy",
+  "url": "https://www.jfklibrary.org/learn/about-jfk/historic-speeches/inaugural-address",
+  "tags": [
+   "parallel-structure",
+   "deliberate-pausing",
+   "strategic-emphasis"
+  ],
+  "notice": "Balanced, contrasting sentences and deliberate pauses that give key lines room to land."
+ },
+ {
+  "id": "t16",
+  "title": "We shall fight on the beaches (1940)",
+  "speaker": "Winston Churchill",
+  "url": "https://winstonchurchill.org/resources/speeches/1940-the-finest-hour/we-shall-fight-on-the-beaches/",
+  "tags": [
+   "controlled-repetition",
+   "parallel-structure",
+   "strong-conclusion"
+  ],
+  "notice": "A repeated opening phrase builds intensity towards the close: repetition used on purpose, not by accident."
+ },
+ {
+  "id": "t17",
+  "title": "Stanford commencement address (2005)",
+  "speaker": "Steve Jobs",
+  "url": "https://news.stanford.edu/stories/2005/06/youve-got-find-love-jobs-says",
+  "tags": [
+   "signposting",
+   "storytelling",
+   "direct-opening"
+  ],
+  "notice": "He announces the structure at the start (three stories) and signposts each one as he goes."
+ },
+ {
+  "id": "t18",
+  "title": "Remarks at the Brandenburg Gate (1987)",
+  "speaker": "Ronald Reagan",
+  "url": "https://www.reaganlibrary.gov/archives/speech/remarks-east-west-relations-brandenburg-gate-west-berlin",
+  "tags": [
+   "short-declaratives",
+   "strong-conclusion",
+   "strategic-emphasis"
+  ],
+  "notice": "The argument builds towards one short, direct demand, delivered with emphasis and space around it."
+ },
+ {
+  "id": "t20",
+  "title": "Nobel lecture (2004)",
+  "speaker": "Wangari Maathai",
+  "url": "https://www.nobelprize.org/prizes/peace/2004/maathai/lecture/",
+  "tags": [
+   "storytelling",
+   "strong-conclusion"
+  ],
+  "notice": "A personal story of starting small (planting trees) that widens into a larger message and a clear closing."
+ }
+]

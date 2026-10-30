@@ -39,7 +39,10 @@ let cached: { token: string; region: string; expires: number } | null = null
 async function getToken() {
   if (cached && cached.expires > Date.now()) return cached
   if (!navigator.onLine) throw new TranscriptionError('You’re offline. The recording is saved and will be transcribed when you’re back online.', 'offline')
-  const res = await fetch('/api/speech-token', { cache: 'no-store' }).catch(() => null)
+  const request = () => fetch('/api/speech-token', { cache: 'no-store' }).catch(() => null)
+  let res = await request()
+  // One quick retry absorbs transient server or network blips.
+  if (!res || (!res.ok && res.status !== 503)) res = await new Promise<Response | null>((r) => setTimeout(() => void request().then(r), 1500))
   if (!res) throw new TranscriptionError('Couldn’t reach the transcription service. It will retry later.', 'offline')
   if (res.status === 503) throw new TranscriptionError('Transcription isn’t set up yet: the Azure key is missing on the server.', 'not-configured')
   if (!res.ok) throw new TranscriptionError('The transcription service refused the request. Check the Azure key and region.', 'service')

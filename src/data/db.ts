@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Transcription, TranscriptWord } from '../lib/transcribe'
 import type { SpeechMetrics } from '../lib/metrics'
-import type { SpeechAnalysis } from '../lib/analysisTypes'
+import type { CoachingFeedback, SpeechAnalysis, TechniqueTag } from '../lib/analysisTypes'
 
 /** Local calendar date, `YYYY-MM-DD`. All daily records key on this. */
 export type DateKey = string
@@ -99,6 +99,9 @@ export interface SpeechAttempt {
   analysisStatus?: 'pending' | 'done' | 'failed' | 'skipped'
   analysisError?: string
   analysis?: SpeechAnalysis
+  feedbackStatus?: 'pending' | 'done' | 'failed'
+  feedbackError?: string
+  feedback?: CoachingFeedback
   createdAt: number
 }
 
@@ -138,6 +141,16 @@ export interface ShadowAudio {
   blob: Blob
 }
 
+/** A talk the user added for "Watch this" recommendations (built-in ones live in content/talks.json). */
+export interface Talk {
+  id: string
+  title: string
+  speaker: string
+  url: string
+  tags: TechniqueTag[]
+  notice: string
+}
+
 /** Rotation bookkeeping so practice prompts don't repeat until a bank is exhausted. */
 export interface ContentUsage {
   key: string
@@ -165,6 +178,7 @@ export const db = new Dexie('orator') as Dexie & {
   shadowSources: EntityTable<ShadowSource, 'id'>
   shadowAudio: EntityTable<ShadowAudio, 'sourceId'>
   contentUsage: EntityTable<ContentUsage, 'key'>
+  talks: EntityTable<Talk, 'id'>
 }
 
 db.version(1).stores({
@@ -183,6 +197,8 @@ db.version(2).stores({
   shadowAudio: 'sourceId',
   contentUsage: 'key, kind',
 })
+
+db.version(3).stores({ talks: 'id' })
 
 /** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
 export const AUDIO_TABLES = ['recordings', 'shadowAudio'] as const

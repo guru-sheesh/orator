@@ -81,3 +81,42 @@ export const ANALYSIS_SCHEMA = obj({
   strengths: strs,
   techniqueTags: arr(enm(...TECHNIQUE_TAGS)),
 })
+
+/** CoachingFeedback (CLAUDE.md §6, §10), from a second /api/coach call after analysis. */
+export interface CoachingFeedback {
+  wentWell: string[]
+  wentWrong: { title: string; evidence: string }[]
+  whyItWeakened: string
+  howToStructure: string
+  howToDeliver: string
+  /** Short improved version of the user's own answer; shown as "Example answer (AI-written)". */
+  exampleAnswer: string
+  retryTargets: string[]
+  /** id from the candidate talks sent, or null when none fits. */
+  talkId: string | null
+  /** How the recommended talk relates to this answer (general, no timestamps or quotations). */
+  talkReason: string
+}
+
+export interface FeedbackRequest {
+  mode: 'feedback'
+  task: CoachRequest['task']
+  prompt: string
+  reference?: string
+  transcript: string
+  /** Compact summary of the analysis (priority, fillers, structure…). */
+  analysis: string
+  talks: { id: string; title: string; speaker: string; tags: string[]; notice: string }[]
+}
+
+export const FEEDBACK_SCHEMA = obj({
+  wentWell: strs,
+  wentWrong: arr(obj({ title: str, evidence: str })),
+  whyItWeakened: str,
+  howToStructure: str,
+  howToDeliver: str,
+  exampleAnswer: str,
+  retryTargets: strs,
+  talkId: { type: 'string', nullable: true },
+  talkReason: str,
+})

@@ -4,6 +4,7 @@ import { loadPassages, WORDS } from './speech'
 import type { CoachRequest, FillerPosition, SpeechAnalysis } from '../lib/analysisTypes'
 import type { SpeechMetrics } from '../lib/metrics'
 import type { TranscriptWord } from '../lib/transcribe'
+import { requestFeedback } from './feedback'
 
 /** Shadowing is assessed against the clip; only independent delivery gets language analysis. */
 export function shouldAnalyse(a: Pick<SpeechAttempt, 'task' | 'stage'>) {
@@ -80,9 +81,10 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
     const res = await fetch('/api/coach', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }).catch(() => null)
     const body = res ? await res.json().catch(() => ({})) : { error: 'offline' }
 
-    if (res?.ok && body.analysis) {
-      await db.speechAttempts.update(attemptId, { analysisStatus: 'done', analysis: sanitise(body.analysis, a.words, a.metrics) })
+    if (res?.ok && body.result) {
+      await db.speechAttempts.update(attemptId, { analysisStatus: 'done', analysis: sanitise(body.result, a.words, a.metrics), feedbackStatus: 'pending' })
       retries.delete(attemptId)
+      void requestFeedback(attemptId)
       return
     }
     const code: string = body.error ?? 'provider'
@@ -96,6 +98,14 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
   } finally {
     running.delete(attemptId)
   }
+}
+
+/** Turns transcript markers the model may echo back into readable text. */
+export function cleanEvidence(text: string) {
+  return text
+    .replace(/<pause\s+([\d.]+)s[^>]*>/g, '[$1 s pause]')
+    .replace(/<sound#\d+[^>]*>/g, '(um?)')
+    .replace(/\b\d+:(?=\S)/g, '')
 }
 
 /** Unambiguous fillers are always counted, whatever the model decides; "so"/"like" stay contextual. */
@@ -129,6 +139,7 @@ function sanitise(raw: SpeechAnalysis, words: TranscriptWord[], metrics: SpeechM
     grammar: (raw.grammar ?? []).filter((r) => ok(r.wordIndex)),
     conciseness: (raw.conciseness ?? []).filter((r) => ok(r.wordIndex)),
     delivery: raw.delivery ?? [],
+    priority: { weakness: raw.priority?.weakness ?? '', evidence: cleanEvidence(raw.priority?.evidence ?? '') },
   }
 }
 
@@ -138,6 +149,8 @@ export async function processPendingAnalyses() {
     .filter((a) => a.transcription === 'done' && shouldAnalyse(a) && (a.analysisStatus === 'pending' || a.analysisStatus === 'failed' || a.analysisStatus === undefined))
     .toArray()
   for (const a of waiting) await analyseAttempt(a.id!)
+  const noFeedback = await db.speechAttempts.filter((a) => a.analysisStatus === 'done' && a.feedbackStatus !== 'done').toArray()
+  for (const a of noFeedback) await requestFeedback(a.id!)
 }
 
 export function useCoachStatus() {

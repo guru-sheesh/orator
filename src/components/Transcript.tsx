@@ -5,6 +5,7 @@ import { useAttempt } from '../data/speech'
 import { transcribeAttempt } from '../data/transcription'
 import { buttonClass, cx } from './ui'
 import { analysisMarks, AnalysisPanel } from './Analysis'
+import { FeedbackLink } from '../screens/speak/FeedbackScreen'
 
 /** Gaps between words at least this long are shown as pauses (silence is not an error, §5B). */
 const PAUSE_SEC = 0.7
@@ -87,7 +88,7 @@ export function TranscriptText({
 }
 
 /** Live transcription status and result for one saved attempt. */
-export function AttemptTranscript({ attemptId }: { attemptId: number }) {
+export function AttemptTranscript({ attemptId, showFeedbackLink = true }: { attemptId: number; showFeedbackLink?: boolean }) {
   const attempt = useAttempt(attemptId)
   if (!attempt) return null
 
@@ -137,6 +138,7 @@ export function AttemptTranscript({ attemptId }: { attemptId: number }) {
         </div>
       )}
       <AnalysisPanel attempt={attempt} />
+      {showFeedbackLink && <FeedbackLink attempt={attempt} />}
     </div>
   )
 }
