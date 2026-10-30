@@ -48,14 +48,14 @@ export function LibraryList() {
         </Link>
       )}
       {sources?.map((s) => (
-        <Link key={s.id} to={`/speak/library/${s.id}`} className="flex items-center gap-3 rounded-lg bg-surface px-4 py-3 hover:bg-raised light:border light:border-border">
+        <Link key={s.id} to={`/speak/library/${s.id}`} className="flex items-center gap-3 rounded-lg bg-surface px-4 py-3 transition-colors duration-(--duration-fast) hover:bg-raised active:bg-raised light:border light:border-border">
           <span className="grid size-10 flex-none place-items-center rounded-md bg-raised text-muted">
             <FileAudio size={20} strokeWidth={1.75} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-medium">{s.title}</span>
             <span className="block truncate text-caption text-subtle">
-              {[s.speaker, `${s.segments.length} clips`, formatClock(s.durationSec * 1000)].filter(Boolean).join(' · ')}
+              {[s.speaker, `${s.segments.length} ${s.segments.length === 1 ? 'clip' : 'clips'}`, formatClock(s.durationSec * 1000)].filter(Boolean).join(' · ')}
             </span>
           </span>
           <ChevronRight size={20} strokeWidth={1.75} className="flex-none text-subtle" aria-hidden="true" />
@@ -147,7 +147,7 @@ export function LibraryImport() {
         const result = await analyse(files[i])
         await saveSource(result, metaFromFileName(files[i].name))
         existing.add(`${files[i].name}|${files[i].size}`) // the same file picked twice in one go
-        update({ status: 'done', note: `${result.segments.length} clips` })
+        update({ status: 'done', note: `${result.segments.length} ${result.segments.length === 1 ? 'clip' : 'clips'}` })
       } catch (err) {
         update({ status: 'failed', note: err instanceof Error ? err.message : 'Couldn’t import' })
       }
@@ -160,8 +160,8 @@ export function LibraryImport() {
       <>
         <BackHeader to="/speak/library" title="Import audio" />
         <Card className="gap-0 py-2">
-          {batch.map((item) => (
-            <div key={item.name} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
+          {batch.map((item, i) => (
+            <div key={i} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm">{item.name.replace(/\.[^.]+$/, '')}</span>
                 {item.note && <span className={cx('block text-caption', item.status === 'failed' ? 'text-danger' : 'text-subtle')}>{item.note}</span>}
@@ -221,7 +221,7 @@ export function LibraryImport() {
           <Card className="gap-1">
             <p className="font-medium break-words">{analysed.file.name}</p>
             <p className="text-caption text-subtle">
-              {formatClock(analysed.durationSec * 1000)} · split into {analysed.segments.length} clips at natural pauses
+              {formatClock(analysed.durationSec * 1000)} · split into {analysed.segments.length} {analysed.segments.length === 1 ? 'clip' : 'clips'} at natural pauses
             </p>
           </Card>
           <MetaForm
@@ -252,7 +252,7 @@ export function LibraryEdit() {
       <Card className="gap-1">
         <p className="font-medium break-words">{source.fileName}</p>
         <p className="text-caption text-subtle">
-          {formatClock(source.durationSec * 1000)} · {source.segments.length} clips · {source.rights}
+          {formatClock(source.durationSec * 1000)} · {source.segments.length} {source.segments.length === 1 ? 'clip' : 'clips'} · {source.rights}
         </p>
       </Card>
       <MetaForm
@@ -263,7 +263,7 @@ export function LibraryEdit() {
           navigate('/speak/library')
         }}
       />
-      <button type="button" onClick={() => setConfirm(true)} className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left text-danger hover:bg-raised">
+      <button type="button" onClick={() => setConfirm(true)} className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left text-danger hover:bg-raised active:bg-raised">
         Delete recording
       </button>
       <ConfirmDialog
@@ -291,6 +291,7 @@ type Meta = { title: string; speaker: string; date: string; source: string }
 function MetaForm({ initial, submitLabel, onSubmit }: { initial: Meta; submitLabel: string; onSubmit: (m: Meta) => Promise<void> }) {
   const [meta, setMeta] = useState(initial)
   const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const set = (k: keyof Meta) => (e: ChangeEvent<HTMLInputElement>) => setMeta({ ...meta, [k]: e.target.value })
 
   async function submit(e: FormEvent) {
@@ -300,7 +301,12 @@ function MetaForm({ initial, submitLabel, onSubmit }: { initial: Meta; submitLab
       document.getElementById('meta-title')?.focus()
       return
     }
-    await onSubmit({ title: meta.title.trim(), speaker: meta.speaker.trim(), date: meta.date.trim(), source: meta.source.trim() })
+    setSaving(true)
+    try {
+      await onSubmit({ title: meta.title.trim(), speaker: meta.speaker.trim(), date: meta.date.trim(), source: meta.source.trim() })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -313,8 +319,8 @@ function MetaForm({ initial, submitLabel, onSubmit }: { initial: Meta; submitLab
         <Field id="meta-source" label="Where it’s from" optional value={meta.source} onChange={set('source')} placeholder="e.g. TED, YouTube channel, podcast…" />
         <p className="text-caption text-subtle">Rights: {RIGHTS}. Imported audio is never uploaded.</p>
       </Card>
-      <button type="submit" className={buttonClass.primary}>
-        {submitLabel}
+      <button type="submit" disabled={saving} className={buttonClass.primary}>
+        {saving ? 'Saving…' : submitLabel}
       </button>
     </form>
   )

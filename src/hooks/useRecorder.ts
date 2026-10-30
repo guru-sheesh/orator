@@ -36,6 +36,7 @@ export function useRecorder({ maxMs, onComplete }: { maxMs: number; onComplete: 
     }
   }, [])
 
+  /** Resolves false if recording couldn't start (the error is shown via `error`). */
   const start = useCallback(async () => {
     setError(null)
     setState('preparing')
@@ -43,8 +44,10 @@ export function useRecorder({ maxMs, onComplete }: { maxMs: number; onComplete: 
       await get().start()
       setElapsedMs(0)
       setState('recording')
+      return true
     } catch (err) {
       fail(err)
+      return false
     }
   }, [])
 

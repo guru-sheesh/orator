@@ -67,7 +67,7 @@ export default function FeedbackScreen() {
       {siblings && siblings.length > 1 && (
         <Link to={`/speak/compare/${attempt.id}`} className={buttonClass.primary}>
           Compare attempt {siblings[0].attemptNumber} with {siblings.at(-1)!.attemptNumber}
-          <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
+          <ChevronRight size={20} strokeWidth={2} aria-hidden="true" />
         </Link>
       )}
     </>
@@ -80,7 +80,7 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
 
   if (attempt.analysisStatus !== 'done')
     return <p className="text-sm text-muted">Feedback follows once the analysis above is ready.</p>
-  if (attempt.feedbackStatus === 'pending' || attempt.feedbackStatus === undefined) return <p className="text-sm text-muted" aria-live="polite">Preparing your feedback…</p>
+  if (attempt.feedbackStatus === 'pending' || attempt.feedbackStatus === undefined) return <p className="text-sm text-muted">Preparing your feedback…</p>
   if (attempt.feedbackStatus === 'failed' || !fb)
     return (
       <Card>
@@ -141,7 +141,7 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
           </a>
         ) : (
           <p className="flex gap-2 rounded-md bg-info-soft px-3 py-2.5 text-sm">
-            <Info size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
+            <Info size={20} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
             <span>
               No talk in your list matches this yet.{' '}
               <Link to="/speak/talks" className="underline underline-offset-2">
@@ -185,15 +185,3 @@ const Bullets = ({ items }: { items: string[] }) => (
     ))}
   </ul>
 )
-
-/** Shown under an analysed answer: feedback status and the way into it. */
-export function FeedbackLink({ attempt }: { attempt: SpeechAttempt }) {
-  if (attempt.analysisStatus !== 'done') return null
-  const ready = attempt.feedbackStatus === 'done'
-  return (
-    <Link to={`/speak/attempt/${attempt.id}`} className={cx(buttonClass.primary, 'w-full', !ready && 'opacity-80')}>
-      {ready ? 'See feedback and retry' : 'Preparing feedback…'}
-      <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
-    </Link>
-  )
-}

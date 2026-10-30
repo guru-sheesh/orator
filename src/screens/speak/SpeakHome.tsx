@@ -45,11 +45,18 @@ export default function SpeakHome() {
 
       <Card className="items-center gap-2 text-center">
         <Label>Today’s session</Label>
-        <ProgressRing value={session?.activeMs ?? 0} max={targetMs} label="Session time" size={120} stroke={6}>
-          <p className="text-[32px] leading-tight font-semibold tabular-nums">{formatClock(session?.activeMs ?? 0)}</p>
+        <ProgressRing
+          value={session?.activeMs ?? 0}
+          max={targetMs}
+          label="Session time"
+          valueText={`${Math.floor((session?.activeMs ?? 0) / 60_000)} of ${settings.targets.articulationMinutes} minutes`}
+          size={120}
+          stroke={6}
+        >
+          <p className="text-stat font-semibold tabular-nums">{formatClock(session?.activeMs ?? 0)}</p>
           <p className="text-caption text-subtle">of {settings.targets.articulationMinutes}:00</p>
         </ProgressRing>
-        <p className="text-[15px] text-muted">
+        <p className="text-secondary text-muted">
           {!session
             ? 'Six short tasks, about 30 minutes. Time counts while a task is open.'
             : next
@@ -73,7 +80,10 @@ export default function SpeakHome() {
                 )}
               >
                 {status === 'done' ? (
-                  <Check size={16} strokeWidth={2} aria-hidden="true" />
+                  <>
+                    <Check size={16} strokeWidth={2} aria-hidden="true" />
+                    <span className="sr-only">Done:</span>
+                  </>
                 ) : status === 'skipped' ? (
                   <SkipForward size={14} strokeWidth={2} aria-hidden="true" />
                 ) : (
@@ -91,7 +101,7 @@ export default function SpeakHome() {
           )
           const row = 'flex min-h-14 items-center gap-3 border-t border-border py-3 first:border-t-0'
           return session ? (
-            <Link key={t.id} to={`/speak/${t.id}`} aria-current={current ? 'step' : undefined} className={cx(row, '-mx-2 rounded-md px-2 hover:bg-raised')}>
+            <Link key={t.id} to={`/speak/${t.id}`} aria-current={current ? 'step' : undefined} className={cx(row, '-mx-2 rounded-md px-2 hover:bg-raised active:bg-raised')}>
               {inner}
             </Link>
           ) : (

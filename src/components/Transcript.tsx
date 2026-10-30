@@ -5,7 +5,8 @@ import { useAttempt } from '../data/speech'
 import { transcribeAttempt } from '../data/transcription'
 import { buttonClass, cx } from './ui'
 import { analysisMarks, AnalysisPanel } from './Analysis'
-import { FeedbackLink } from '../screens/speak/FeedbackScreen'
+import { FeedbackLink } from './FeedbackLink'
+import type { SpeechAttempt } from '../data/db'
 
 /** Gaps between words at least this long are shown as pauses (silence is not an error, §5B). */
 const PAUSE_SEC = 0.7
@@ -42,8 +43,9 @@ export function TranscriptText({
 }) {
   const sound = (n: number) =>
     Array.from({ length: n }, (_, k) => (
-      <span key={`s${k}`} className="mx-0.5 font-sans text-xs text-danger" title="A sound that was likely a filler such as “um”">
-        (um?)
+      <span key={`s${k}`} className="mx-0.5 font-sans text-caption text-danger" title="A sound that was likely a filler such as “um”">
+        <span aria-hidden="true">(um?)</span>
+        <span className="sr-only">(likely filler sound)</span>
       </span>
     ))
   return (
@@ -58,12 +60,12 @@ export function TranscriptText({
             {gap >= PAUSE_SEC && (
               <span
                 className={cx(
-                  'mx-0.5 inline-flex h-[22px] items-center rounded-[6px] px-1.5 align-[2px] font-sans text-xs font-medium tabular-nums',
+                  'mx-0.5 inline-flex h-[22px] items-center rounded-sm px-1.5 align-[2px] font-sans text-caption font-medium tabular-nums',
                   gap >= LONG_PAUSE_SEC ? 'bg-danger-soft text-danger' : 'bg-info-soft text-info',
                 )}
-                aria-label={`pause, ${gap.toFixed(1)} seconds`}
               >
-                ‖ {gap.toFixed(1)}s
+                <span aria-hidden="true">‖ {gap.toFixed(1)}s</span>
+                <span className="sr-only">(pause, {gap.toFixed(1)} seconds)</span>
               </span>
             )}{' '}
             <span
@@ -77,6 +79,8 @@ export function TranscriptText({
               title={fillers?.has(i) ? 'Filler' : unclear ? 'This word may be hard to understand' : undefined}
             >
               {w.text}
+              {fillers?.has(i) && <span className="sr-only"> (filler)</span>}
+              {unclear && !fillers?.has(i) && <span className="sr-only"> (may be hard to understand)</span>}
             </span>
             {w.punct}
           </Fragment>
@@ -90,20 +94,34 @@ export function TranscriptText({
 /** Live transcription status and result for one saved attempt. */
 export function AttemptTranscript({ attemptId, showFeedbackLink = true }: { attemptId: number; showFeedbackLink?: boolean }) {
   const attempt = useAttempt(attemptId)
-  if (!attempt) return null
-
-  if (attempt.transcription === 'skipped') return null
-  if (attempt.transcription === 'pending' || attempt.transcription === undefined)
-    return (
-      <p className="text-caption text-subtle" aria-live="polite">
-        Transcribing…
+  if (!attempt || attempt.transcription === 'skipped') return null
+  return (
+    <>
+      {/* One persistent live region, so each step is announced once and the transcript isn't re-read. */}
+      <p role="status" className="sr-only">
+        {statusMessage(attempt)}
       </p>
-    )
+      <AttemptBody attempt={attempt} showFeedbackLink={showFeedbackLink} />
+    </>
+  )
+}
+
+function statusMessage(a: SpeechAttempt) {
+  if (a.transcription === 'pending' || a.transcription === undefined) return 'Transcribing your answer.'
+  if (a.transcription === 'failed') return a.transcriptionError ?? 'Transcription failed.'
+  if (a.analysisStatus === 'pending') return 'Transcript ready. Analysing.'
+  if (a.analysisStatus === 'failed') return a.analysisError ?? 'Analysis failed.'
+  if (a.analysisStatus === 'done') return a.feedbackStatus === 'done' ? 'Analysis and feedback ready.' : 'Analysis ready.'
+  return 'Transcript ready.'
+}
+
+function AttemptBody({ attempt, showFeedbackLink }: { attempt: SpeechAttempt; showFeedbackLink: boolean }) {
+  if (attempt.transcription === 'pending' || attempt.transcription === undefined) return <p className="text-caption text-subtle">Transcribing…</p>
   if (attempt.transcription === 'failed')
     return (
-      <div className="flex flex-col gap-2" aria-live="polite">
+      <div className="flex flex-col gap-2">
         <p className="text-sm text-muted">{attempt.transcriptionError ?? 'Transcription failed.'}</p>
-        <button type="button" onClick={() => void transcribeAttempt(attemptId)} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
+        <button type="button" onClick={() => void transcribeAttempt(attempt.id!)} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
           <RefreshCw size={16} strokeWidth={1.75} aria-hidden="true" />
           Try transcription again
         </button>
@@ -117,16 +135,16 @@ export function AttemptTranscript({ attemptId, showFeedbackLink = true }: { atte
   const marks = analysisMarks(attempt)
 
   return (
-    <div className="flex flex-col gap-2" aria-live="polite">
+    <div className="flex flex-col gap-2">
       <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Transcript</p>
       {words.length ? (
-        <TranscriptText words={words} className="text-base" fillers={marks.fillers} soundsBefore={marks.soundsBefore} />
+        <TranscriptText words={words} className="text-body" fillers={marks.fillers} soundsBefore={marks.soundsBefore} />
       ) : (
         <p className="text-muted">No speech was recognised in this recording.</p>
       )}
       {words.length > 0 && !attempt.analysis && (
         <div className="flex flex-wrap gap-2 text-caption">
-          {wpm && <span className="rounded-sm bg-surface px-2 py-1 text-muted tabular-nums">{wpm} words/min</span>}
+          {wpm != null && wpm > 0 && <span className="rounded-sm bg-surface px-2 py-1 text-muted tabular-nums">{wpm} words/min</span>}
           <span className="rounded-sm bg-info-soft px-2 py-1 text-info tabular-nums">
             {pauses} {pauses === 1 ? 'pause' : 'pauses'}
           </span>

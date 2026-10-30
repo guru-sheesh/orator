@@ -75,7 +75,7 @@ export function TrendChart({
           )}
         </svg>
       </div>
-      <div className="flex justify-between text-[11px] text-subtle" aria-hidden="true">
+      <div className="flex justify-between text-caption text-subtle" aria-hidden="true">
         <span>{points[0]?.label}</span>
         <span>This week</span>
       </div>
@@ -112,11 +112,12 @@ function trendDelta(points: TrendPoint[], lowerIsBetter: boolean, inPoints: bool
   if (inPoints) {
     const pts = Math.round(late - early)
     if (Math.abs(pts) < 5) return { text: 'Steady', good: false }
-    return { text: `${pts < 0 ? '↓' : '↑'} ${Math.abs(pts)} pts`, good: lowerIsBetter ? pts < 0 : pts > 0 }
+    const good = lowerIsBetter ? pts < 0 : pts > 0
+    return { text: `${pts < 0 ? '↓' : '↑'} ${Math.abs(pts)} pts · ${good ? 'better' : 'worse'}`, good }
   }
   if (early === 0 && late === 0) return { text: 'None', good: true }
   const change = early === 0 ? 100 : Math.round(((late - early) / early) * 100)
   if (Math.abs(change) < 10) return { text: 'Steady', good: false }
   const better = lowerIsBetter ? change < 0 : change > 0
-  return { text: `${change < 0 ? '↓' : '↑'} ${Math.abs(change)}%`, good: better }
+  return { text: `${change < 0 ? '↓' : '↑'} ${Math.abs(change)}% · ${better ? 'better' : 'worse'}`, good: better }
 }

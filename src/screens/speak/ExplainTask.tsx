@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, EyeOff } from 'lucide-react'
 import { loadPassages, TIMING, useAttempts, type Passage } from '../../data/speech'
 import { PromptRecorder } from '../../components/PromptRecorder'
@@ -11,6 +11,10 @@ export function ExplainTask({ session, finish }: TaskProps) {
   const [passage, setPassage] = useState<Passage | null>()
   const [phase, setPhase] = useState<Phase>('reading')
   const attempts = useAttempts(session.id, 'explain')
+  const explainRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (phase === 'explaining') explainRef.current?.focus()
+  }, [phase])
 
   useEffect(() => {
     let cancelled = false
@@ -55,10 +59,10 @@ export function ExplainTask({ session, finish }: TaskProps) {
       )}
 
       {phase !== 'reading' && (
-        <Card>
+        <Card ref={explainRef} tabIndex={-1} className="outline-none">
           <Label>Explain what you understood</Label>
           <p className="text-title font-medium">{passage.title}</p>
-          <p className="text-[15px] text-muted">What is it? → How does it work? → Why does it matter? → What is an example?</p>
+          <p className="text-secondary text-muted">What is it? → How does it work? → Why does it matter? → What is an example?</p>
           <p className="text-caption text-subtle">Explain it, don’t recite it. The passage stays hidden until you’ve recorded.</p>
         </Card>
       )}
@@ -101,7 +105,8 @@ function SourceLine({ passage }: { passage: Passage }) {
       Source: Wikipedia,{' '}
       <a href={passage.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-text">
         {passage.title}
-        <ExternalLink size={12} strokeWidth={1.75} aria-hidden="true" />
+        <span className="sr-only"> (opens in a new tab)</span>
+        <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
       </a>{' '}
       (CC BY-SA 4.0). Excerpt, trimmed.
     </p>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useAttempts, IMPROMPTU, QUESTIONS, STRUCTURE_STEPS, TIMING, WORDS } from '../../data/speech'
 import { PromptRecorder } from '../../components/PromptRecorder'
@@ -26,6 +26,11 @@ function Sequence({
   const [index, setIndex] = useState(firstOpen < 0 ? 0 : firstOpen)
   const item = items[index]
   const last = index === items.length - 1
+  const promptRef = useRef<HTMLDivElement>(null)
+  const advanced = useRef(false)
+  useEffect(() => {
+    if (advanced.current) promptRef.current?.focus()
+  }, [index])
   if (!attempts || !item) return null
 
   return (
@@ -33,10 +38,16 @@ function Sequence({
       <p className="text-caption text-subtle" aria-live="polite">
         {index + 1} of {items.length}
       </p>
-      <Card>{render(item)}</Card>
+      <div ref={promptRef} tabIndex={-1} className="outline-none">
+        <Card>{render(item)}</Card>
+      </div>
       <PromptRecorder key={item.id} session={session} task={task} promptId={item.id} prompt={item.prompt} prepSec={TIMING[task].prepSec} maxSec={TIMING[task].maxSec} />
       {recorded.has(item.id) && (
-        <button type="button" onClick={() => (last ? finish() : setIndex(index + 1))} className={buttonClass.primary}>
+        <button type="button" onClick={() => {
+            if (last) return finish()
+            advanced.current = true
+            setIndex(index + 1)
+          }} className={buttonClass.primary}>
           {last ? 'Finish task' : 'Next'}
         </button>
       )}
@@ -54,7 +65,7 @@ export function WordsTask(props: TaskProps) {
       render={(item) => (
         <>
           <Label>Describe this word without saying it</Label>
-          <p className="text-[34px] leading-tight font-semibold">{item.prompt}</p>
+          <p className="text-display font-semibold">{item.prompt}</p>
           <p className="text-sm text-muted">If a better word won’t come, describe around it and keep talking.</p>
           <p className="text-caption text-subtle">{AI_LABEL}</p>
         </>
@@ -96,7 +107,7 @@ export function ImpromptuTask({ session, finish }: TaskProps) {
         <p className="text-title font-medium">{q.text}</p>
         <div className="border-t border-border pt-3">
           <p className="text-caption text-subtle">Suggested structure</p>
-          <p className="text-[15px] text-muted">{STRUCTURE_STEPS[q.structure].join(' → ')}</p>
+          <p className="text-secondary text-muted">{STRUCTURE_STEPS[q.structure].join(' → ')}</p>
         </div>
         <p className="text-caption text-subtle">{AI_LABEL}</p>
       </Card>
@@ -132,7 +143,7 @@ export function ParaphraseTask({ session, finish }: TaskProps) {
       <Card>
         <Label>Paraphrase the speaker</Label>
         <p className="text-title font-medium">Explain the speaker’s central message in your own words.</p>
-        <ul className="list-disc pl-5 text-[15px] text-muted">
+        <ul className="list-disc pl-5 text-secondary text-muted">
           <li>Keep the main message; leave out minor details.</li>
           <li>Don’t repeat their exact wording.</li>
           <li>Organise it so someone who didn’t hear it would understand.</li>

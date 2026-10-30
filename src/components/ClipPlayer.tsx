@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { Pause, Play, RotateCcw } from 'lucide-react'
 import type { ShadowSegment } from '../data/db'
 import { ENVELOPE_RATE } from '../lib/audioAnalysis'
@@ -41,6 +41,7 @@ export function ClipPlayer({
   const [url, setUrl] = useState<string>()
   const [playing, setPlaying] = useState(false)
   const [position, setPosition] = useState(range.start)
+  const [blocked, setBlocked] = useState(false)
   const ended = useRef(onEnded)
   ended.current = onEnded
 
@@ -63,7 +64,8 @@ export function ClipPlayer({
     const tick = () => {
       const a = audio.current
       if (!a) return
-      setPosition(a.currentTime)
+      // Stop precisely every frame, but only re-render when the playhead moves ~0.1 s.
+      setPosition((p) => (Math.abs(a.currentTime - p) >= 0.1 ? a.currentTime : p))
       if (a.currentTime >= range.end) {
         a.pause()
         ended.current?.()
@@ -79,12 +81,12 @@ export function ClipPlayer({
     const a = audio.current
     if (!a) return
     if (fromStart || a.currentTime < range.start || a.currentTime >= range.end - 0.05) a.currentTime = range.start
-    void a.play()
+    a.play().catch(() => setBlocked(true))
   }
 
   useImperativeHandle(ref, () => ({ play: () => play(true), pause: () => audio.current?.pause() }))
 
-  const bars = waveform(envelope, range)
+  const bars = useMemo(() => waveform(envelope, range), [envelope, range.start, range.end]) // eslint-disable-line react-hooks/exhaustive-deps
   const progress = Math.min(1, Math.max(0, (position - range.start) / (range.end - range.start)))
 
   return (
@@ -101,20 +103,21 @@ export function ClipPlayer({
       </div>
       {!hideControls && (
         <div className="flex items-center justify-center gap-4">
-          <button type="button" onClick={() => play(true)} aria-label={`Restart ${label}`} className="grid size-11 place-items-center rounded-md text-muted hover:bg-raised">
+          <button type="button" onClick={() => play(true)} aria-label={`Restart ${label}`} className="grid size-11 place-items-center rounded-md text-muted hover:bg-raised active:bg-raised">
             <RotateCcw size={20} strokeWidth={1.75} aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => (playing ? audio.current?.pause() : play())}
             aria-label={`${playing ? 'Pause' : 'Play'} ${label}`}
-            className="grid size-14 place-items-center rounded-full bg-primary text-on-primary"
+            className="grid size-14 place-items-center rounded-full bg-primary text-on-primary transition-transform duration-(--duration-fast) hover:brightness-110 active:scale-95"
           >
             {playing ? <Pause size={24} strokeWidth={2} aria-hidden="true" /> : <Play size={24} strokeWidth={2} aria-hidden="true" />}
           </button>
           <span className="size-11" aria-hidden="true" />
         </div>
       )}
+      {blocked && <p className="text-caption text-subtle">Tap play to start the clip.</p>}
       {transcript && <ClipWords transcript={transcript} range={range} position={position} />}
       <audio ref={audio} src={url} preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
     </div>
@@ -134,9 +137,13 @@ function waveform(envelope: Uint8Array, range: ShadowSegment): number[] {
 
 /** Transcript of the playing range with the current word highlighted. */
 function ClipWords({ transcript, range, position }: { transcript: { words: TranscriptWord[]; offset: number }; range: ShadowSegment; position: number }) {
-  const words = transcript.words
-    .map((w) => ({ ...w, start: w.start + transcript.offset, end: w.end + transcript.offset }))
-    .filter((w) => w.end > range.start && w.start < range.end)
+  const words = useMemo(
+    () =>
+      transcript.words
+        .map((w) => ({ ...w, start: w.start + transcript.offset, end: w.end + transcript.offset }))
+        .filter((w) => w.end > range.start && w.start < range.end),
+    [transcript, range.start, range.end],
+  )
   if (!words.length) return null
   return <TranscriptText words={words} highlightAt={position > range.start ? position : undefined} className="mt-1" />
 }

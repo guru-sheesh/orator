@@ -48,7 +48,7 @@ function BookSection({ title, books, empty }: { title: string; books: Book[]; em
           <Link
             key={b.id}
             to={`/read/books/${b.id}`}
-            className="flex items-center gap-3 rounded-lg bg-surface px-4 py-3 hover:bg-raised light:border light:border-border"
+            className="flex items-center gap-3 rounded-lg bg-surface px-4 py-3 transition-colors duration-(--duration-fast) hover:bg-raised active:bg-raised light:border light:border-border"
           >
             <BookCover book={b} size="sm" />
             <div className="min-w-0 flex-1">

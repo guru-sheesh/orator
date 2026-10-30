@@ -63,6 +63,7 @@ function TaskBody({ session, taskId }: { session: SpeechSession; taskId: TaskId 
           <h1 className="truncate text-title font-semibold">{meta.title}</h1>
         </div>
         <span className="rounded-sm bg-raised px-2.5 py-1 text-caption font-medium text-muted tabular-nums" title="Session time today">
+          <span className="sr-only">Session time today: </span>
           {formatClock(session.activeMs)}
         </span>
       </header>

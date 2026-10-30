@@ -17,11 +17,11 @@ export default function Today() {
   const remaining = 3 - completedCount
 
   const next = !articulation.done
-    ? { to: '/speak', title: 'Articulation practice', body: `${articulation.target - articulation.minutes} minutes left today.`, cta: articulation.minutes > 0 ? 'Continue session' : 'Start session' }
+    ? { to: '/speak', title: 'Articulation practice', body: `${articulation.target - articulation.minutes} ${articulation.target - articulation.minutes === 1 ? 'minute' : 'minutes'} left today.`, cta: articulation.minutes > 0 ? 'Continue session' : 'Start session' }
     : !journal.done
       ? { to: '/journal', title: 'Journal', body: 'Mark it once you’ve journaled today.', cta: 'Mark journal done' }
       : !reading.done
-        ? { to: '/read', title: 'Reading', body: `${reading.target - reading.pages} pages to go.`, cta: 'Log pages' }
+        ? { to: '/read', title: 'Reading', body: `${reading.target - reading.pages} ${reading.target - reading.pages === 1 ? 'page' : 'pages'} to go.`, cta: 'Log pages' }
         : null
 
   return (
@@ -76,7 +76,7 @@ export default function Today() {
         <Card>
           <Label>Next up</Label>
           <p className="text-title font-semibold">{next.title}</p>
-          <p className="text-[15px] text-muted">{next.body}</p>
+          <p className="text-secondary text-muted">{next.body}</p>
           <Link to={next.to} className={cx(buttonClass.primary, 'w-full')}>
             {next.cta}
           </Link>
@@ -125,7 +125,7 @@ function StatusRow({
   progress?: { value: number; max: number }
 }) {
   return (
-    <Link to={to} className="flex items-center gap-4 rounded-lg bg-surface px-5 py-4 light:border light:border-border">
+    <Link to={to} className="flex items-center gap-4 rounded-lg bg-surface px-5 py-4 transition-colors duration-(--duration-fast) hover:bg-raised active:bg-raised light:border light:border-border">
       <span
         className={cx('grid size-10 flex-none place-items-center rounded-md', done ? 'bg-success-soft text-success' : 'bg-raised text-muted')}
       >
@@ -136,7 +136,7 @@ function StatusRow({
           <span>{label}</span>
           <span className={cx('font-semibold tabular-nums', done && 'text-success')}>{done ? doneValue : value}</span>
         </div>
-        {progress && <ProgressBar value={progress.value} max={progress.max} label={`${label} progress`} done={done} />}
+        {progress && <ProgressBar value={progress.value} max={progress.max} label={`${label} progress`} valueText={value} done={done} />}
       </div>
     </Link>
   )

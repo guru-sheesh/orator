@@ -30,7 +30,6 @@ export function RecordButton({
         type="button"
         onClick={recording ? onStop : onStart}
         disabled={disabled || busy}
-        aria-pressed={recording}
         aria-label={recording ? 'Stop recording' : idleLabel}
         className={cx(
           'relative grid size-20 place-items-center rounded-full bg-danger text-on-danger transition-transform duration-(--duration-fast) active:scale-95 disabled:opacity-40',
@@ -92,11 +91,11 @@ export function AttemptPlayer({ blob, label, durationMs }: { blob: Blob; label: 
     <div className="flex items-center gap-3">
       <button
         type="button"
-        onClick={() => (playing ? audio.current?.pause() : void audio.current?.play())}
+        onClick={() => (playing ? audio.current?.pause() : void audio.current?.play().catch(() => undefined))}
         aria-label={`${playing ? 'Pause' : 'Play'} ${label}`}
         className="grid size-11 flex-none place-items-center rounded-full bg-primary text-on-primary"
       >
-        {playing ? <Pause size={18} strokeWidth={2} aria-hidden="true" /> : <Play size={18} strokeWidth={2} aria-hidden="true" />}
+        {playing ? <Pause size={20} strokeWidth={2} aria-hidden="true" /> : <Play size={20} strokeWidth={2} aria-hidden="true" />}
       </button>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{label}</p>

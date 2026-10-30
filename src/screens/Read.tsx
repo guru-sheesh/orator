@@ -56,7 +56,7 @@ export default function Read() {
               <BookCover book={current} />
               <div className="flex min-w-0 flex-col gap-1">
                 <p className="text-lg leading-snug font-semibold break-words">{current.title}</p>
-                {current.author && <p className="text-[15px] text-muted">{current.author}</p>}
+                {current.author && <p className="text-secondary text-muted">{current.author}</p>}
                 <p className="text-caption text-subtle tabular-nums">
                   {current.totalPages
                     ? `Page ${current.currentPage} of ${current.totalPages} · ${Math.round((current.currentPage / current.totalPages) * 100)}%`
@@ -145,7 +145,7 @@ export default function Read() {
                 {s.note && <p className="mt-1 text-sm break-words text-muted">“{s.note}”</p>}
               </div>
               <button type="button" onClick={() => setPendingDelete(s)} aria-label={`Delete ${s.pagesRead}-page session`} className={iconButtonClass}>
-                <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
+                <Trash2 size={20} strokeWidth={1.75} aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -210,10 +210,17 @@ function LogForm({
     const problem = validatePages(n)
     if (problem) return setError(problem)
     setBusy(true)
-    const result = await logPages(book, toDateKey(), n)
-    setBusy(false)
-    if (!result.ok) return setError(result.error)
-    onSaved(result.pages, result.finished)
+    try {
+      const result = await logPages(book, toDateKey(), n)
+      if (!result.ok) return setError(result.error)
+      onSaved(result.pages, result.finished)
+      // The form remounts to reset; put focus back where the user was typing.
+      requestAnimationFrame(() => document.getElementById('log-pages')?.focus())
+    } catch {
+      setError('The pages couldn’t be saved. Try again.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -247,7 +254,7 @@ function LogForm({
               autoComplete="off"
               value={pages}
               onChange={(e) => setPages(e.target.value.replace(/\D/g, ''))}
-              placeholder="e.g. 12"
+              placeholder="e.g. 12…"
               aria-invalid={!!error || undefined}
               aria-describedby={error ? 'log-error' : undefined}
               className={cx(inputClass, 'flex-1 text-lg tabular-nums aria-invalid:border-danger')}

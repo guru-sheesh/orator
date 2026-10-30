@@ -57,7 +57,7 @@ export default function CompareScreen() {
       </Card>
 
       <Card>
-        <table className="w-full border-collapse text-[15px]">
+        <table className="w-full border-collapse text-secondary">
           <caption className="sr-only">
             Attempt {first.attemptNumber} compared with attempt {latest.attemptNumber}
           </caption>
@@ -67,10 +67,10 @@ export default function CompareScreen() {
                 Dimension
               </th>
               <th scope="col" className="pb-2 text-right font-medium">
-                {first.attemptNumber}
+                Try {first.attemptNumber}
               </th>
               <th scope="col" className="pb-2 text-right font-medium">
-                {latest.attemptNumber}
+                Try {latest.attemptNumber}
               </th>
               <th scope="col" className="pb-2 text-right font-medium">
                 Change
@@ -96,7 +96,7 @@ export default function CompareScreen() {
                     )}
                   >
                     <span className="inline-flex items-center gap-1">
-                      <Icon size={13} strokeWidth={2} aria-hidden="true" />
+                      <Icon size={14} strokeWidth={2} aria-hidden="true" />
                       {r.change}
                     </span>
                   </td>
@@ -122,7 +122,7 @@ export default function CompareScreen() {
 
       <Card>
         <Summary title="What improved" items={improved} empty="No dimension improved this time. That happens; the retry targets still apply." />
-        <div className="divider h-px bg-border" />
+        <div className="h-px bg-border" />
         <Summary title="What still needs work" items={needsWork} empty="Nothing flagged on the retry." />
         <div className="h-px bg-border" />
         <div>

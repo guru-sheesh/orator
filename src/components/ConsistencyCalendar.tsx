@@ -10,7 +10,7 @@ const LEVEL_CLASS = [
   'bg-raised text-subtle',
   'bg-raised text-muted ring-1 ring-inset ring-border-strong',
   'bg-success-soft text-success ring-1 ring-inset ring-success',
-  'bg-success text-bg font-semibold',
+  'bg-success text-on-success font-semibold',
 ]
 
 /** Day grid, Monday first. `days` must be contiguous; leading blanks pad the first week. */
@@ -22,7 +22,7 @@ export function ConsistencyCalendar({ days }: { days: DayProgress[] }) {
     <div>
       <div className="grid grid-cols-7 gap-1.5 text-center" aria-hidden="true">
         {WEEKDAYS.map((d, i) => (
-          <span key={i} className="pb-1 text-xs font-medium text-subtle">
+          <span key={i} className="pb-1 text-caption font-medium text-subtle">
             {d}
           </span>
         ))}
@@ -37,14 +37,16 @@ export function ConsistencyCalendar({ days }: { days: DayProgress[] }) {
           return (
             <li
               key={day.date}
-              aria-label={`${WEEKDAY_NAMES[(date.getDay() + 6) % 7]} ${formatShortDate(date)}: ${future ? 'upcoming' : `${day.met} of 3 targets met`}`}
               className={cx(
-                'grid aspect-square place-items-center rounded-sm text-xs font-medium tabular-nums',
-                future ? 'text-subtle opacity-60' : LEVEL_CLASS[day.met],
+                'grid aspect-square place-items-center rounded-sm text-caption font-medium tabular-nums',
+                future ? 'text-subtle ring-1 ring-border ring-inset' : LEVEL_CLASS[day.met],
                 day.date === today && 'outline-2 outline-offset-1 outline-primary',
               )}
             >
-              {date.getDate()}
+              <span aria-hidden="true">{date.getDate()}</span>
+              <span className="sr-only">
+                {WEEKDAY_NAMES[(date.getDay() + 6) % 7]} {formatShortDate(date)}: {future ? 'upcoming' : `${day.met} of 3 targets met`}
+              </span>
             </li>
           )
         })}

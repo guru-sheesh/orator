@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronLeft, ChevronRight, NotebookPen } from 'lucide-react'
 import { setJournaled, useJournaledDates } from '../data/journal'
 import { Card, cx, iconButtonClass, PageHeader } from '../components/ui'
@@ -16,6 +16,18 @@ export default function Journal() {
   const todayMarked = useJournaledDates(today, today)
   const isCurrentMonth = from.slice(0, 7) === today.slice(0, 7)
 
+  // The pressed button is swapped for its opposite (mark ⇄ undo); keep keyboard/screen-reader focus on it.
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const toggled = useRef(false)
+  const doneToday = !!todayMarked?.has(today)
+  useEffect(() => {
+    if (toggled.current) toggleRef.current?.focus()
+  }, [doneToday])
+  function toggleToday(next: boolean) {
+    toggled.current = true
+    void setJournaled(today, next)
+  }
+
   if (!marked || !todayMarked) return null
   const done = todayMarked.has(today)
   const days = dateKeysBetween(month, endOfMonth(month))
@@ -28,22 +40,23 @@ export default function Journal() {
 
       <Card className="items-center gap-4 py-8 text-center">
         <span className={cx('grid size-16 place-items-center rounded-full', done ? 'bg-success-soft text-success' : 'bg-raised text-muted')}>
-          {done ? <Check size={30} strokeWidth={2} aria-hidden="true" /> : <NotebookPen size={28} strokeWidth={1.75} aria-hidden="true" />}
+          {done ? <Check size={28} strokeWidth={2} aria-hidden="true" /> : <NotebookPen size={28} strokeWidth={1.75} aria-hidden="true" />}
         </span>
-        <p className="text-title font-semibold" aria-live="polite">
+        <p className="text-title font-semibold" role="status">
           {done ? 'Journaled today' : 'Have you journaled today?'}
         </p>
         {done ? (
-          <button type="button" onClick={() => void setJournaled(today, false)} className="min-h-11 px-3 text-sm text-muted underline underline-offset-2 hover:text-text">
+          <button ref={toggleRef} type="button" onClick={() => toggleToday(false)} className="min-h-11 px-3 text-sm text-muted underline underline-offset-2 hover:text-text">
             Undo
           </button>
         ) : (
           <button
+            ref={toggleRef}
             type="button"
-            onClick={() => void setJournaled(today, true)}
+            onClick={() => toggleToday(true)}
             className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 text-lg font-semibold text-on-primary transition-transform duration-(--duration-fast) active:scale-[0.98] hover:brightness-110"
           >
-            <Check size={22} strokeWidth={2} aria-hidden="true" />
+            <Check size={24} strokeWidth={2} aria-hidden="true" />
             I journaled today
           </button>
         )}
@@ -73,7 +86,7 @@ export default function Journal() {
 
         <div className="grid grid-cols-7 gap-1.5 text-center" aria-hidden="true">
           {WEEKDAYS.map((d, i) => (
-            <span key={i} className="text-xs font-medium text-subtle">
+            <span key={i} className="text-caption font-medium text-subtle">
               {d}
             </span>
           ))}
@@ -92,11 +105,11 @@ export default function Journal() {
                   type="button"
                   disabled={future}
                   aria-pressed={on}
-                  aria-label={`${formatLongDate(date)}: ${on ? 'journaled' : 'not journaled'}`}
+                  aria-label={formatLongDate(date)}
                   onClick={() => void setJournaled(key, !on)}
                   className={cx(
-                    'grid aspect-square w-full place-items-center rounded-sm text-xs font-medium tabular-nums disabled:opacity-40',
-                    on ? 'bg-success font-semibold text-bg' : 'bg-raised text-subtle hover:ring-1 hover:ring-border-strong',
+                    'grid aspect-square w-full place-items-center rounded-sm text-caption font-medium tabular-nums disabled:opacity-40',
+                    on ? 'bg-success font-semibold text-on-success' : 'bg-raised text-subtle hover:ring-1 hover:ring-border-strong',
                     key === today && 'outline-2 outline-offset-1 outline-primary',
                   )}
                 >

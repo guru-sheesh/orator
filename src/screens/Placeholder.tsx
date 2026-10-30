@@ -6,7 +6,7 @@ export function NotFound() {
     <>
       <PageHeader title="Page not found" />
       <Card>
-        <p className="text-muted">This page doesn't exist. Your data is unaffected.</p>
+        <p className="text-muted">This page doesn’t exist. Your data is unaffected.</p>
         <Link to="/" className={buttonClass.secondary}>
           Back to Today
         </Link>

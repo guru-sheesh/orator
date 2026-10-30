@@ -133,6 +133,7 @@ function ShadowStages({
 }) {
   const [stage, setStage] = useState<Stage>('listen')
   const [phraseIndex, setPhraseIndex] = useState(0)
+  const [recordingNow, setRecordingNow] = useState(false)
   const player = useRef<ClipPlayerHandle>(null)
   const phrases = useMemo(() => splitPhrases(envelope, segment), [envelope, segment])
   const attempts = useAttempts(session.id, 'shadowing')
@@ -155,7 +156,7 @@ function ShadowStages({
 
   return (
     <>
-      <Segmented label="Stage" options={STAGES} value={stage} onChange={setStage} />
+      <Segmented label="Stage" options={STAGES} value={stage} onChange={setStage} disabled={recordingNow} />
 
       <Card>
         <div>
@@ -184,7 +185,7 @@ function ShadowStages({
           <>
             <ClipPlayer ref={player} blob={blob} envelope={envelope} range={segment} label="Clip" hideControls transcript={transcript} />
             <p className="flex gap-2 text-sm text-muted">
-              <Headphones size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
+              <Headphones size={20} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
               Use headphones. Recording starts the clip; speak along almost at the same time, copying timing and emphasis.
             </p>
           </>
@@ -202,8 +203,8 @@ function ShadowStages({
           </>
         )}
 
-        {transcriptStatus === 'loading' && <p className="text-caption text-subtle">Loading the transcript…</p>}
-        {transcriptStatus === 'failed' && <p className="text-caption text-subtle">The clip transcript isn’t available right now; practice works without it.</p>}
+        {transcriptStatus === 'loading' && <p role="status" className="text-caption text-subtle">Loading the transcript…</p>}
+        {transcriptStatus === 'failed' && <p role="status" className="text-caption text-subtle">The clip transcript isn’t available right now; practice works without it.</p>}
         <p className="flex gap-2 text-caption text-subtle">
           <Info size={14} strokeWidth={1.75} className="mt-0.5 flex-none" aria-hidden="true" />
           Copy the rhythm and timing, not the speaker’s accent.
@@ -217,6 +218,8 @@ function ShadowStages({
             session={session}
             task="shadowing"
             stage="repeat"
+            onRecordingStart={() => setRecordingNow(true)}
+            onRecordingEnd={() => setRecordingNow(false)}
             promptId={`${baseId}:p${phraseIndex}`}
             prompt={`Repeat phrase ${phraseIndex + 1}`}
             prepSec={0}
@@ -242,13 +245,19 @@ function ShadowStages({
           prepSec={0}
           maxSec={Math.ceil(clipSec) + 2}
           startLabel="Start clip and record"
-          onRecordingStart={() => player.current?.play()}
-          onRecordingEnd={() => player.current?.pause()}
+          onRecordingStart={() => {
+            setRecordingNow(true)
+            player.current?.play()
+          }}
+          onRecordingEnd={() => {
+            setRecordingNow(false)
+            player.current?.pause()
+          }}
         />
       )}
 
       {stage === 'deliver' && (
-        <PromptRecorder session={session} task="shadowing" stage="deliver" promptId={baseId} prompt="Deliver the clip independently" prepSec={0} maxSec={Math.max(TIMING.shadowing.maxSec, Math.ceil(clipSec * 1.5))} />
+        <PromptRecorder session={session} task="shadowing" stage="deliver" onRecordingStart={() => setRecordingNow(true)} onRecordingEnd={() => setRecordingNow(false)} promptId={baseId} prompt="Deliver the clip independently" prepSec={0} maxSec={Math.max(TIMING.shadowing.maxSec, Math.ceil(clipSec * 1.5))} />
       )}
 
       {stage === 'listen' && (

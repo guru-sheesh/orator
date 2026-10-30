@@ -110,7 +110,7 @@ export default function Settings() {
         <Card>
           <Label>Transcription usage · this month</Label>
           <p className="tabular-nums">
-            <span className="text-[28px] font-semibold">{formatHours(usage.seconds)}</span> <span className="text-muted">of {formatHours(usage.limit)} free</span>
+            <span className="text-stat font-semibold">{formatHours(usage.seconds)}</span> <span className="text-muted">of {formatHours(usage.limit)} free</span>
           </p>
           <ProgressBar value={Math.round(usage.seconds)} max={usage.limit} label="Azure transcription time used" />
           <p className="text-caption text-subtle">
@@ -130,7 +130,7 @@ export default function Settings() {
           </span>
         </div>
         <p className="flex gap-2 rounded-md bg-info-soft px-3 py-2.5 text-sm">
-          <ShieldAlert size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
+          <ShieldAlert size={20} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
           <span>
             {coach?.provider === 'claude'
               ? 'Only transcripts and timing numbers are sent for analysis, never audio or journal entries.'
@@ -146,10 +146,11 @@ export default function Settings() {
           <label htmlFor="keep-recordings" className="flex min-h-14 cursor-pointer items-center gap-3">
             <span className="flex-1">
               <span className="block">Keep recordings on this device</span>
-              <span className="block text-caption text-subtle">Off: audio is discarded after each task. On: needed to replay Attempt 1 vs 2 later.</span>
+              <span id="keep-recordings-hint" className="block text-caption text-subtle">Off: audio is discarded after each task. On: needed to replay Attempt 1 vs 2 later.</span>
             </span>
             <input
               id="keep-recordings"
+              aria-describedby="keep-recordings-hint"
               type="checkbox"
               role="switch"
               checked={settings.keepRecordings}
@@ -162,7 +163,7 @@ export default function Settings() {
             />
           </label>
         )}
-        <Link to="/speak/library" className="-mx-2 flex min-h-12 items-center gap-3 rounded-md px-2 hover:bg-raised">
+        <Link to="/speak/library" className="-mx-2 flex min-h-12 items-center gap-3 rounded-md px-2 hover:bg-raised active:bg-raised">
           <FileAudio size={20} strokeWidth={1.75} aria-hidden="true" />
           <span className="flex-1">Shadowing audio</span>
           <ChevronRight size={20} strokeWidth={1.75} className="text-subtle" aria-hidden="true" />
@@ -224,7 +225,7 @@ export default function Settings() {
         onConfirm={confirmPending}
         onCancel={() => setPending(null)}
       >
-        <p>This permanently removes every journal entry, reading log and practice record on this device. It can't be undone.</p>
+        <p>This permanently removes every journal entry, reading log and practice record on this device. It can’t be undone.</p>
         <p>If you might want them later, cancel and export a backup first.</p>
       </ConfirmDialog>
 
@@ -305,7 +306,7 @@ function SettingButton({
       type="button"
       onClick={onClick}
       className={cx(
-        '-mx-2 flex min-h-12 items-center gap-3 rounded-md px-2 text-left hover:bg-raised',
+        '-mx-2 flex min-h-12 items-center gap-3 rounded-md px-2 text-left hover:bg-raised active:bg-raised',
         danger && 'text-danger',
       )}
     >

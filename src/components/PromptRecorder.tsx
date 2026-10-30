@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { ShadowStage, SpeechSession, TaskId } from '../data/db'
 import { saveAttempt } from '../data/speech'
@@ -42,13 +42,27 @@ export function PromptRecorder({
   const [last, setLast] = useState<{ blob: Blob; durationMs: number } | null>(null)
   const [saveError, setSaveError] = useState(false)
   const [attemptId, setAttemptId] = useState<number | null>(null)
+  // The control the user pressed disappears between phases; move focus to what replaced it.
+  const resultRef = useRef<HTMLDivElement>(null)
+  const prepRef = useRef<HTMLDivElement>(null)
+  const recordRef = useRef<HTMLDivElement>(null)
+  const moved = useRef(false)
+  useEffect(() => {
+    if (!moved.current) return
+    const target = phase === 'done' ? resultRef.current : phase === 'prep' ? prepRef.current : recordRef.current?.querySelector('button')
+    target?.focus()
+  }, [phase])
+  const go = (next: Phase) => {
+    moved.current = true
+    setPhase(next)
+  }
 
   const rec = useRecorder({
     maxMs: maxSec * 1000,
     onComplete: async (result) => {
       onRecordingEnd?.()
       setLast({ blob: result.blob, durationMs: result.durationMs })
-      setPhase('done')
+      go('done')
       try {
         setAttemptId(await saveAttempt({ session, task, promptId, prompt, stage, ...result }))
         setSaveError(false)
@@ -62,14 +76,18 @@ export function PromptRecorder({
   async function begin() {
     if (prepSec > 0) {
       // Open the mic on this tap (iOS needs a gesture), then count down.
-      if (await rec.prepare()) setPhase('prep')
+      if (await rec.prepare()) go('prep')
     } else {
       await record()
     }
   }
 
   async function record() {
-    await rec.start()
+    // If the microphone fails, stay put (and don't start a shadowing clip).
+    if (!(await rec.start())) {
+      setPhase('ready')
+      return
+    }
     setPhase('recording')
     onRecordingStart?.()
   }
@@ -78,7 +96,14 @@ export function PromptRecorder({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {phase === 'prep' && <Countdown seconds={prepSec} onDone={() => void record()} />}
+      {phase === 'prep' && (
+        <div ref={prepRef} tabIndex={-1} className="outline-none">
+          <p role="status" className="sr-only">
+            Prepare. Recording starts automatically in {prepSec} seconds.
+          </p>
+          <Countdown seconds={prepSec} onDone={() => void record()} />
+        </div>
+      )}
 
       {(phase === 'recording' || phase === 'ready') && (
         <>
@@ -90,27 +115,29 @@ export function PromptRecorder({
       )}
 
       {phase !== 'prep' && phase !== 'done' && (
+        <div ref={recordRef} className="contents">
         <RecordButton
           state={rec.state === 'error' ? 'idle' : rec.state}
           onStart={() => void begin()}
           onStop={() => void rec.stop()}
           idleLabel={prepSec > 0 ? `${startLabel} · ${prepSec} s to prepare` : startLabel}
         />
+        </div>
       )}
 
       {phase === 'done' && last && (
-        <div className="flex w-full flex-col gap-3 rounded-md bg-raised p-4">
+        <div ref={resultRef} tabIndex={-1} aria-label="Your recording" role="group" className="flex w-full flex-col gap-3 rounded-md bg-raised p-4 outline-none focus-visible:outline-2 focus-visible:outline-focus">
           <AttemptPlayer blob={last.blob} durationMs={last.durationMs} label="Your answer" />
           {attemptId !== null && <AttemptTranscript attemptId={attemptId} />}
           <p className="text-caption text-subtle">
-            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : 'Saved. Feedback arrives in a later update.'}
+            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : 'Saved.'}
           </p>
           <button
             type="button"
             onClick={() => {
               setLast(null)
               setAttemptId(null)
-              setPhase('ready')
+              go('ready')
             }}
             className={cx(buttonClass.secondary, 'min-h-11 text-sm')}
           >

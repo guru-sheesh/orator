@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from 'react-router'
+import { Link, Outlet, useLocation } from 'react-router'
 import { BookOpen, Mic, NotebookPen, Sun, type LucideIcon } from 'lucide-react'
 import { cx } from './ui'
 
@@ -25,7 +25,7 @@ export function AppShell() {
         {TABS.map(({ to, label, icon: Icon, also }) => {
           const active = to === '/' ? pathname === '/' || !!also?.includes(pathname) : pathname.startsWith(to)
           return (
-            <NavLink
+            <Link
               key={to}
               to={to}
               aria-current={active ? 'page' : undefined}
@@ -36,7 +36,7 @@ export function AppShell() {
             >
               <Icon size={24} strokeWidth={1.75} aria-hidden="true" />
               {label}
-            </NavLink>
+            </Link>
           )
         })}
       </nav>

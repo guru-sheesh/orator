@@ -32,6 +32,7 @@ function BookEditor({ book }: { book: Book | null }) {
   const [cover, setCover] = useState(book?.coverDataUrl)
   const [errors, setErrors] = useState<{ title?: string; cover?: string }>({})
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [saving, setSaving] = useState(false)
   const coverInput = useRef<HTMLInputElement>(null)
 
   async function submit(e: FormEvent) {
@@ -45,9 +46,11 @@ function BookEditor({ book }: { book: Book | null }) {
 
     // The page count is kept by the app from logged pages; the start date is simply the day it was added.
     const fields = { title: title.trim(), author: author.trim(), totalPages: total, coverDataUrl: cover, currentPage: book?.currentPage ?? 0, startedOn: book?.startedOn ?? today }
+    if (saving) return
+    setSaving(true)
     if (book) {
       await updateBook(book.id!, fields)
-      navigate(-1)
+      navigate('/read/books')
     } else {
       await addBook(fields)
       navigate('/read', { replace: true })
@@ -115,7 +118,7 @@ function BookEditor({ book }: { book: Book | null }) {
               <BookCover book={{ coverDataUrl: cover }} />
               <div className="flex flex-col gap-1">
                 <button type="button" onClick={() => coverInput.current?.click()} className={cx(buttonClass.secondary, 'min-h-11 px-4 text-sm')}>
-                  <ImagePlus size={18} strokeWidth={1.75} aria-hidden="true" />
+                  <ImagePlus size={20} strokeWidth={1.75} aria-hidden="true" />
                   {cover ? 'Change photo' : 'Add photo'}
                 </button>
                 {cover && (
@@ -146,7 +149,7 @@ function BookEditor({ book }: { book: Book | null }) {
           </div>
         </Card>
 
-        <button type="submit" className={buttonClass.primary}>
+        <button type="submit" disabled={saving} className={buttonClass.primary}>
           {book ? 'Save changes' : 'Add book'}
         </button>
       </form>
@@ -159,11 +162,11 @@ function BookEditor({ book }: { book: Book | null }) {
               await setBookCompleted(book.id!, !book.completedOn)
               navigate('/read/books')
             }}
-            className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left hover:bg-raised"
+            className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left hover:bg-raised active:bg-raised"
           >
             {book.completedOn ? 'Move back to Reading' : 'Mark as finished'}
           </button>
-          <button type="button" onClick={() => setConfirmDelete(true)} className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left text-danger hover:bg-raised">
+          <button type="button" onClick={() => setConfirmDelete(true)} className="-mx-2 flex min-h-12 items-center rounded-md px-2 text-left text-danger hover:bg-raised active:bg-raised">
             Delete book
           </button>
         </Card>

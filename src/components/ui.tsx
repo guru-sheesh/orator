@@ -1,10 +1,23 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import type { ComponentProps, ComponentPropsWithoutRef, ElementType, ReactNode } from 'react'
+import { extendTailwindMerge } from 'tailwind-merge'
 
+/** Teaches tailwind-merge the design-system scales so overrides (e.g. a Card's gap) win predictably. */
+const merge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: ['caption', 'secondary', 'body', 'transcript', 'title', 'headline', 'stat', 'display'],
+      radius: ['pill'],
+      shadow: ['sheet'],
+    },
+  },
+})
+
+/** Joins class names; later classes override earlier ones for the same CSS property. */
 export function cx(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
+  return merge(classes.filter(Boolean).join(' '))
 }
 
-export function Card({ className, ...props }: ComponentPropsWithoutRef<'section'>) {
+export function Card({ className, ...props }: ComponentProps<'section'>) {
   return (
     <section
       className={cx('flex flex-col gap-3 rounded-lg bg-surface px-5 py-4 light:border light:border-border', className)}
@@ -13,8 +26,9 @@ export function Card({ className, ...props }: ComponentPropsWithoutRef<'section'
   )
 }
 
-export function Label({ className, ...props }: ComponentPropsWithoutRef<'p'>) {
-  return <p className={cx('text-caption font-medium uppercase tracking-[0.06em] text-subtle', className)} {...props} />
+/** Section title of a card. A heading by default so screen-reader users can jump between sections. */
+export function Label({ className, as: Tag = 'h2', ...props }: ComponentPropsWithoutRef<'h2'> & { as?: ElementType }) {
+  return <Tag className={cx('text-caption font-medium uppercase tracking-[0.06em] text-subtle', className)} {...props} />
 }
 
 export function PageHeader({ eyebrow, title, actions }: { eyebrow?: string; title: string; actions?: ReactNode }) {
@@ -35,11 +49,13 @@ export function Segmented<T extends string>({
   options,
   value,
   onChange,
+  disabled,
 }: {
   label: string
   options: readonly { value: T; label: string }[]
   value: T
   onChange: (value: T) => void
+  disabled?: boolean
 }) {
   return (
     <div role="group" aria-label={label} className="flex rounded-pill bg-raised p-1">
@@ -48,8 +64,9 @@ export function Segmented<T extends string>({
           key={o.value}
           type="button"
           aria-pressed={value === o.value}
+          disabled={disabled}
           onClick={() => onChange(o.value)}
-          className="min-h-11 flex-1 rounded-pill text-sm font-medium text-muted hover:text-text aria-pressed:bg-surface aria-pressed:text-text aria-pressed:shadow-[0_0_0_1px_var(--border)]"
+          className="min-h-11 flex-1 rounded-pill text-sm font-medium text-muted hover:text-text disabled:opacity-40 aria-pressed:bg-surface aria-pressed:text-text aria-pressed:shadow-[0_0_0_1px_var(--border)]"
         >
           {o.label}
         </button>
@@ -58,13 +75,14 @@ export function Segmented<T extends string>({
   )
 }
 
-export function ProgressBar({ value, max, label, done }: { value: number; max: number; label: string; done?: boolean }) {
+export function ProgressBar({ value, max, label, done, valueText }: { value: number; max: number; label: string; done?: boolean; valueText?: string }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0
   return (
     <div
       role="progressbar"
       aria-label={label}
-      aria-valuenow={value}
+      aria-valuenow={Math.min(value, max)}
+      aria-valuetext={valueText ?? `${value} of ${max}`}
       aria-valuemin={0}
       aria-valuemax={max}
       className="h-1.5 overflow-hidden rounded-pill bg-raised"
@@ -83,11 +101,14 @@ export function ProgressRing({
   label,
   size = 56,
   stroke = 4,
+  valueText,
   children,
 }: {
   value: number
   max: number
   label: string
+  /** Spoken value, e.g. "12 of 30 minutes"; raw value/max otherwise. */
+  valueText?: string
   size?: number
   stroke?: number
   children?: ReactNode
@@ -100,7 +121,8 @@ export function ProgressRing({
     <div
       role="progressbar"
       aria-label={label}
-      aria-valuenow={value}
+      aria-valuenow={Math.min(value, max)}
+      aria-valuetext={valueText ?? `${value} of ${max}`}
       aria-valuemin={0}
       aria-valuemax={max}
       className="relative grid flex-none place-items-center"

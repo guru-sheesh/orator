@@ -36,7 +36,7 @@ function Chip({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neu
     <span
       className={cx(
         'rounded-sm px-2 py-1 text-caption tabular-nums',
-        tone === 'neutral' && 'bg-surface text-muted',
+        tone === 'neutral' && 'bg-raised text-muted',
         tone === 'danger' && 'bg-danger-soft text-danger',
         tone === 'info' && 'bg-info-soft text-info',
         tone === 'success' && 'bg-success-soft text-success',
@@ -71,7 +71,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
 
   if (status === 'pending')
     return (
-      <p className="text-caption text-subtle" aria-live="polite">
+      <p className="text-caption text-subtle">
         Analysing your answer…
       </p>
     )
@@ -116,7 +116,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
           </Chip>
         )}
         {accidental.length > 0 && <Chip>{accidental.length} repeated</Chip>}
-        {m.wpm && (
+        {m.wpm != null && m.wpm > 0 && (
           <Chip>
             {m.wpm} wpm{m.paceVariation !== null ? (m.paceVariation <= 15 ? ' · steady' : ' · uneven') : ''}
           </Chip>
@@ -126,14 +126,14 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
 
       {a.saidTargetWord && <p className="text-sm text-danger">You said the word itself. Describe around it instead.</p>}
 
-      <div className="rounded-md bg-surface px-4 py-3">
+      <div className="rounded-md bg-raised px-4 py-3">
         <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Top priority</p>
         <p className="font-medium">{a.priority.weakness}</p>
         {a.priority.evidence && <p className="text-sm text-muted">{a.priority.evidence}</p>}
       </div>
 
       {a.content && (
-        <div className="flex flex-col gap-2 rounded-md bg-surface px-4 py-3">
+        <div className="flex flex-col gap-2 rounded-md bg-raised px-4 py-3">
           {a.content.remembered.length > 0 && <ContentList title="You covered" items={a.content.remembered} />}
           {a.content.missed.length > 0 && <ContentList title="You missed" items={a.content.missed} />}
           {a.content.incorrect.length > 0 && <ContentList title="Not accurate" items={a.content.incorrect} />}
@@ -141,7 +141,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
         </div>
       )}
 
-      <details className="rounded-md bg-surface px-4 py-1">
+      <details className="rounded-md bg-raised px-4 py-1">
         <summary className="min-h-11 cursor-pointer content-center text-sm font-medium">Full analysis</summary>
         <div className="flex flex-col gap-3 pb-3">
           <Section title="Fillers">
