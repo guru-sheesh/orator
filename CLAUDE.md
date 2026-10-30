@@ -70,6 +70,11 @@ The user decided feedback does NOT need citations. Replace the source library wi
 - Word, unexpected-question and impromptu banks are built in (labelled "AI-generated practice material"), with rotation so items don't repeat until exhausted, and difficulty rising over time. Impromptu keeps a minority of professional/technical work scenarios; the rest is new territory. The user can add their own questions.
 - Shadowing audio: the user imports their own files (personal use, no verification needed). Copyrighted audio is never committed or bundled.
 
+## 0.9b Journal and reading simplified (user, 2026-10-30) — SUPERSEDES sections 14-15 where they conflict
+
+- Journal: the user journals elsewhere. The app only records "I journaled today" (one tap, with undo) and shows a month calendar where past days can be marked/unmarked. No prompts, free write, autosave, search or entry text.
+- Reading: a book is title, author (optional), total pages (optional) and an optional cover. No "current page" or "date started" fields. Logging asks only "Pages read" for today; the app keeps its own running page count per book for the progress bar. No "one thing I learned" note.
+
 ## 0.8 Source library: anti-fabrication rules (sections 7-9) — see 0.8a
 
 - The coaching AI may ONLY cite sources that exist in the app's `SourceReference` table, by ID. It must never write a citation, quotation, author or page number free-hand.

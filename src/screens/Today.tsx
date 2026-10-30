@@ -16,7 +16,7 @@ export default function Today() {
   const next = !articulation.done
     ? { to: '/speak', title: 'Articulation practice', body: `${articulation.target - articulation.minutes} minutes left today.`, cta: articulation.minutes > 0 ? 'Continue session' : 'Start session' }
     : !journal.done
-      ? { to: '/journal', title: 'Journal', body: 'One entry for today.', cta: journal.started ? 'Continue entry' : 'Write entry' }
+      ? { to: '/journal', title: 'Journal', body: 'Mark it once you’ve journaled today.', cta: 'Mark journal done' }
       : !reading.done
         ? { to: '/read', title: 'Reading', body: `${reading.target - reading.pages} pages to go.`, cta: 'Log pages' }
         : null
@@ -58,7 +58,7 @@ export default function Today() {
         value={`${articulation.minutes} / ${articulation.target} min`}
         progress={{ value: articulation.minutes, max: articulation.target }}
       />
-      <StatusRow to="/journal" icon={NotebookPen} label="Journal" done={journal.done} value={journal.started ? 'In progress' : 'Not started'} />
+      <StatusRow to="/journal" icon={NotebookPen} label="Journal" done={journal.done} value="Not done" />
       <StatusRow
         to="/read"
         icon={BookOpen}

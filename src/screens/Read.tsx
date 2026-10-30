@@ -4,7 +4,7 @@ import { Check, Library, Plus, Trash2 } from 'lucide-react'
 import type { Book, ReadingSession } from '../data/db'
 import { useDailySummary } from '../data/daily'
 import { usePeriodProgress } from '../data/progress'
-import { deleteSession, logSession, setBookCompleted, useBooks, useSessionsOn, validateLog } from '../data/reading'
+import { deleteSession, logPages, setBookCompleted, useBooks, useSessionsOn, validatePages } from '../data/reading'
 import { BookCover } from '../components/BookCover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { buttonClass, Card, cx, iconButtonClass, Label, PageHeader, ProgressBar } from '../components/ui'
@@ -139,7 +139,7 @@ export default function Read() {
             <div key={s.id} className="flex items-start gap-3 border-t border-border py-3 first-of-type:border-t-0">
               <div className="min-w-0 flex-1">
                 <p className="font-medium tabular-nums">
-                  {s.pagesRead} pages <span className="font-normal text-muted">· p. {s.startPage}–{s.endPage}</span>
+                  {s.pagesRead} {s.pagesRead === 1 ? 'page' : 'pages'}
                 </p>
                 <p className="truncate text-caption text-subtle">{bookTitle(s.bookId)}</p>
                 {s.note && <p className="mt-1 text-sm break-words text-muted">“{s.note}”</p>}
@@ -172,7 +172,7 @@ export default function Read() {
         onCancel={() => setPendingDelete(null)}
       >
         <p>
-          {pendingDelete?.pagesRead} pages (p. {pendingDelete?.startPage}–{pendingDelete?.endPage}) will be removed from today’s total.
+          {pendingDelete?.pagesRead} pages will be removed from today’s total.
         </p>
       </ConfirmDialog>
     </>
@@ -188,6 +188,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   )
 }
 
+
 function LogForm({
   book,
   books,
@@ -199,27 +200,17 @@ function LogForm({
   onSelectBook: (id: number) => void
   onSaved: (pages: number, finished: boolean) => void
 }) {
-  const today = toDateKey()
-  const [start, setStart] = useState(String(book.currentPage))
-  const [end, setEnd] = useState('')
-  const [date, setDate] = useState(today)
-  const [note, setNote] = useState('')
+  const [pages, setPages] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const startN = Number(start)
-  const endN = Number(end)
-  const preview = end !== '' && endN > startN ? endN - startN : null
-
   async function submit(e: FormEvent) {
     e.preventDefault()
-    const problem = validateLog(book, startN, end === '' ? NaN : endN)
-    if (problem) {
-      setError(problem)
-      return
-    }
+    const n = pages === '' ? NaN : Number(pages)
+    const problem = validatePages(n)
+    if (problem) return setError(problem)
     setBusy(true)
-    const result = await logSession(book, date, startN, endN, note)
+    const result = await logPages(book, toDateKey(), n)
     setBusy(false)
     if (!result.ok) return setError(result.error)
     onSaved(result.pages, result.finished)
@@ -227,20 +218,13 @@ function LogForm({
 
   return (
     <Card>
-      <Label>Log pages</Label>
       <form onSubmit={submit} noValidate className="flex flex-col gap-3">
         {books.length > 1 && (
           <div className="flex flex-col gap-1.5">
             <label htmlFor="log-book" className="text-sm font-medium text-muted">
               Book
             </label>
-            <select
-              id="log-book"
-              name="book"
-              value={book.id}
-              onChange={(e) => onSelectBook(Number(e.target.value))}
-              className={cx(inputClass, 'bg-raised text-text')}
-            >
+            <select id="log-book" name="book" value={book.id} onChange={(e) => onSelectBook(Number(e.target.value))} className={cx(inputClass, 'bg-raised text-text')}>
               {books.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.title}
@@ -249,68 +233,36 @@ function LogForm({
             </select>
           </div>
         )}
-        <div className="flex gap-3">
-          <NumberField id="log-start" label="Start page" value={start} onChange={setStart} />
-          <NumberField id="log-end" label="End page" value={end} onChange={setEnd} invalid={!!error} describedBy={error ? 'log-error' : undefined} />
-        </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="log-date" className="text-sm font-medium text-muted">
-            Date
+          <label htmlFor="log-pages" className="text-sm font-medium text-muted">
+            Pages read
           </label>
-          <input id="log-date" name="date" type="date" max={today} value={date} onChange={(e) => setDate(e.target.value || today)} className={cx(inputClass, 'tabular-nums')} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="log-note" className="text-sm font-medium text-muted">
-            One thing I learned <span className="font-normal text-subtle">(optional)</span>
-          </label>
-          <input id="log-note" name="note" autoComplete="off" value={note} onChange={(e) => setNote(e.target.value)} placeholder="A sentence is enough…" className={inputClass} />
+          <div className="flex gap-2">
+            <input
+              id="log-pages"
+              name="pages"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={pages}
+              onChange={(e) => setPages(e.target.value.replace(/\D/g, ''))}
+              placeholder="e.g. 12"
+              aria-invalid={!!error || undefined}
+              aria-describedby={error ? 'log-error' : undefined}
+              className={cx(inputClass, 'flex-1 text-lg tabular-nums aria-invalid:border-danger')}
+            />
+            <button type="submit" disabled={busy} className={cx(buttonClass.primary, 'min-h-12')}>
+              {busy ? 'Saving…' : 'Log'}
+            </button>
+          </div>
         </div>
         {error && (
           <p id="log-error" role="alert" className="text-sm text-danger">
             {error}
           </p>
         )}
-        <button type="submit" disabled={busy} className={buttonClass.primary}>
-          {busy ? 'Saving…' : preview ? `Save session · ${preview} ${preview === 1 ? 'page' : 'pages'}` : 'Save session'}
-        </button>
       </form>
     </Card>
-  )
-}
-
-function NumberField({
-  id,
-  label,
-  value,
-  onChange,
-  invalid,
-  describedBy,
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (v: string) => void
-  invalid?: boolean
-  describedBy?: string
-}) {
-  return (
-    <div className="flex flex-1 flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-muted">
-        {label}
-      </label>
-      <input
-        id={id}
-        name={id}
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        autoComplete="off"
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        className={cx(inputClass, 'tabular-nums aria-invalid:border-danger')}
-      />
-    </div>
   )
 }

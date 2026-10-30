@@ -29,27 +29,22 @@ function BookEditor({ book }: { book: Book | null }) {
   const [title, setTitle] = useState(book?.title ?? '')
   const [author, setAuthor] = useState(book?.author ?? '')
   const [totalPages, setTotalPages] = useState(book?.totalPages ? String(book.totalPages) : '')
-  const [currentPage, setCurrentPage] = useState(String(book?.currentPage ?? 0))
-  const [startedOn, setStartedOn] = useState(book?.startedOn ?? today)
   const [cover, setCover] = useState(book?.coverDataUrl)
-  const [errors, setErrors] = useState<{ title?: string; pages?: string; cover?: string }>({})
+  const [errors, setErrors] = useState<{ title?: string; cover?: string }>({})
   const [confirmDelete, setConfirmDelete] = useState(false)
   const coverInput = useRef<HTMLInputElement>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     const total = totalPages ? Number(totalPages) : undefined
-    const current = Number(currentPage || 0)
-    const next: typeof errors = {}
-    if (!title.trim()) next.title = 'Enter the book’s title.'
-    if (total !== undefined && current > total) next.pages = `The current page can’t be past the last page (${total}).`
-    setErrors(next)
-    if (next.title || next.pages) {
-      document.getElementById(next.title ? 'book-title' : 'book-current')?.focus()
+    if (!title.trim()) {
+      setErrors({ title: 'Enter the book’s title.' })
+      document.getElementById('book-title')?.focus()
       return
     }
 
-    const fields = { title: title.trim(), author: author.trim(), totalPages: total, currentPage: current, coverDataUrl: cover, startedOn }
+    // The page count is kept by the app from logged pages; the start date is simply the day it was added.
+    const fields = { title: title.trim(), author: author.trim(), totalPages: total, coverDataUrl: cover, currentPage: book?.currentPage ?? 0, startedOn: book?.startedOn ?? today }
     if (book) {
       await updateBook(book.id!, fields)
       navigate(-1)
@@ -95,41 +90,22 @@ function BookEditor({ book }: { book: Book | null }) {
           <Field id="book-author" label="Author" optional>
             <input id="book-author" name="author" autoComplete="off" value={author} onChange={(e) => setAuthor(e.target.value)} className={inputClass} />
           </Field>
-          <div className="flex gap-3">
-            <Field id="book-total" label="Total pages">
-              <input
-                id="book-total"
-                name="totalPages"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                value={totalPages}
-                onChange={(e) => setTotalPages(e.target.value.replace(/\D/g, ''))}
-                aria-describedby="book-pages-hint"
-                className={cx(inputClass, 'tabular-nums')}
-              />
-            </Field>
-            <Field id="book-current" label="Current page" error={errors.pages}>
-              <input
-                id="book-current"
-                name="currentPage"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                value={currentPage}
-                onChange={(e) => setCurrentPage(e.target.value.replace(/\D/g, ''))}
-                aria-invalid={!!errors.pages || undefined}
-                aria-describedby={errors.pages ? 'book-current-error book-pages-hint' : 'book-pages-hint'}
-                className={cx(inputClass, 'tabular-nums')}
-              />
-            </Field>
-          </div>
-          <p id="book-pages-hint" className="-mt-1 text-caption text-subtle">
-            Leave total pages blank if you don’t know it. Current page is your bookmark (0 if you haven’t started); pages read are counted from it.
-          </p>
-          <Field id="book-started" label="Date started">
-            <input id="book-started" name="startedOn" type="date" max={today} value={startedOn} onChange={(e) => setStartedOn(e.target.value || today)} className={cx(inputClass, 'tabular-nums')} />
+          <Field id="book-total" label="Total pages" optional>
+            <input
+              id="book-total"
+              name="totalPages"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={totalPages}
+              onChange={(e) => setTotalPages(e.target.value.replace(/\D/g, ''))}
+              aria-describedby="book-pages-hint"
+              className={cx(inputClass, 'tabular-nums')}
+            />
           </Field>
+          <p id="book-pages-hint" className="-mt-1 text-caption text-subtle">
+            Used for the progress bar. The pages you log each day are added up for you.
+          </p>
 
           <div className="flex flex-col gap-1.5">
             <p className="text-sm font-medium text-muted">

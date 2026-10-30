@@ -46,23 +46,24 @@ export async function deleteBook(id: number) {
 
 export type LogResult = { ok: true; pages: number; finished: boolean } | { ok: false; error: string }
 
-export function validateLog(book: Book, startPage: number, endPage: number): string | null {
-  if (!Number.isInteger(startPage) || startPage < 0) return 'Enter the page you started on.'
-  if (!Number.isInteger(endPage)) return 'Enter the page you stopped on.'
-  if (endPage <= startPage) return 'The end page must be after the start page.'
-  if (book.totalPages && endPage > book.totalPages) return `This book has ${book.totalPages} pages. Check the end page, or edit the book’s page count.`
+export function validatePages(pages: number): string | null {
+  if (!Number.isInteger(pages) || pages < 1) return 'Enter how many pages you read.'
+  if (pages > 1000) return 'That’s more than 1,000 pages. Check the number.'
   return null
 }
 
-/** Records a session and moves the book's bookmark forward. */
-export async function logSession(book: Book, date: DateKey, startPage: number, endPage: number, note?: string): Promise<LogResult> {
-  const error = validateLog(book, startPage, endPage)
+/**
+ * Records pages read (the only thing the user enters, user decision 2026-10-30).
+ * The app keeps its own page count per book for the progress bar.
+ */
+export async function logPages(book: Book, date: DateKey, pages: number): Promise<LogResult> {
+  const error = validatePages(pages)
   if (error) return { ok: false, error }
-  const pages = endPage - startPage
+  const startPage = book.currentPage
+  const endPage = book.totalPages ? Math.min(book.totalPages, startPage + pages) : startPage + pages
 
   await db.transaction('rw', db.books, db.readingSessions, async () => {
     const session: ReadingSession = { bookId: book.id!, date, startPage, endPage, pagesRead: pages }
-    if (note?.trim()) session.note = note.trim()
     await db.readingSessions.add(session)
     const latest = book.lastReadOn && book.lastReadOn > date ? book.lastReadOn : date
     await db.books.update(book.id!, { currentPage: Math.max(book.currentPage, endPage), lastReadOn: latest })

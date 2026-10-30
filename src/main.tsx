@@ -7,7 +7,6 @@ import Today from './screens/Today'
 import Settings from './screens/Settings'
 import Progress from './screens/Progress'
 import Journal from './screens/Journal'
-import JournalHistory from './screens/JournalHistory'
 import Read from './screens/Read'
 import Books from './screens/Books'
 import BookForm from './screens/BookForm'
@@ -34,7 +33,6 @@ const router = createBrowserRouter([
       { path: 'speak/compare/:id', element: <CompareScreen /> },
       { path: 'speak/:task', element: <TaskScreen /> },
       { path: 'journal', element: <Journal /> },
-      { path: 'journal/history', element: <JournalHistory /> },
       { path: 'read', element: <Read /> },
       { path: 'read/books', element: <Books /> },
       { path: 'read/books/new', element: <BookForm /> },
