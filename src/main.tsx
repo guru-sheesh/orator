@@ -1,6 +1,9 @@
 import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
+import '@fontsource-variable/schibsted-grotesk'
+import '@fontsource-variable/newsreader/opsz.css'
+import '@fontsource-variable/newsreader/opsz-italic.css'
 import './styles/tokens.css'
 import { AppShell } from './components/AppShell'
 import { RouteError } from './components/RouteError'
@@ -48,12 +51,9 @@ const resume = () => {
   if (resuming) return
   resuming = true
   void (async () => {
-    const [{ processPendingTranscriptions }, { refreshOfflinePack, downloadModel }] = await Promise.all([import('./data/transcription'), import('./data/offline')])
-    // Today's clip and the speech model come first so a session can start; then everything waiting is processed.
-    await downloadModel().catch(() => {})
-    await processPendingTranscriptions().catch(() => {})
-    // A month of shadowing clips, so practice keeps working offline.
-    await refreshOfflinePack().catch(() => {})
+    const [{ processPendingTranscriptions }, { refreshOfflinePack }] = await Promise.all([import('./data/transcription'), import('./data/offline')])
+    // In parallel: a month of shadowing clips, and the speech model followed by anything waiting to be transcribed.
+    await refreshOfflinePack(() => processPendingTranscriptions()).catch(() => {})
   })().finally(() => {
     resuming = false
   })

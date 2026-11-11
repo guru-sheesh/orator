@@ -23,7 +23,7 @@ export default function TalksScreen() {
         <Link to="/speak" aria-label="Back to Speak" className={iconButtonClass}>
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="flex-1 text-headline font-semibold">Talks to watch</h1>
+        <h1 className="flex-1 font-serif text-headline font-medium">Talks to watch</h1>
         {!adding && (
           <button ref={addButtonRef} type="button" onClick={() => setAdding(true)} aria-label="Add a talk" className={iconButtonClass}>
             <Plus size={20} strokeWidth={1.75} aria-hidden="true" />

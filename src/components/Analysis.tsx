@@ -127,7 +127,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
       {a.saidTargetWord && <p className="text-sm text-danger">You said the word itself. Describe around it instead.</p>}
 
       <div className="rounded-md bg-raised px-4 py-3">
-        <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Top priority</p>
+        <p className="text-caption font-medium text-subtle">Top priority</p>
         <p className="font-medium">{a.priority.weakness}</p>
         {a.priority.evidence && <p className="text-sm text-muted">{a.priority.evidence}</p>}
       </div>
@@ -227,7 +227,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
 function ContentList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">{title}</p>
+      <p className="text-caption font-medium text-subtle">{title}</p>
       <List items={items} />
     </div>
   )

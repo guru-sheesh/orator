@@ -122,10 +122,18 @@ async function persist() {
   }
 }
 
-/** Runs at start-up and whenever the connection comes back. Safe to call repeatedly. */
-export async function refreshOfflinePack() {
-  await persist()
-  // Clips first: small, and needed for shadowing; the model is larger.
-  await downloadClips().catch(() => {})
-  await downloadModel().catch(() => {})
+/**
+ * Runs at start-up and whenever the connection comes back. Safe to call
+ * repeatedly. Clips and the model download side by side, so a slow model
+ * download never holds up the clips. `afterModel` runs once the model step ends.
+ */
+export async function refreshOfflinePack(afterModel?: () => Promise<unknown>) {
+  void persist()
+  await Promise.all([
+    downloadClips().catch(() => {}),
+    downloadModel()
+      .catch(() => {})
+      .then(() => afterModel?.())
+      .catch(() => {}),
+  ])
 }

@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ExternalLink, Info, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, Info, RefreshCw, Smartphone } from 'lucide-react'
+import { analyseAttempt } from '../../data/analysis'
+import { useOnline } from '../../hooks/useOnline'
 import { db, type SpeechAttempt } from '../../data/db'
 import { findTalk, requestFeedback } from '../../data/feedback'
 import { TASKS, TIMING, useAttempt, useSession } from '../../data/speech'
@@ -34,7 +36,7 @@ export default function FeedbackScreen() {
           <p className="text-caption text-subtle">
             {task.title} · Attempt {attempt.attemptNumber}
           </p>
-          <h1 className="text-title font-semibold">Feedback</h1>
+          <h1 className="font-serif text-[1.75rem] leading-tight font-medium">Feedback</h1>
         </div>
       </header>
 
@@ -95,6 +97,7 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
 
   return (
     <>
+      <ReviewSource attempt={attempt} />
       <Step n={1} title="What you did well">
         <Bullets items={fb.wentWell} />
       </Step>
@@ -123,11 +126,13 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
           <span className="font-medium">Delivery: </span>
           <span className="text-muted">{fb.howToDeliver}</span>
         </p>
-        <div className="flex flex-col gap-2 rounded-md bg-raised px-4 py-3.5">
-          <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Example answer (AI-written)</p>
-          <p className="font-serif text-base leading-relaxed">{fb.exampleAnswer}</p>
-          <p className="text-caption text-subtle">Built from your own ideas to show the structure. Not a quotation from anyone.</p>
-        </div>
+        {fb.exampleAnswer && (
+          <div className="flex flex-col gap-2 rounded-md border-l-[3px] border-primary bg-raised px-4 py-3.5">
+            <p className="text-caption font-medium text-subtle">Example answer (AI-written)</p>
+            <p className="font-serif text-transcript">{fb.exampleAnswer}</p>
+            <p className="text-caption text-subtle">Built from your own ideas to show the structure. Not a quotation from anyone.</p>
+          </div>
+        )}
       </Step>
 
       <Step n={5} title="Watch this">
@@ -168,11 +173,42 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
   )
 }
 
+/** Says whether this is the quick on-phone review or the AI coach, and what's coming. */
+function ReviewSource({ attempt }: { attempt: SpeechAttempt }) {
+  const online = useOnline()
+  if (attempt.feedbackSource === 'ai') return null
+  const writing = attempt.aiStatus === 'pending'
+  const canRetry = online && !writing && (attempt.aiStatus === 'failed' || attempt.aiStatus === 'unavailable')
+  return (
+    <div className="flex gap-3 rounded-lg bg-info-soft px-4 py-3 text-sm" role="status">
+      <Smartphone size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <p>
+          <span className="font-medium">Quick review, made on this phone.</span>{' '}
+          <span className="text-muted">
+            {writing
+              ? 'The AI coach is writing fuller feedback…'
+              : !online
+                ? 'Fuller AI feedback, with an example answer, arrives when you’re back online.'
+                : (attempt.aiError ?? 'Fuller AI feedback will replace this shortly.')}
+          </span>
+        </p>
+        {canRetry && (
+          <button type="button" onClick={() => void analyseAttempt(attempt.id!)} className="self-start font-medium text-info underline underline-offset-2">
+            Ask the AI coach again
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <Card>
-      <h2 className="text-caption font-semibold text-primary">
-        {n} · {title}
+      <h2 className="flex items-baseline gap-2.5">
+        <span className="text-caption font-semibold text-primary tabular-nums">{n}</span>
+        <span className="font-serif text-[1.1875rem] font-medium">{title}</span>
       </h2>
       {children}
     </Card>

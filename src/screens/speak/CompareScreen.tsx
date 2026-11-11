@@ -156,7 +156,7 @@ function Header({ back, task }: { back: string; task: string }) {
       </Link>
       <div className="min-w-0 flex-1">
         <p className="text-caption text-subtle">{task}</p>
-        <h1 className="text-title font-semibold">Attempt comparison</h1>
+        <h1 className="font-serif text-[1.75rem] leading-tight font-medium">Attempt comparison</h1>
       </div>
     </header>
   )

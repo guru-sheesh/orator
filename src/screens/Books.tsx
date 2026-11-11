@@ -15,7 +15,7 @@ export default function Books() {
         <Link to="/read" aria-label="Back to Read" className={iconButtonClass}>
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="flex-1 text-headline font-semibold">Books</h1>
+        <h1 className="flex-1 font-serif text-headline font-medium">Books</h1>
         <Link to="/read/books/new" aria-label="Add book" className={iconButtonClass}>
           <Plus size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>

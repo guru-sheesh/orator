@@ -124,6 +124,7 @@ export function PromptRecorder({
           state={rec.state === 'error' ? 'idle' : rec.state}
           onStart={() => void begin()}
           onStop={() => void rec.stop()}
+          levelRef={rec.levelRef}
           idleLabel={prepSec > 0 ? `${startLabel} · ${prepSec} s to prepare` : startLabel}
         />
         </div>

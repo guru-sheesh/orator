@@ -73,7 +73,7 @@ function BookEditor({ book }: { book: Book | null }) {
         <Link to={book ? '/read/books' : '/read'} aria-label="Back" className={iconButtonClass}>
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="text-headline font-semibold">{book ? 'Edit book' : 'Add book'}</h1>
+        <h1 className="font-serif text-headline font-medium">{book ? 'Edit book' : 'Add book'}</h1>
       </header>
 
       <form onSubmit={submit} noValidate className="flex flex-col gap-3">

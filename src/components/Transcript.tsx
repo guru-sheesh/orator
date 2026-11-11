@@ -136,7 +136,7 @@ function AttemptBody({ attempt, showFeedbackLink }: { attempt: SpeechAttempt; sh
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-caption font-medium tracking-[0.06em] text-subtle uppercase">Transcript</p>
+      <p className="text-caption font-medium text-subtle">Transcript</p>
       {words.length ? (
         <TranscriptText words={words} className="text-body" fillers={marks.fillers} soundsBefore={marks.soundsBefore} />
       ) : (

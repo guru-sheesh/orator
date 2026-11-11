@@ -1,7 +1,7 @@
 export type Theme = 'dark' | 'light'
 
 const KEY = 'orator-theme'
-const THEME_COLOR: Record<Theme, string> = { dark: '#121315', light: '#f7f5f1' }
+const THEME_COLOR: Record<Theme, string> = { dark: '#12141c', light: '#f2f3f7' }
 
 export function getTheme(): Theme {
   try {

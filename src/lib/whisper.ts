@@ -70,10 +70,42 @@ function getWorker() {
 
 type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never
 
-function call<T extends 'result' | 'loaded'>(req: WithoutId<WorkerRequest>, onProgress?: Pending['onProgress'], transfer: Transferable[] = []) {
+/**
+ * Sends one request to the worker. `stallMs` fails it if nothing (no progress,
+ * no answer) arrives for that long: a hung download or a frozen worker never
+ * leaves the app waiting for ever.
+ */
+function call<T extends 'result' | 'loaded'>(req: WithoutId<WorkerRequest>, onProgress?: Pending['onProgress'], transfer: Transferable[] = [], stallMs = 120_000) {
   const id = nextId++
   return new Promise<Extract<WorkerResponse, { type: T }>>((resolve, reject) => {
-    pending.set(id, { resolve: resolve as Pending['resolve'], reject, onProgress })
+    let timer: ReturnType<typeof setTimeout>
+    const arm = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        pending.delete(id)
+        // The worker may be stuck mid-download or mid-inference: start a fresh one next time.
+        worker?.terminate()
+        worker = null
+        for (const p of pending.values()) p.reject(new Error('The speech model stopped responding.'))
+        pending.clear()
+        reject(new Error('The speech model stopped responding.'))
+      }, stallMs)
+    }
+    arm()
+    pending.set(id, {
+      resolve: (r) => {
+        clearTimeout(timer)
+        resolve(r as Extract<WorkerResponse, { type: T }>)
+      },
+      reject: (e) => {
+        clearTimeout(timer)
+        reject(e)
+      },
+      onProgress: (l, t) => {
+        arm()
+        onProgress?.(l, t)
+      },
+    })
     getWorker().postMessage({ ...req, id } as WorkerRequest, transfer)
   })
 }
@@ -250,7 +282,8 @@ export async function transcribeWithWhisper(
     if (peak < 0.01 || w.end - w.start < 0.3) continue
     let result: Extract<WorkerResponse, { type: 'result' }>
     try {
-      result = await call<'result'>({ type: 'transcribe', repos: WHISPER_MODELS[size].repos, audio: slice }, undefined, [slice.buffer])
+      // Up to 28 s of audio; even a slow phone finishes well inside 5 minutes.
+      result = await call<'result'>({ type: 'transcribe', repos: WHISPER_MODELS[size].repos, audio: slice }, undefined, [slice.buffer], 300_000)
     } catch (err) {
       throw toTranscriptionError(err)
     }
