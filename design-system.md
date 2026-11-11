@@ -1,5 +1,7 @@
 # Orator Design System
 
+> **2026-11-11 refresh, "rehearsal room".** Palette and type changed; structure below still applies. Dark: bg `#12141C`, surface `#1A1D28`, raised `#242837`, border `#2F3445`, border-strong `#6B7186`, text `#EDEEF3`, muted `#A7ACBC`, subtle `#9095A8`, primary (spotlight) `#F2C66D` on `#23190A`, danger (on-air) `#FF7D6E`, success `#79CFA6`, info `#96B2FF`. Light: bg `#F2F3F7`, surface `#FFFFFF`, raised `#E7E9F0`, text `#161924`, muted `#4D5366`, subtle `#5D6377`, primary `#7A5200`, danger `#B42318`, success `#1D6B4A`, info `#2C4DB0`. All text pairs ≥4.5:1, controls ≥3:1 (checked by script). Type: **Newsreader** (serif, screen titles at 32px and transcripts) and **Schibsted Grotesk** (UI), both self-hosted so they work offline. Section labels are sentence case, never tracked capitals. The record button is an 88px on-air circle whose halo follows the live microphone level. Tokens: `src/styles/tokens.css`. Older values below are kept for history.
+
 Generated with UI/UX Pro Max (style: *Minimalism & Swiss*, dials variance 3 / motion 2 / density 5), then adapted to the product rules in `CLAUDE.md` §18: serious, calm, professional, dark mode first. No badges, coins, mascots, streak flames or celebration animations. Motivation comes from visible improvement and consistency.
 
 Tokens live in [`src/styles/tokens.css`](src/styles/tokens.css) (Tailwind v4 `@theme`). Components use semantic tokens only (`bg-surface`, `text-muted`, `text-primary`…), never raw hex.

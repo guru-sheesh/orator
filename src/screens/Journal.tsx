@@ -85,14 +85,14 @@ export default function Journal() {
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5 text-center" aria-hidden="true">
+        <div className="grid grid-cols-7 gap-0.5 text-center" aria-hidden="true">
           {WEEKDAYS.map((d, i) => (
             <span key={i} className="text-caption font-medium text-subtle">
               {d}
             </span>
           ))}
         </div>
-        <ol className="grid grid-cols-7 gap-1.5">
+        <ol className="grid grid-cols-7 gap-0.5">
           {Array.from({ length: (month.getDay() + 6) % 7 }, (_, i) => (
             <li key={`pad-${i}`} aria-hidden="true" />
           ))}
@@ -109,7 +109,7 @@ export default function Journal() {
                   aria-label={formatLongDate(date)}
                   onClick={() => void setJournaled(key, !on)}
                   className={cx(
-                    'grid aspect-square w-full place-items-center rounded-sm text-caption font-medium tabular-nums disabled:opacity-40',
+                    'grid aspect-square w-full place-items-center min-h-11 rounded-sm text-caption font-medium tabular-nums disabled:opacity-40',
                     on ? 'bg-success font-semibold text-on-success' : 'bg-raised text-subtle hover:ring-1 hover:ring-border-strong',
                     key === today && 'outline-2 outline-offset-1 outline-primary',
                   )}
