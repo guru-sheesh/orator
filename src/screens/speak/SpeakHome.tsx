@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { AudioLines, Check, ChevronRight, Library, MonitorPlay, Repeat, SkipForward } from 'lucide-react'
 import { useSettings } from '../../data/daily'
-import { nextPendingTask, startSession, TASKS, useTodaySession } from '../../data/speech'
+import { nextPendingTask, startSession, TASKS, useLatestFeedbackAttempt, useTodaySession } from '../../data/speech'
 import { formatClock } from '../../components/recording'
 import { useTodaysClip } from '../../data/clips'
 import { useToday } from '../../hooks/useToday'
@@ -56,6 +56,7 @@ export default function SpeakHome() {
   const settings = useSettings()
   const navigate = useNavigate()
   const [starting, setStarting] = useState(false)
+  const feedbackAttempt = useLatestFeedbackAttempt(session?.id)
 
   if (session === undefined || !settings) return null
   const targetMs = settings.targets.articulationMinutes * 60_000
@@ -157,15 +158,30 @@ export default function SpeakHome() {
             </div>
           )
         })}
-        <div className="flex min-h-14 items-center gap-3 border-t border-border py-3 text-subtle">
-          <span className="grid size-8 flex-none place-items-center rounded-full bg-raised">
-            <Repeat size={16} strokeWidth={1.75} aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium">Feedback and retry</span>
-            <span className="block text-caption">Under each analysed answer: see feedback, then retry</span>
-          </span>
-        </div>
+        {(() => {
+          const inner = (
+            <>
+              <span className="grid size-8 flex-none place-items-center rounded-full bg-raised">
+                <Repeat size={16} strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">Feedback and retry</span>
+                <span className="block text-caption">
+                  {feedbackAttempt ? 'Open your latest answer: feedback, then retry' : 'Appears here once you’ve recorded an answer'}
+                </span>
+              </span>
+              {feedbackAttempt && <ChevronRight size={20} strokeWidth={1.75} className="flex-none text-subtle" aria-hidden="true" />}
+            </>
+          )
+          const row = 'flex min-h-14 items-center gap-3 border-t border-border py-3'
+          return feedbackAttempt ? (
+            <Link to={`/speak/attempt/${feedbackAttempt.id}`} className={cx(row, '-mx-2 rounded-md px-2 hover:bg-raised active:bg-raised')}>
+              {inner}
+            </Link>
+          ) : (
+            <div className={cx(row, 'text-subtle')}>{inner}</div>
+          )
+        })()}
       </Card>
 
       {next && (

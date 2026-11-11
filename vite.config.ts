@@ -19,7 +19,7 @@ function netlifyFunctionsDev(): Plugin {
           const mod = await server.ssrLoadModule(`/netlify/functions/${name}.mts`)
           const chunks: Buffer[] = []
           for await (const chunk of req) chunks.push(chunk as Buffer)
-          const request = new Request(`http://localhost/api/${name}`, {
+          const request = new Request(`http://localhost/api${req.url ?? `/${name}`}`, {
             method: req.method,
             headers: req.headers as Record<string, string>,
             body: ['GET', 'HEAD'].includes(req.method ?? 'GET') ? undefined : Buffer.concat(chunks),

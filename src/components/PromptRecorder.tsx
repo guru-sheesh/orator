@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { ShadowStage, SpeechSession, TaskId } from '../data/db'
-import { saveAttempt } from '../data/speech'
+import { saveAttempt, useLatestAttempt } from '../data/speech'
 import { useRecorder } from '../hooks/useRecorder'
 import { AttemptPlayer, Countdown, formatClock, LevelMeter, RecordButton } from './recording'
 import { AttemptTranscript } from './Transcript'
@@ -22,6 +22,7 @@ export function PromptRecorder({
   prepSec,
   maxSec,
   startLabel = 'Start',
+  showPrevious = true,
   onRecordingStart,
   onRecordingEnd,
   onSaved,
@@ -34,6 +35,8 @@ export function PromptRecorder({
   prepSec: number
   maxSec: number
   startLabel?: string
+  /** Show the last saved answer to this prompt (with its feedback link) while nothing new is recorded. */
+  showPrevious?: boolean
   onRecordingStart?: () => void
   onRecordingEnd?: () => void
   onSaved?: () => void
@@ -42,6 +45,7 @@ export function PromptRecorder({
   const [last, setLast] = useState<{ blob: Blob; durationMs: number } | null>(null)
   const [saveError, setSaveError] = useState(false)
   const [attemptId, setAttemptId] = useState<number | null>(null)
+  const previous = useLatestAttempt(session.id, task, promptId, stage)
   // The control the user pressed disappears between phases; move focus to what replaced it.
   const resultRef = useRef<HTMLDivElement>(null)
   const prepRef = useRef<HTMLDivElement>(null)
@@ -130,7 +134,7 @@ export function PromptRecorder({
           <AttemptPlayer blob={last.blob} durationMs={last.durationMs} label="Your answer" />
           {attemptId !== null && <AttemptTranscript attemptId={attemptId} />}
           <p className="text-caption text-subtle">
-            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : 'Saved.'}
+            {saveError ? 'This recording couldn’t be saved, but you can still play it here.' : attemptId !== null ? 'Saved.' : 'Saving…'}
           </p>
           <button
             type="button"
@@ -144,6 +148,13 @@ export function PromptRecorder({
             <RotateCcw size={16} strokeWidth={1.75} aria-hidden="true" />
             Record again
           </button>
+        </div>
+      )}
+
+      {showPrevious && phase === 'ready' && rec.state !== 'recording' && previous && previous.transcription !== 'skipped' && (
+        <div role="group" aria-label="Your last answer" className="flex w-full flex-col gap-3 rounded-md bg-raised p-4">
+          <p className="text-caption text-subtle">Your last answer (attempt {previous.attemptNumber}) is saved. Record again whenever you like.</p>
+          <AttemptTranscript attemptId={previous.id!} />
         </div>
       )}
 

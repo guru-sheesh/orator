@@ -69,7 +69,10 @@ export function errorCode(res: Response | null, body: { error?: string }): strin
   return res && res.status >= 500 ? 'timeout' : 'provider'
 }
 
-export async function analyseAttempt(attemptId: number): Promise<void> {
+/** Failures that would repeat for every waiting answer, so batch retries stop at the first one. */
+const BLOCKING = new Set(['not-configured', 'offline', 'rate-limited'])
+
+export async function analyseAttempt(attemptId: number): Promise<'blocked' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
   try {
@@ -77,7 +80,7 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
     if (!a || a.analysisStatus === 'done' || !a.words?.length || !a.metrics) return
     if (!navigator.onLine) {
       await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: MESSAGES.offline })
-      return
+      return 'blocked'
     }
     await db.speechAttempts.update(attemptId, { analysisStatus: 'pending', analysisError: undefined })
 
@@ -106,6 +109,7 @@ export async function analyseAttempt(attemptId: number): Promise<void> {
       retries.set(attemptId, n + 1)
       setTimeout(() => void analyseAttempt(attemptId), RETRY_DELAY_MS * (n + 1))
     }
+    if (BLOCKING.has(code)) return 'blocked'
   } catch {
     // Never leave it stuck on "pending": show the error with a Try again button.
     await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: 'The analysis failed. You can try again.' }).catch(() => {})
@@ -163,9 +167,9 @@ export async function processPendingAnalyses() {
   const waiting = await db.speechAttempts
     .filter((a) => a.transcription === 'done' && shouldAnalyse(a) && (a.analysisStatus === 'pending' || a.analysisStatus === 'failed' || a.analysisStatus === undefined))
     .toArray()
-  for (const a of waiting) await analyseAttempt(a.id!)
+  for (const a of waiting) if ((await analyseAttempt(a.id!)) === 'blocked') return
   const noFeedback = await db.speechAttempts.filter((a) => a.analysisStatus === 'done' && a.feedbackStatus !== 'done').toArray()
-  for (const a of noFeedback) await requestFeedback(a.id!)
+  for (const a of noFeedback) if ((await requestFeedback(a.id!)) === 'blocked') return
 }
 
 export function useCoachStatus() {

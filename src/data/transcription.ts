@@ -53,7 +53,7 @@ const running = new Set<number>()
  * Transcribes one attempt. The audio is held in `recordings` until this
  * succeeds, then discarded unless the user keeps recordings (§0.4).
  */
-export async function transcribeAttempt(attemptId: number): Promise<void> {
+export async function transcribeAttempt(attemptId: number): Promise<'blocked' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
   try {
@@ -69,7 +69,7 @@ export async function transcribeAttempt(attemptId: number): Promise<void> {
         transcription: 'failed',
         transcriptionError: 'This month’s free transcription time is used up. It resets on the 1st.',
       })
-      return
+      return 'blocked'
     }
 
     await db.speechAttempts.update(attemptId, { transcription: 'pending', transcriptionError: undefined })
@@ -91,6 +91,8 @@ export async function transcribeAttempt(attemptId: number): Promise<void> {
   } catch (err) {
     const message = err instanceof TranscriptionError ? err.message : 'Transcription failed. It will retry later.'
     await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message })
+    // Missing key, no connection or no quota: the next attempt would fail the same way.
+    if (err instanceof TranscriptionError && (err.kind === 'not-configured' || err.kind === 'offline' || err.kind === 'quota')) return 'blocked'
   } finally {
     running.delete(attemptId)
   }
@@ -103,7 +105,8 @@ export async function processPendingTranscriptions() {
   for (const a of waiting) {
     // Without its audio (e.g. restored from a backup) it can't be transcribed; transcribeAttempt marks it failed once.
     if (!(await db.recordings.get(a.id!)) && a.transcription === 'failed') continue
-    await transcribeAttempt(a.id!)
+    // Stop at the first failure that would repeat for every attempt, rather than calling the server once per recording.
+    if ((await transcribeAttempt(a.id!)) === 'blocked') break
   }
   await processPendingAnalyses()
 }
@@ -146,4 +149,16 @@ export async function ensureBuiltInClipTranscript(clip: BuiltInClip, blob: Blob)
   const entry = { clipId: clip.id, text: result.text, words: result.words.map(({ text, start, end, punct }) => ({ text, start, end, punct })) }
   await db.clipTranscripts.put(entry)
   return entry
+}
+
+/** Whether the server has the Azure key and region (Settings shows it, so a missing key is visible before a recording fails). */
+export function useTranscriptionStatus() {
+  return useLiveQuery(async () => {
+    try {
+      const res = await fetch('/api/speech-token?check', { cache: 'no-store' })
+      return res.ok ? ((await res.json()) as { configured: boolean; missing: string[] }) : null
+    } catch {
+      return null
+    }
+  })
 }

@@ -63,7 +63,7 @@ const running = new Set<number>()
 const retries = new Map<number, number>()
 
 /** Second AI call: coaching in the order of CLAUDE.md §10, plus a "Watch this" pick from the talk list. */
-export async function requestFeedback(attemptId: number): Promise<void> {
+export async function requestFeedback(attemptId: number): Promise<'blocked' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
   try {
@@ -98,13 +98,14 @@ export async function requestFeedback(attemptId: number): Promise<void> {
     const busy = code === 'rate-limited' || code === 'timeout'
     await db.speechAttempts.update(attemptId, {
       feedbackStatus: 'failed',
-      feedbackError: busy ? 'The AI service is busy. Retrying in a minute.' : code === 'offline' ? 'You’re offline. Feedback arrives when you’re back online.' : 'Feedback couldn’t be generated. You can try again.',
+      feedbackError: busy ? 'The AI service is busy. Retrying in a minute.' : code === 'not-configured' ? 'Feedback isn’t set up yet: the AI key is missing on the server.' : code === 'offline' ? 'You’re offline. Feedback arrives when you’re back online.' : 'Feedback couldn’t be generated. You can try again.',
     })
     const n = retries.get(attemptId) ?? 0
     if (busy && n < 3) {
       retries.set(attemptId, n + 1)
       setTimeout(() => void requestFeedback(attemptId), 60_000 * (n + 1))
     }
+    if (code === 'not-configured' || code === 'offline' || code === 'rate-limited') return 'blocked'
   } catch {
     await db.speechAttempts.update(attemptId, { feedbackStatus: 'failed', feedbackError: 'Feedback couldn’t be generated. You can try again.' }).catch(() => {})
   } finally {

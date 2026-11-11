@@ -9,8 +9,10 @@ type Phase = 'reading' | 'explaining' | 'review'
 
 export function ExplainTask({ session, finish }: TaskProps) {
   const [passage, setPassage] = useState<Passage | null>()
-  const [phase, setPhase] = useState<Phase>('reading')
   const attempts = useAttempts(session.id, 'explain')
+  // Already recorded today (e.g. back from the feedback screen): resume at the review step, not at "read again".
+  const [chosenPhase, setPhase] = useState<Phase>()
+  const phase: Phase = chosenPhase ?? (attempts?.length ? 'review' : 'reading')
   const explainRef = useRef<HTMLElement>(null)
   useEffect(() => {
     if (phase === 'explaining') explainRef.current?.focus()

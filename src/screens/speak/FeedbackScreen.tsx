@@ -60,6 +60,7 @@ export default function FeedbackScreen() {
             prepSec={TIMING[attempt.task].prepSec}
             maxSec={TIMING[attempt.task].maxSec}
             startLabel="Start retry"
+            showPrevious={false}
           />
         </Card>
       )}

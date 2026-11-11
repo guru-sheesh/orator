@@ -123,8 +123,12 @@ export async function transcribe(blob: Blob, opts: { referenceText?: string; ran
   pa.applyTo(recognizer)
 
   const results: AzureResult[] = []
+  // A dropped connection can leave the recogniser silent for ever; give up so the attempt can be retried.
+  const limitMs = 45_000 + seconds * 2000
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
     await new Promise<void>((resolve, reject) => {
+      timer = setTimeout(() => reject(new TranscriptionError('Transcription took too long. It will retry later.', 'service')), limitMs)
       recognizer.recognized = (_s, e) => {
         if (e.result.reason !== sdk.ResultReason.RecognizedSpeech) return
         const json = e.result.properties.getProperty(sdk.PropertyId.SpeechServiceResponse_JsonResult)
@@ -144,6 +148,7 @@ export async function transcribe(blob: Blob, opts: { referenceText?: string; ran
       recognizer.startContinuousRecognitionAsync(undefined, (err) => reject(new TranscriptionError(`Transcription couldn’t start (${err}).`, 'service')))
     })
   } finally {
+    clearTimeout(timer)
     recognizer.close()
   }
 

@@ -15,6 +15,8 @@ export function useActiveTime(sessionId: number | undefined) {
     const flush = () => {
       if (since === null) return
       const now = performance.now()
+      // Under a second isn't saved; keep counting from the same start so it isn't lost.
+      if (now - since < 1000) return
       void addActiveTime(sessionId, now - since)
       since = now
     }
