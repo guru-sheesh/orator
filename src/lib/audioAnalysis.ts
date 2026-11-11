@@ -127,3 +127,144 @@ export function splitPhrases(envelope: Uint8Array, segment: ShadowSegment): Shad
   }
   return phrases
 }
+
+const PHRASE_MIN_SEC = 2.5
+const PHRASE_MAX_SEC = 12
+/** Words that lead into what follows; a phrase must not end on one. */
+const LEADING_WORDS = new Set(['a', 'an', 'the', 'of', 'to', 'in', 'on', 'at', 'for', 'with', 'from', 'by', 'my', 'your', 'our', 'their', 'his', 'her', 'its', 'this', 'that', 'these', 'those', 'i', "i'm", "i've", "i'd", "i'll", 'we', 'you', 'he', 'she', 'they', 'it', 'and', 'but', 'or', 'so', 'because', 'if', 'when', 'is', 'are', 'was', 'were', 'be', 'very', 'as'])
+/** A gap between sentences longer than this isn't speech worth replaying. */
+const LONG_GAP_SEC = 1.2
+
+/** The bits of a transcript word this needs (times in seconds, relative to the clip). */
+interface TimedWord {
+  text?: string
+  start: number
+  end: number
+  punct?: string
+}
+
+/** Words that usually open a new clause: the natural place to break a long sentence that has no comma. */
+const JOINING_WORDS = new Set(['and', 'but', 'or', 'so', 'because', 'that', 'which', 'who', 'when', 'where', 'while', 'if', 'then', 'than', 'although', 'though', 'until', 'unless', 'since', 'before', 'after', 'to'])
+
+/**
+ * Phrases for the Repeat stage that follow the speaker's sentences: one phrase
+ * per sentence, using the transcript's punctuation. Very short sentences join
+ * the next one; long ones are divided at a comma (or, failing that, at their
+ * longest pause) so each part can be held in mind and repeated. Every phrase
+ * ends where a sentence or clause ends, never part-way through one.
+ *
+ * `offset` is where the clip starts in the recording, as word times are relative
+ * to the clip. Returns null when the transcript has no punctuation to go by;
+ * the caller then falls back to splitting on pauses alone.
+ */
+export function splitPhrasesBySentence(words: TimedWord[], offset: number, segment: ShadowSegment, envelope: Uint8Array): ShadowSegment[] | null {
+  const merged = phraseWordRanges(words, offset, envelope)
+  return merged && phraseTimes(merged, words, offset, segment, envelope)
+}
+
+/** Which words make up each Repeat phrase, as [first word, last word]. */
+export function phraseWordRanges(words: TimedWord[], offset: number, envelope: Uint8Array): [number, number][] | null {
+  if (words.length < 2 || !words.some((w) => /[.!?]/.test(w.punct ?? ''))) return null
+  const dur = (a: number, b: number) => words[b].end - words[a].start
+  const quiet = silenceThreshold(envelope)
+  /** Longest run of silence (seconds) around the boundary between two words. */
+  const silenceAround = (endSec: number, nextSec: number) => {
+    const lo = Math.max(0, Math.floor((endSec - 0.25) * ENVELOPE_RATE))
+    const hi = Math.min(envelope.length - 1, Math.ceil((Math.max(nextSec, endSec) + 0.25) * ENVELOPE_RATE))
+    let run = 0
+    let longest = 0
+    for (let f = lo; f <= hi; f++) {
+      run = envelope[f] < quiet ? run + 1 : 0
+      if (run > longest) longest = run
+    }
+    return longest / ENVELOPE_RATE
+  }
+
+  // 1. Sentences, as [first word, last word].
+  const sentences: [number, number][] = []
+  let first = 0
+  words.forEach((w, i) => {
+    if (/[.!?]/.test(w.punct ?? '') || i === words.length - 1) {
+      sentences.push([first, i])
+      first = i + 1
+    }
+  })
+
+  // 2. Divide sentences too long to repeat in one go.
+  const divide = ([a, b]: [number, number]): [number, number][] => {
+    const total = dur(a, b)
+    if (total <= PHRASE_MAX_SEC || b - a < 3) return [[a, b]]
+    const middle = words[a].start + total / 2
+    const balanced = (i: number) => Math.abs(words[i].end - middle)
+    const inside = Array.from({ length: b - a }, (_, k) => a + k) // a break after word i
+    // Best: a comma that leaves a repeatable length on both sides.
+    const clauses = inside.filter((i) => /[,;:]/.test(words[i].punct ?? '') && dur(a, i) >= 3 && dur(i + 1, b) >= 3)
+    let at = clauses.sort((x, y) => balanced(x) - balanced(y))[0]
+    if (at === undefined) {
+      // No comma: break at a pause in the middle of the sentence, preferring one just before a joining word
+      // ("... the report | because it was late"); failing any pause, simply at its middle.
+      const central = inside.filter((i) => dur(a, i) >= total * 0.25 && dur(i + 1, b) >= total * 0.25)
+      const score = (i: number) => {
+        const next = words[i + 1].text ?? ''
+        const here = (words[i].text ?? '').toLowerCase()
+        // A real silence in the audio (word timings alone often hide it), up to a second.
+        let s = Math.min(1, silenceAround(offset + words[i].end, offset + words[i + 1].start))
+        // A capital mid-sentence usually means a new sentence the transcript didn't punctuate.
+        if (/^[A-Z]/.test(next) && !/^I(\b|')/.test(next)) s += 0.4
+        if (JOINING_WORDS.has(next.toLowerCase())) s += 0.25
+        // Never leave a phrase hanging on "the", "I", "and"…
+        if (LEADING_WORDS.has(here)) s -= 0.8
+        return s
+      }
+      at = central.sort((x, y) => score(y) - score(x) || balanced(x) - balanced(y))[0] ?? inside.sort((x, y) => balanced(x) - balanced(y))[0]
+    }
+    return [...divide([a, at]), ...divide([at + 1, b])]
+  }
+  const pieces = sentences.flatMap(divide)
+
+  // 3. Join sentences too short to be worth a turn ("Yes." "Thank you.") to their neighbour.
+  const merged: [number, number][] = []
+  for (const piece of pieces) {
+    const prev = merged.at(-1)
+    if (prev && dur(prev[0], prev[1]) < PHRASE_MIN_SEC && dur(prev[0], piece[1]) <= PHRASE_MAX_SEC) prev[1] = piece[1]
+    else merged.push([...piece])
+  }
+  const tail = merged.at(-1)!
+  if (merged.length > 1 && dur(tail[0], tail[1]) < PHRASE_MIN_SEC) {
+    merged.pop()
+    merged.at(-1)![1] = tail[1]
+  }
+
+  return merged
+}
+
+/** Turns word ranges into play ranges, cutting at the quietest moment around each boundary so no word is clipped. */
+function phraseTimes(merged: [number, number][], words: TimedWord[], offset: number, segment: ShadowSegment, envelope: Uint8Array): ShadowSegment[] {
+  const quietest = (fromSec: number, toSec: number) => {
+    const lo = Math.max(0, Math.floor(fromSec * ENVELOPE_RATE))
+    const hi = Math.min(envelope.length - 1, Math.ceil(toSec * ENVELOPE_RATE))
+    let best = lo
+    for (let f = lo; f <= hi; f++) if (envelope[f] < envelope[best]) best = f
+    return hi >= lo ? (best + 0.5) / ENVELOPE_RATE : (fromSec + toSec) / 2
+  }
+  const clamp = (t: number) => Math.min(segment.end, Math.max(segment.start, t))
+  return merged
+    .map(([a, b], i) => {
+      const wordsStart = offset + words[a].start
+      const wordsEnd = offset + words[b].end
+      // Start: just before the first word, or at the shared cut with the previous phrase when they run together.
+      let start = wordsStart - 0.4
+      if (i > 0) {
+        const prevEnd = offset + words[a - 1].end
+        if (wordsStart - prevEnd <= LONG_GAP_SEC) start = quietest(prevEnd - 0.1, Math.max(wordsStart, prevEnd) + 0.1)
+      }
+      // End likewise. A long gap (applause, a laugh, a long silence) belongs to neither phrase.
+      let end = wordsEnd + 0.6
+      if (i < merged.length - 1) {
+        const nextStart = offset + words[b + 1].start
+        end = nextStart - wordsEnd <= LONG_GAP_SEC ? quietest(wordsEnd - 0.1, Math.max(nextStart, wordsEnd) + 0.1) : Math.min(end, nextStart - 0.4)
+      }
+      return { start: clamp(start), end: clamp(end) }
+    })
+    .filter((p) => p.end - p.start > 0.3)
+}
