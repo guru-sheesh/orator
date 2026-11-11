@@ -19,6 +19,8 @@ export interface Settings {
   transcriptionEngine?: 'whisper' | 'azure'
   /** Which on-device Whisper model to use. */
   whisperSize?: 'base' | 'tiny'
+  /** False after the user removes the model: it then downloads only when they ask. */
+  whisperAutoDownload?: boolean
 }
 
 export interface DailyStatus {
@@ -111,6 +113,8 @@ export interface SpeechAttempt {
   /** State of the AI coach for this attempt. */
   aiStatus?: 'pending' | 'done' | 'failed' | 'unavailable'
   aiError?: string
+  /** Automatic AI attempts that failed; the batch stops trying after a few (a manual retry resets it). */
+  aiTries?: number
   analysisError?: string
   analysis?: SpeechAnalysis
   feedbackStatus?: 'pending' | 'done' | 'failed'
@@ -248,6 +252,18 @@ db.version(5)
   })
 
 db.version(6).stores({ kv: 'key' })
+
+/** Marks reviews made before quick reviews existed as AI reviews (they were). */
+export function normaliseAttempt(a: SpeechAttempt) {
+  if (a.analysisStatus === 'done' && a.analysis && !a.analysisSource) a.analysisSource = 'ai'
+  if (a.feedbackStatus === 'done' && a.feedback && !a.feedbackSource) a.feedbackSource = 'ai'
+  if (a.aiStatus === 'pending') delete a.aiStatus
+  return a
+}
+
+db.version(7)
+  .stores({})
+  .upgrade((tx) => tx.table('speechAttempts').toCollection().modify((a: SpeechAttempt) => void normaliseAttempt(a)))
 
 /** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
 export const AUDIO_TABLES = ['recordings', 'shadowAudio', 'clipAudio'] as const

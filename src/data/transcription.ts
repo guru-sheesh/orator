@@ -48,23 +48,20 @@ async function transcribeWithAzure(blob: Blob, seconds: number, opts: { referenc
 }
 
 /**
- * Transcribes with the chosen engine. On-phone Whisper is the default; if it
- * fails for a reason other than being offline, Azure is tried when it's set up.
+ * Transcribes with the chosen engine. On-phone Whisper never falls back to
+ * Azure by itself: the user chose to keep audio on the phone.
  */
-export async function runTranscription(blob: Blob, seconds: number, opts: { referenceText?: string; range?: { start: number; end: number } } = {}): Promise<Transcription> {
+export async function runTranscription(
+  blob: Blob,
+  seconds: number,
+  opts: { referenceText?: string; range?: { start: number; end: number } } = {},
+): Promise<Transcription & { wordTimes?: boolean }> {
   const { engine, size } = await engineSettings()
   if (engine === 'azure') return transcribeWithAzure(blob, seconds, opts)
-  try {
-    return await transcribeWithWhisper(blob, size, { range: opts.range })
-  } catch (err) {
-    if (err instanceof TranscriptionError && (err.kind === 'offline' || err.kind === 'unreadable')) throw err
-    if (!navigator.onLine) throw err
-    try {
-      return await transcribeWithAzure(blob, seconds, opts)
-    } catch {
-      throw err
-    }
-  }
+  const result = await transcribeWithWhisper(blob, size, { range: opts.range })
+  // A transcription can be what first downloads the model: let the offline status know.
+  void import('./offline').then((m) => m.downloadModel()).catch(() => {})
+  return result
 }
 
 /** Repeat-stage phrases are short drills: not worth the monthly audio budget. */
@@ -87,9 +84,11 @@ const running = new Set<number>()
  * Transcribes one attempt. The audio is held in `recordings` until this
  * succeeds, then discarded unless the user keeps recordings (§0.4).
  */
-export async function transcribeAttempt(attemptId: number): Promise<'blocked' | void> {
+export async function transcribeAttempt(attemptId: number): Promise<'blocked' | 'failed' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
+  let transcribed = false
+  let keep = true
   try {
     const [attempt, recording, settings] = await Promise.all([db.speechAttempts.get(attemptId), db.recordings.get(attemptId), db.settings.get('user')])
     if (!attempt || attempt.transcription === 'done') return
@@ -99,32 +98,39 @@ export async function transcribeAttempt(attemptId: number): Promise<'blocked' | 
     }
     const durationSec = attempt.durationMs / 1000
     await db.speechAttempts.update(attemptId, { transcription: 'pending', transcriptionError: undefined })
-    const result = await runTranscription(recording.blob, durationSec, { referenceText: await referenceFor(attempt) })
+    const result = await runTranscription(recording.blob, durationSec, { referenceText: await referenceFor(attempt).catch(() => undefined) })
     // Loudness envelope finds voiced sounds the recogniser dropped (often "um"); needs the audio, so do it before discarding it.
     const envelope = await profileAudio(recording.blob).then((p) => p.envelope).catch(() => undefined)
     const analyse = shouldAnalyse(attempt) && result.words.length > 0
+    const metrics = computeMetrics(result.words, result.audioSeconds, envelope)
+    // Estimated word timing can't support pause or "um"-sound findings; keep only what's reliable.
+    if (result.wordTimes === false) Object.assign(metrics, { pauses: [], unrecognisedSounds: [], rushedBoundaries: 0, fastEndings: [] })
     await db.speechAttempts.update(attemptId, {
       transcription: 'done',
       transcript: result.text,
       words: result.words,
       pronunciation: result.scores,
-      metrics: computeMetrics(result.words, result.audioSeconds, envelope),
+      metrics,
       analysisStatus: analyse ? 'pending' : 'skipped',
     })
-    if (!(settings ?? DEFAULT_SETTINGS).keepRecordings) await db.recordings.delete(attemptId)
-    if (analyse) {
-      // Instant quick review on the phone, then the AI coach when online.
-      await applyLocalReview(attemptId)
-      if (navigator.onLine) void analyseAttempt(attemptId)
-    }
+    transcribed = analyse
+    keep = (settings ?? DEFAULT_SETTINGS).keepRecordings
   } catch (err) {
     const message = err instanceof TranscriptionError ? err.message : 'Transcription failed. It will retry later.'
-    await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message })
-    // Missing key, no connection or no quota: the next attempt would fail the same way.
-    // A bad file only affects itself; anything else (no model, no key, no memory) would repeat.
-    if (err instanceof TranscriptionError && err.kind !== 'unreadable') return 'blocked'
+    await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message }).catch(() => {})
+    // No connection, no key or no quota would fail the same way for every waiting answer.
+    if (err instanceof TranscriptionError && (err.kind === 'offline' || err.kind === 'not-configured' || err.kind === 'quota')) return 'blocked'
+    if (err instanceof TranscriptionError && err.kind === 'service') return 'failed'
+    return
   } finally {
     running.delete(attemptId)
+  }
+  // After the transcript is safely saved: nothing below can mark it failed.
+  if (!keep) await db.recordings.delete(attemptId).catch(() => {})
+  if (transcribed) {
+    // Instant quick review on the phone, then the AI coach when online.
+    await applyLocalReview(attemptId).catch(() => {})
+    if (navigator.onLine) void analyseAttempt(attemptId).catch(() => {})
   }
 }
 
@@ -133,11 +139,16 @@ export async function processPendingTranscriptions() {
   // On-phone transcription works offline once the model is downloaded; Azure needs a connection.
   if (!navigator.onLine && (await engineSettings()).engine === 'azure') return
   const waiting = await db.speechAttempts.filter((a) => (a.transcription === 'pending' || a.transcription === 'failed') && shouldTranscribe(a)).toArray()
+  let failures = 0
   for (const a of waiting) {
     // Without its audio (e.g. restored from a backup) it can't be transcribed; transcribeAttempt marks it failed once.
     if (!(await db.recordings.get(a.id!)) && a.transcription === 'failed') continue
-    // Stop at the first failure that would repeat for every attempt, rather than calling the server once per recording.
-    if ((await transcribeAttempt(a.id!)) === 'blocked') break
+    const r = await transcribeAttempt(a.id!)
+    // Stop at a failure that would repeat for every attempt (offline, no key); one bad recording doesn't block the rest,
+    // but two failures in a row suggest the phone itself is struggling.
+    if (r === 'blocked') break
+    failures = r === 'failed' ? failures + 1 : 0
+    if (failures >= 2) break
   }
   await processPendingAnalyses()
 }

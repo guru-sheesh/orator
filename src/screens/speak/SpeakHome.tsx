@@ -6,12 +6,14 @@ import { nextPendingTask, startSession, TASKS, useLatestFeedbackAttempt, useToda
 import { formatClock } from '../../components/recording'
 import { useTodaysClip } from '../../data/clips'
 import { useToday } from '../../hooks/useToday'
+import { useOnline } from '../../hooks/useOnline'
 import { buttonClass, Card, cx, iconButtonClass, PageHeader } from '../../components/ui'
 
 /** Today's built-in clip, shown (and downloaded) before the session starts. */
 function TodaysClip({ hasSession, sessionClip }: { hasSession: boolean; sessionClip: string | undefined }) {
   const today = useToday()
   const todays = useTodaysClip(today, sessionClip)
+  const online = useOnline()
   const navigate = useNavigate()
   const [opening, setOpening] = useState(false)
   if (!todays) return null
@@ -39,7 +41,7 @@ function TodaysClip({ hasSession, sessionClip }: { hasSession: boolean; sessionC
           {clip.title} · part {clip.index} of {clip.of} · {formatClock(clip.durationSec * 1000)}
         </p>
         <p className="mt-1 text-caption text-subtle" role="status">
-          {ready ? 'On this phone, plays offline' : 'Downloading…'}
+          {ready ? 'On this phone, plays offline' : online ? 'Downloading…' : 'Not on this phone yet. It downloads when you reconnect.'}
         </p>
       </div>
       <button type="button" onClick={() => void listen()} disabled={opening} aria-label={`Go to shadowing with ${clip.speaker}`} className={cx(iconButtonClass, 'bg-raised text-text')}>

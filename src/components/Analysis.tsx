@@ -79,7 +79,7 @@ export function AnalysisPanel({ attempt }: { attempt: SpeechAttempt }) {
     return (
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted">{attempt.analysisError ?? 'The analysis failed.'}</p>
-        <button type="button" onClick={() => void analyseAttempt(attempt.id!)} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
+        <button type="button" onClick={() => void analyseAttempt(attempt.id!, { manual: true })} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
           <RefreshCw size={16} strokeWidth={1.75} aria-hidden="true" />
           Analyse again
         </button>

@@ -227,8 +227,12 @@ function deliveryNotes(m: SpeechMetrics): string[] {
 export function localAnalysis(input: { task: Task; prompt: string; reference?: string; words: TranscriptWord[]; metrics: SpeechMetrics }): SpeechAnalysis {
   const { task, prompt, reference, words, metrics: m } = input
   const fillers = fillersIn(words, m)
-  // Unrecognised voiced sounds right before a pause or at a sentence start are almost always "um/uh".
-  const soundFillers = m.unrecognisedSounds.map((_, i) => i)
+  // Unrecognised voiced sounds count as "um/uh" only where fillers happen: before a pause or at a sentence start.
+  // (Word timings drift a little, so a short uncovered sound mid-phrase is more likely a timing gap.)
+  const pauseAt = new Set(m.pauses.map((p) => p.beforeWord))
+  const soundFillers = m.unrecognisedSounds.flatMap((snd, i) =>
+    snd.seconds >= 0.25 && (snd.beforeWord === 0 || pauseAt.has(snd.beforeWord) || (words[snd.beforeWord - 1] && endsSentence(words[snd.beforeWord - 1]))) ? [i] : [],
+  )
   const restarts = restartsIn(words)
   const repetitions = repetitionsIn(words)
   const sentenceIssues = sentenceIssuesIn(words)

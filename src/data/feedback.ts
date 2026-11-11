@@ -68,7 +68,7 @@ const running = new Set<number>()
 const retries = new Map<number, number>()
 
 /** Second AI call: coaching in the order of CLAUDE.md §10, plus a "Watch this" pick from the talk list. */
-export async function requestFeedback(attemptId: number): Promise<'blocked' | void> {
+export async function requestFeedback(attemptId: number, opts: { batch?: boolean } = {}): Promise<'blocked' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
   try {
@@ -118,14 +118,15 @@ export async function requestFeedback(attemptId: number): Promise<'blocked' | vo
     // The quick review's feedback stays in place; only the AI status changes.
     await db.speechAttempts.update(attemptId, {
       aiStatus: code === 'not-configured' ? 'unavailable' : 'failed',
+      aiTries: code === 'offline' || code === 'not-configured' ? (a.aiTries ?? 0) : (a.aiTries ?? 0) + 1,
       aiError: busy ? 'The AI coach is busy. Retrying in a minute.' : code === 'not-configured' ? 'The AI coach isn’t set up: the AI key is missing on the server.' : code === 'offline' ? 'You’re offline. The AI coach runs when you’re back online.' : 'The AI coach couldn’t write feedback. You can try again.',
     })
     const n = retries.get(attemptId) ?? 0
-    if (busy && n < 3) {
+    if (!opts.batch && busy && n < 3) {
       retries.set(attemptId, n + 1)
       setTimeout(() => void requestFeedback(attemptId), 60_000 * (n + 1))
     }
-    if (code === 'not-configured' || code === 'offline' || code === 'rate-limited') return 'blocked'
+    if (code === 'not-configured' || code === 'offline' || busy) return 'blocked'
   } catch {
     await db.speechAttempts.update(attemptId, { aiStatus: 'failed', aiError: 'The AI coach couldn’t write feedback. You can try again.' }).catch(() => {})
   } finally {

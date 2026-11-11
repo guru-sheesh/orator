@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { CircleCheck, CloudDownload, HardDrive, TriangleAlert } from 'lucide-react'
 import { updateSettings } from '../data/daily'
 import { db } from '../data/db'
-import { downloadModel, refreshOfflinePack, useOfflineState } from '../data/offline'
+import { downloadModel, markModelRemoved, refreshOfflinePack, useOfflineState } from '../data/offline'
 import { processPendingTranscriptions } from '../data/transcription'
 import { deleteWhisperModels, WHISPER_MODELS, type WhisperSize } from '../lib/whisper'
 import { useOnline } from '../hooks/useOnline'
@@ -44,7 +44,7 @@ export function SpeechSettings({ engine, size }: { engine: 'whisper' | 'azure'; 
     setBusy(true)
     try {
       await deleteWhisperModels()
-      await downloadModel()
+      await markModelRemoved()
     } finally {
       setBusy(false)
     }
@@ -80,13 +80,13 @@ export function SpeechSettings({ engine, size }: { engine: 'whisper' | 'azure'; 
                   : model.state === 'error'
                     ? model.error
                     : online
-                      ? 'Not downloaded yet.'
+                      ? 'Not downloaded yet. It downloads by itself on Wi-Fi, or tap below.'
                       : 'Not downloaded yet. Connect to the internet once to download it.'}
             </span>
           </div>
           {model.state === 'downloading' && <ProgressBar value={Math.round(model.progress * 100)} max={100} label="Speech model download" />}
           {(model.state === 'missing' || model.state === 'error' || model.state === 'unknown') && (
-            <button type="button" disabled={!online || busy} onClick={() => void downloadModel()} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
+            <button type="button" disabled={!online || busy} onClick={() => void downloadModel({ force: true }).then(() => processPendingTranscriptions())} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
               <CloudDownload size={16} strokeWidth={1.75} aria-hidden="true" />
               Download now
             </button>

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Info, RefreshCw, Smartphone } 
 import { analyseAttempt } from '../../data/analysis'
 import { useOnline } from '../../hooks/useOnline'
 import { db, type SpeechAttempt } from '../../data/db'
-import { findTalk, requestFeedback } from '../../data/feedback'
+import { findTalk } from '../../data/feedback'
 import { TASKS, TIMING, useAttempt, useSession } from '../../data/speech'
 import { AttemptTranscript } from '../../components/Transcript'
 import { AttemptPlayer } from '../../components/recording'
@@ -88,7 +88,7 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
     return (
       <Card>
         <p className="text-sm text-muted">{attempt.feedbackError ?? 'Feedback couldn’t be generated.'}</p>
-        <button type="button" onClick={() => void requestFeedback(attempt.id!)} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
+        <button type="button" onClick={() => void analyseAttempt(attempt.id!, { manual: true })} className={cx(buttonClass.secondary, 'min-h-11 text-sm')}>
           <RefreshCw size={16} strokeWidth={1.75} aria-hidden="true" />
           Try again
         </button>
@@ -177,8 +177,8 @@ function Coaching({ attempt }: { attempt: SpeechAttempt }) {
 function ReviewSource({ attempt }: { attempt: SpeechAttempt }) {
   const online = useOnline()
   if (attempt.feedbackSource === 'ai') return null
-  const writing = attempt.aiStatus === 'pending'
-  const canRetry = online && !writing && (attempt.aiStatus === 'failed' || attempt.aiStatus === 'unavailable')
+  const writing = online && attempt.aiStatus === 'pending'
+  const canRetry = online && !writing && attempt.aiStatus !== undefined && attempt.aiStatus !== 'done'
   return (
     <div className="flex gap-3 rounded-lg bg-info-soft px-4 py-3 text-sm" role="status">
       <Smartphone size={18} strokeWidth={1.75} className="mt-0.5 flex-none text-info" aria-hidden="true" />
@@ -194,7 +194,7 @@ function ReviewSource({ attempt }: { attempt: SpeechAttempt }) {
           </span>
         </p>
         {canRetry && (
-          <button type="button" onClick={() => void analyseAttempt(attempt.id!)} className="self-start font-medium text-info underline underline-offset-2">
+          <button type="button" onClick={() => void analyseAttempt(attempt.id!, { manual: true })} className="self-start font-medium text-info underline underline-offset-2">
             Ask the AI coach again
           </button>
         )}

@@ -7,6 +7,7 @@
  */
 import { useSyncExternalStore } from 'react'
 import { db } from './db'
+import { updateSettings } from './daily'
 import { CLIPS_AHEAD, findClip, getClipAudio, loadClipCatalogue, pruneClipAudio, upcomingClipIds, type BuiltInClip } from './clips'
 import { engineSettings } from './transcription'
 import { isWhisperCached, prepareWhisper, WHISPER_MODELS } from '../lib/whisper'
@@ -90,26 +91,58 @@ async function downloadClips() {
   }
 }
 
-let modelRunning = false
-export async function downloadModel() {
-  if (modelRunning) return
-  modelRunning = true
-  try {
+/** On mobile data or data-saver, the ~100 MB model waits for Wi-Fi unless the user asks. */
+function meteredConnection() {
+  const c = (navigator as Navigator & { connection?: { type?: string; saveData?: boolean } }).connection
+  return !!c && (c.saveData === true || c.type === 'cellular')
+}
+
+let modelRunning: Promise<void> | null = null
+let modelAgain = false
+
+/**
+ * Makes sure the chosen speech model is on the phone. `force` downloads even
+ * on mobile data or after the user removed it. If settings change while a
+ * download runs, it runs once more for the new choice.
+ */
+export async function downloadModel(opts: { force?: boolean } = {}): Promise<void> {
+  if (modelRunning) {
+    modelAgain = true
+    return modelRunning
+  }
+  modelRunning = (async () => {
+    const settings = (await db.settings.get('user')) ?? null
     const { engine, size } = await engineSettings()
     const label = `${WHISPER_MODELS[size].label} speech model (about ${WHISPER_MODELS[size].approxMB} MB)`
     if (engine !== 'whisper') return set({ model: { state: 'not-needed', progress: 0, label } })
     if (await isWhisperCached(size)) return set({ model: { state: 'ready', progress: 1, label } })
-    if (!navigator.onLine) return set({ model: { state: 'missing', progress: 0, label } })
+    const auto = settings?.whisperAutoDownload !== false && !meteredConnection()
+    if (!navigator.onLine || (!opts.force && !auto)) return set({ model: { state: 'missing', progress: 0, label } })
+    if (opts.force && settings?.whisperAutoDownload === false) await updateSettings({ whisperAutoDownload: true })
     set({ model: { state: 'downloading', progress: 0, label } })
     try {
       await prepareWhisper(size, (p) => set({ model: { state: 'downloading', progress: p, label } }))
-      set({ model: { state: (await isWhisperCached(size)) ? 'ready' : 'error', progress: 1, label, error: (await isWhisperCached(size)) ? undefined : 'The model loaded but couldn’t be saved for offline use.' } })
+      const cached = await isWhisperCached(size)
+      set({ model: { state: cached ? 'ready' : 'error', progress: 1, label, error: cached ? undefined : 'The model loaded but couldn’t be saved for offline use.' } })
     } catch (err) {
       set({ model: { state: 'error', progress: 0, label, error: err instanceof Error ? err.message : 'Download failed.' } })
     }
+  })()
+  try {
+    await modelRunning
   } finally {
-    modelRunning = false
+    modelRunning = null
   }
+  if (modelAgain) {
+    modelAgain = false
+    await downloadModel(opts)
+  }
+}
+
+/** After the user removes the model: don't fetch it again until they ask. */
+export async function markModelRemoved() {
+  await updateSettings({ whisperAutoDownload: false })
+  await downloadModel()
 }
 
 /** Asks the browser not to clear this app's storage when space runs low. */

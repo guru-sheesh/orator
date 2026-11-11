@@ -31,7 +31,7 @@ export function RecordButton({
   const busy = state === 'preparing' || state === 'stopping'
   const halo = useRef<HTMLSpanElement>(null)
   useEffect(() => {
-    if (!recording || !levelRef) return
+    if (!recording || !levelRef || matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let frame = 0
     let smooth = 0
     const draw = () => {
@@ -43,7 +43,14 @@ export function RecordButton({
       frame = requestAnimationFrame(draw)
     }
     frame = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(frame)
+      // React won't reset styles it didn't set, so put the halo back to rest.
+      if (halo.current) {
+        halo.current.style.transform = 'scale(1)'
+        halo.current.style.opacity = ''
+      }
+    }
   }, [recording, levelRef])
 
   return (
