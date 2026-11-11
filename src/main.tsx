@@ -43,10 +43,20 @@ const router = createBrowserRouter([
 ])
 
 // Finish transcriptions left over from offline use or a closed app, once the first screen is up.
+let resuming = false
 const resume = () => {
-  void import('./data/transcription').then((m) => m.processPendingTranscriptions())
-  // Have today's shadowing clip on the phone before the session even starts.
-  void Promise.all([import('./data/clips'), import('./lib/date')]).then(([c, d]) => c.prefetchTodaysClip(d.toDateKey())).catch(() => {})
+  if (resuming) return
+  resuming = true
+  void (async () => {
+    const [{ processPendingTranscriptions }, { refreshOfflinePack, downloadModel }] = await Promise.all([import('./data/transcription'), import('./data/offline')])
+    // Today's clip and the speech model come first so a session can start; then everything waiting is processed.
+    await downloadModel().catch(() => {})
+    await processPendingTranscriptions().catch(() => {})
+    // A month of shadowing clips, so practice keeps working offline.
+    await refreshOfflinePack().catch(() => {})
+  })().finally(() => {
+    resuming = false
+  })
 }
 if ('requestIdleCallback' in window) requestIdleCallback(resume, { timeout: 5000 })
 else setTimeout(resume, 2000)

@@ -45,6 +45,8 @@ export interface SpeechAnalysis {
   strengths: string[]
   /** 1-3 techniques that address the main weaknesses; used to pick a talk to watch (step 10). */
   techniqueTags: TechniqueTag[]
+  /** Quick on-phone review only: every measured problem, most noticeable first. */
+  ranked?: { weakness: string; evidence: string }[]
 }
 
 export interface CoachRequest {

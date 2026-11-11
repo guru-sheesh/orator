@@ -38,6 +38,7 @@ function netlifyFunctionsDev(): Plugin {
 }
 
 export default defineConfig({
+  worker: { format: 'es' },
   plugins: [
     react(),
     tailwindcss(),
@@ -66,7 +67,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
         // Speech SDK is fetched on demand; built-in audio clips download one a day (CLAUDE.md §0.9c).
         globIgnores: ['**/microsoft.cognitiveservices*.js', 'audio/**'],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [

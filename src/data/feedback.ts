@@ -18,6 +18,11 @@ export async function findTalk(id: string | null | undefined): Promise<Talk | un
   return BUILT_IN_TALKS.find((t) => t.id === id) ?? (await db.talks.get(id))
 }
 
+/** Best matching talk for the quick on-phone review (no AI to choose). */
+export async function pickTalk(a: SpeechAnalysis): Promise<Talk | undefined> {
+  return (await candidateTalks(a))[0]
+}
+
 /** Talks whose techniques overlap the analysis' tags, best overlap first; the AI picks one or none. */
 async function candidateTalks(a: SpeechAnalysis): Promise<Talk[]> {
   const all = [...BUILT_IN_TALKS, ...(await db.talks.toArray())]
@@ -68,8 +73,8 @@ export async function requestFeedback(attemptId: number): Promise<'blocked' | vo
   running.add(attemptId)
   try {
     const a = await db.speechAttempts.get(attemptId)
-    if (!a?.analysis || !a.words || !a.metrics || a.feedbackStatus === 'done') return
-    await db.speechAttempts.update(attemptId, { feedbackStatus: 'pending', feedbackError: undefined })
+    if (!a?.analysis || !a.words || !a.metrics || a.analysisSource !== 'ai' || a.feedbackSource === 'ai') return
+    await db.speechAttempts.update(attemptId, { aiStatus: 'pending', aiError: undefined })
     const talks = await candidateTalks(a.analysis)
     const request: FeedbackRequest = {
       mode: 'feedback',
@@ -89,16 +94,31 @@ export async function requestFeedback(attemptId: number): Promise<'blocked' | vo
       const talkId = fb.talkId && talks.some((t) => t.id === fb.talkId) ? fb.talkId : null
       await db.speechAttempts.update(attemptId, {
         feedbackStatus: 'done',
-        feedback: { ...fb, talkId, exampleAnswer: (fb.exampleAnswer ?? '').replace(/^\s*example answer[^:]*:\s*/i, ''), wentWell: fb.wentWell ?? [], wentWrong: (fb.wentWrong ?? []).map((w) => ({ ...w, evidence: cleanEvidence(w.evidence) })), retryTargets: (fb.retryTargets ?? []).slice(0, 3) },
+        feedbackSource: 'ai',
+        aiStatus: 'done',
+        feedbackError: undefined,
+        feedback: {
+          ...fb,
+          talkId,
+          talkReason: fb.talkReason ?? '',
+          whyItWeakened: fb.whyItWeakened ?? '',
+          howToStructure: fb.howToStructure ?? '',
+          howToDeliver: fb.howToDeliver ?? '',
+          exampleAnswer: (fb.exampleAnswer ?? '').replace(/^\s*example answer[^:]*:\s*/i, ''),
+          wentWell: fb.wentWell ?? [],
+          wentWrong: (fb.wentWrong ?? []).map((w) => ({ ...w, evidence: cleanEvidence(w.evidence ?? '') })),
+          retryTargets: (fb.retryTargets ?? []).slice(0, 3),
+        },
       })
       retries.delete(attemptId)
       return
     }
     const code = errorCode(res, body)
     const busy = code === 'rate-limited' || code === 'timeout'
+    // The quick review's feedback stays in place; only the AI status changes.
     await db.speechAttempts.update(attemptId, {
-      feedbackStatus: 'failed',
-      feedbackError: busy ? 'The AI service is busy. Retrying in a minute.' : code === 'not-configured' ? 'Feedback isn’t set up yet: the AI key is missing on the server.' : code === 'offline' ? 'You’re offline. Feedback arrives when you’re back online.' : 'Feedback couldn’t be generated. You can try again.',
+      aiStatus: code === 'not-configured' ? 'unavailable' : 'failed',
+      aiError: busy ? 'The AI coach is busy. Retrying in a minute.' : code === 'not-configured' ? 'The AI coach isn’t set up: the AI key is missing on the server.' : code === 'offline' ? 'You’re offline. The AI coach runs when you’re back online.' : 'The AI coach couldn’t write feedback. You can try again.',
     })
     const n = retries.get(attemptId) ?? 0
     if (busy && n < 3) {
@@ -107,7 +127,7 @@ export async function requestFeedback(attemptId: number): Promise<'blocked' | vo
     }
     if (code === 'not-configured' || code === 'offline' || code === 'rate-limited') return 'blocked'
   } catch {
-    await db.speechAttempts.update(attemptId, { feedbackStatus: 'failed', feedbackError: 'Feedback couldn’t be generated. You can try again.' }).catch(() => {})
+    await db.speechAttempts.update(attemptId, { aiStatus: 'failed', aiError: 'The AI coach couldn’t write feedback. You can try again.' }).catch(() => {})
   } finally {
     running.delete(attemptId)
   }

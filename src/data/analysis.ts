@@ -5,7 +5,8 @@ import { loadPassages, WORDS } from './speech'
 import { TECHNIQUE_TAGS, type CoachRequest, type FillerPosition, type SpeechAnalysis } from '../lib/analysisTypes'
 import type { SpeechMetrics } from '../lib/metrics'
 import type { TranscriptWord } from '../lib/transcribe'
-import { requestFeedback } from './feedback'
+import { pickTalk, requestFeedback } from './feedback'
+import { localAnalysis, localFeedback } from '../lib/localAnalysis'
 import { speakerHistory } from './trends'
 
 /** Shadowing is assessed against the clip; only independent delivery gets language analysis. */
@@ -72,37 +73,76 @@ export function errorCode(res: Response | null, body: { error?: string }): strin
 /** Failures that would repeat for every waiting answer, so batch retries stop at the first one. */
 const BLOCKING = new Set(['not-configured', 'offline', 'rate-limited'])
 
+/**
+ * Quick on-phone review: works offline and gives feedback straight away. The
+ * AI coach (when online and set up) replaces it with a fuller review.
+ */
+export async function applyLocalReview(attemptId: number) {
+  const a = await db.speechAttempts.get(attemptId)
+  if (!a?.words?.length || !a.metrics || !shouldAnalyse(a)) return
+  const local = localAnalysis({ task: a.task, prompt: a.prompt, reference: await referenceFor(a), words: a.words, metrics: a.metrics })
+  if (a.analysisSource === 'ai') {
+    if (!a.localAnalysis) await db.speechAttempts.update(attemptId, { localAnalysis: local })
+    return
+  }
+  const feedback = localFeedback(a.task, local, a.metrics)
+  const talk = await pickTalk(local)
+  await db.speechAttempts.update(attemptId, {
+    analysisStatus: 'done',
+    analysis: local,
+    analysisSource: 'local',
+    localAnalysis: local,
+    analysisError: undefined,
+    feedbackStatus: 'done',
+    feedback: { ...feedback, talkId: talk?.id ?? null, talkReason: talk?.notice ?? '' },
+    feedbackSource: 'local',
+    feedbackError: undefined,
+  })
+}
+
+/** The AI coach: replaces the quick review with a full one. Never removes the quick review on failure. */
 export async function analyseAttempt(attemptId: number): Promise<'blocked' | void> {
   if (running.has(attemptId)) return
   running.add(attemptId)
   try {
-    const a = await db.speechAttempts.get(attemptId)
-    if (!a || a.analysisStatus === 'done' || !a.words?.length || !a.metrics) return
+    let a = await db.speechAttempts.get(attemptId)
+    if (!a || !a.words?.length || !a.metrics || !shouldAnalyse(a)) return
+    if (a.analysisSource !== 'ai' && a.analysisStatus !== 'done') {
+      await applyLocalReview(attemptId)
+      a = (await db.speechAttempts.get(attemptId))!
+    }
+    if (a.analysisSource === 'ai') {
+      if (a.feedbackSource !== 'ai') return requestFeedback(attemptId)
+      return
+    }
     if (!navigator.onLine) {
-      await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: MESSAGES.offline })
+      await db.speechAttempts.update(attemptId, { aiStatus: 'failed', aiError: MESSAGES.offline })
       return 'blocked'
     }
-    await db.speechAttempts.update(attemptId, { analysisStatus: 'pending', analysisError: undefined })
+    await db.speechAttempts.update(attemptId, { aiStatus: 'pending', aiError: undefined })
 
     const request: CoachRequest = {
       task: a.task,
       prompt: a.prompt,
       reference: await referenceFor(a),
-      transcript: encodeTranscript(a.words, a.metrics),
-      metrics: describeMetrics(a.metrics),
+      transcript: encodeTranscript(a.words!, a.metrics!),
+      metrics: describeMetrics(a.metrics!),
       history: await speakerHistory(),
     }
     const res = await fetch('/api/coach', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }).catch(() => null)
     const body = res ? await res.json().catch(() => ({})) : { error: 'offline' }
 
     if (res?.ok && body.result) {
-      await db.speechAttempts.update(attemptId, { analysisStatus: 'done', analysis: sanitise(body.result, a.words, a.metrics), feedbackStatus: 'pending' })
+      await db.speechAttempts.update(attemptId, { analysisStatus: 'done', analysis: sanitise(body.result, a.words!, a.metrics!), analysisSource: 'ai' })
       retries.delete(attemptId)
       void requestFeedback(attemptId)
       return
     }
     const code = errorCode(res, body)
-    await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: MESSAGES[code] ?? 'The analysis failed. You can try again.' })
+    await db.speechAttempts.update(attemptId, {
+      aiStatus: code === 'not-configured' ? 'unavailable' : 'failed',
+      aiError: MESSAGES[code] ?? 'The AI coach couldn’t review this answer. You can try again.',
+    })
     // Busy or slow: try again automatically a few times.
     const n = retries.get(attemptId) ?? 0
     if ((code === 'rate-limited' || code === 'timeout') && n < MAX_AUTO_RETRIES) {
@@ -111,8 +151,7 @@ export async function analyseAttempt(attemptId: number): Promise<'blocked' | voi
     }
     if (BLOCKING.has(code)) return 'blocked'
   } catch {
-    // Never leave it stuck on "pending": show the error with a Try again button.
-    await db.speechAttempts.update(attemptId, { analysisStatus: 'failed', analysisError: 'The analysis failed. You can try again.' }).catch(() => {})
+    await db.speechAttempts.update(attemptId, { aiStatus: 'failed', aiError: 'The AI coach couldn’t review this answer. You can try again.' }).catch(() => {})
   } finally {
     running.delete(attemptId)
   }
@@ -162,14 +201,19 @@ function sanitise(raw: SpeechAnalysis, words: TranscriptWord[], metrics: SpeechM
   }
 }
 
+/** How far back the AI coach upgrades quick reviews, so a long offline spell doesn't burn the free quota at once. */
+const AI_BACKLOG = 12
+
 export async function processPendingAnalyses() {
+  // 1. Quick review for anything transcribed but not reviewed yet (works offline).
+  const unreviewed = await db.speechAttempts.filter((a) => a.transcription === 'done' && shouldAnalyse(a) && !!a.words?.length && (a.analysisStatus !== 'done' || !a.analysis)).toArray()
+  for (const a of unreviewed) await applyLocalReview(a.id!).catch(() => {})
   if (!navigator.onLine) return
-  const waiting = await db.speechAttempts
-    .filter((a) => a.transcription === 'done' && shouldAnalyse(a) && (a.analysisStatus === 'pending' || a.analysisStatus === 'failed' || a.analysisStatus === undefined))
-    .toArray()
-  for (const a of waiting) if ((await analyseAttempt(a.id!)) === 'blocked') return
-  const noFeedback = await db.speechAttempts.filter((a) => a.analysisStatus === 'done' && a.feedbackStatus !== 'done').toArray()
-  for (const a of noFeedback) if ((await requestFeedback(a.id!)) === 'blocked') return
+  // 2. AI coach for the most recent answers still on the quick review.
+  const upgrade = (await db.speechAttempts.filter((a) => a.transcription === 'done' && shouldAnalyse(a) && !!a.words?.length && (a.analysisSource !== 'ai' || a.feedbackSource !== 'ai')).toArray())
+    .sort((x, y) => y.createdAt - x.createdAt)
+    .slice(0, AI_BACKLOG)
+  for (const a of upgrade) if ((await analyseAttempt(a.id!)) === 'blocked') return
 }
 
 export function useCoachStatus() {

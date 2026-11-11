@@ -25,11 +25,20 @@ interface ClipCatalogue {
 
 let catalogue: Promise<ClipCatalogue | null> | null = null
 
+/** The clip list: fresh from the server when online, else the copy saved on the phone. */
 export function loadClipCatalogue(): Promise<ClipCatalogue | null> {
   // no-cache: older builds served this file as immutable for a year, so always recheck it.
   catalogue ??= fetch('/audio/clips.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? (r.json() as Promise<ClipCatalogue>) : null))
     .catch(() => null)
+    .then(async (fresh) => {
+      if (fresh?.clips?.length) {
+        await db.kv.put({ key: 'clip-catalogue', value: fresh }).catch(() => {})
+        return fresh
+      }
+      const saved = (await db.kv.get('clip-catalogue').catch(() => undefined))?.value as ClipCatalogue | undefined
+      return saved?.clips?.length ? saved : null
+    })
   void catalogue.then((c) => {
     if (!c) catalogue = null // retry next time (offline on first try)
   })
@@ -65,10 +74,21 @@ export async function findClip(id: string) {
 
 /** Next clip in the schedule: the Nth practice day gets order[N]. */
 export async function clipForNewSession(): Promise<string | undefined> {
+  return (await upcomingClipIds(1))[0]
+}
+
+/**
+ * The clips for the next `count` new practice days, starting with the one the
+ * next new session will get (today's if there's no session yet, else tomorrow's).
+ */
+export async function upcomingClipIds(count: number): Promise<string[]> {
   const cat = await loadClipCatalogue()
-  if (!cat?.order.length) return undefined
-  const days = new Set((await db.speechSessions.toArray()).map((s) => s.date)).size
-  return cat.order[days % cat.order.length]
+  if (!cat?.order.length) return []
+  const sessions = await db.speechSessions.toArray()
+  const days = new Set(sessions.map((s) => s.date)).size
+  const ids: string[] = []
+  for (let k = 0; k < Math.min(count, cat.order.length); k++) ids.push(cat.order[(days + k) % cat.order.length])
+  return ids
 }
 
 export function decodeEnvelope(b64: string) {
@@ -87,14 +107,21 @@ export async function getClipAudio(clip: BuiltInClip): Promise<Blob> {
   // A missing file can come back as the app's HTML page; never keep that as audio.
   if (!isAudio(blob)) throw new Error('download failed')
   await db.clipAudio.put({ clipId: clip.id, blob })
-  // Keep only the last few clips so storage doesn't grow without limit.
-  const all = await db.clipAudio.toCollection().primaryKeys()
-  if (all.length > 7) {
-    const recent = new Set((await db.speechSessions.orderBy('id').reverse().limit(7).toArray()).map((s) => s.plan.clip))
-    await db.clipAudio.bulkDelete(all.filter((k) => !recent.has(k) && k !== clip.id))
-  }
   return blob
 }
+
+/** Practice days of clips kept on the phone ahead of time (CLAUDE.md §0.9c, extended to a month for offline use). */
+export const CLIPS_AHEAD = 30
+
+/** Drops clips that are neither coming up in the next month nor used in the last week. */
+export async function pruneClipAudio() {
+  const keep = new Set(await upcomingClipIds(CLIPS_AHEAD))
+  for (const s of await db.speechSessions.orderBy('id').reverse().limit(7).toArray()) if (s.plan.clip) keep.add(s.plan.clip)
+  if (keep.size === 0) return
+  const all = await db.clipAudio.toCollection().primaryKeys()
+  await db.clipAudio.bulkDelete(all.filter((k) => !keep.has(k)))
+}
+
 
 /** Today's clip: the one today's session has, else the one starting a session would pick. */
 export async function todaysClip(today: string): Promise<BuiltInClip | undefined> {

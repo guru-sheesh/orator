@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, DEFAULT_SETTINGS, type SpeechAttempt } from './db'
-import { transcribe, TranscriptionError, type TranscriptWord } from '../lib/transcribe'
+import { transcribe, TranscriptionError, type Transcription, type TranscriptWord } from '../lib/transcribe'
+import { transcribeWithWhisper, type WhisperSize } from '../lib/whisper'
 import { profileAudio } from '../lib/audioAnalysis'
 import { computeMetrics } from '../lib/metrics'
-import { analyseAttempt, processPendingAnalyses, shouldAnalyse } from './analysis'
+import { analyseAttempt, applyLocalReview, processPendingAnalyses, shouldAnalyse } from './analysis'
 import { clipIdFromPrompt, type BuiltInClip } from './clips'
 
 /** Azure F0 includes 5 hours a month; stop a little short so a long answer can't tip it over. */
@@ -31,6 +32,39 @@ async function usageLeft() {
   const usage = (await db.settings.get('user'))?.azureUsage
   const used = usage?.month === monthKey() ? usage.seconds : 0
   return MONTHLY_LIMIT_SECONDS - SAFETY_MARGIN_SECONDS - used
+}
+
+export async function engineSettings() {
+  const s = (await db.settings.get('user')) ?? DEFAULT_SETTINGS
+  return { engine: s.transcriptionEngine ?? 'whisper', size: (s.whisperSize ?? 'base') as WhisperSize }
+}
+
+async function transcribeWithAzure(blob: Blob, seconds: number, opts: { referenceText?: string; range?: { start: number; end: number } }) {
+  if ((await usageLeft()) < seconds)
+    throw new TranscriptionError('This month’s free Azure transcription time is used up. Switch to on-phone transcription in Settings.', 'quota')
+  const result = await transcribe(blob, opts)
+  await addUsage(result.audioSeconds)
+  return result
+}
+
+/**
+ * Transcribes with the chosen engine. On-phone Whisper is the default; if it
+ * fails for a reason other than being offline, Azure is tried when it's set up.
+ */
+export async function runTranscription(blob: Blob, seconds: number, opts: { referenceText?: string; range?: { start: number; end: number } } = {}): Promise<Transcription> {
+  const { engine, size } = await engineSettings()
+  if (engine === 'azure') return transcribeWithAzure(blob, seconds, opts)
+  try {
+    return await transcribeWithWhisper(blob, size, { range: opts.range })
+  } catch (err) {
+    if (err instanceof TranscriptionError && (err.kind === 'offline' || err.kind === 'unreadable')) throw err
+    if (!navigator.onLine) throw err
+    try {
+      return await transcribeWithAzure(blob, seconds, opts)
+    } catch {
+      throw err
+    }
+  }
 }
 
 /** Repeat-stage phrases are short drills: not worth the monthly audio budget. */
@@ -64,18 +98,9 @@ export async function transcribeAttempt(attemptId: number): Promise<'blocked' | 
       return
     }
     const durationSec = attempt.durationMs / 1000
-    if ((await usageLeft()) < durationSec) {
-      await db.speechAttempts.update(attemptId, {
-        transcription: 'failed',
-        transcriptionError: 'This month’s free transcription time is used up. It resets on the 1st.',
-      })
-      return 'blocked'
-    }
-
     await db.speechAttempts.update(attemptId, { transcription: 'pending', transcriptionError: undefined })
-    const result = await transcribe(recording.blob, { referenceText: await referenceFor(attempt) })
-    await addUsage(result.audioSeconds)
-    // Loudness envelope finds voiced sounds Azure dropped (often "um"); needs the audio, so do it before discarding it.
+    const result = await runTranscription(recording.blob, durationSec, { referenceText: await referenceFor(attempt) })
+    // Loudness envelope finds voiced sounds the recogniser dropped (often "um"); needs the audio, so do it before discarding it.
     const envelope = await profileAudio(recording.blob).then((p) => p.envelope).catch(() => undefined)
     const analyse = shouldAnalyse(attempt) && result.words.length > 0
     await db.speechAttempts.update(attemptId, {
@@ -87,12 +112,17 @@ export async function transcribeAttempt(attemptId: number): Promise<'blocked' | 
       analysisStatus: analyse ? 'pending' : 'skipped',
     })
     if (!(settings ?? DEFAULT_SETTINGS).keepRecordings) await db.recordings.delete(attemptId)
-    if (analyse) void analyseAttempt(attemptId)
+    if (analyse) {
+      // Instant quick review on the phone, then the AI coach when online.
+      await applyLocalReview(attemptId)
+      if (navigator.onLine) void analyseAttempt(attemptId)
+    }
   } catch (err) {
     const message = err instanceof TranscriptionError ? err.message : 'Transcription failed. It will retry later.'
     await db.speechAttempts.update(attemptId, { transcription: 'failed', transcriptionError: message })
     // Missing key, no connection or no quota: the next attempt would fail the same way.
-    if (err instanceof TranscriptionError && (err.kind === 'not-configured' || err.kind === 'offline' || err.kind === 'quota')) return 'blocked'
+    // A bad file only affects itself; anything else (no model, no key, no memory) would repeat.
+    if (err instanceof TranscriptionError && err.kind !== 'unreadable') return 'blocked'
   } finally {
     running.delete(attemptId)
   }
@@ -100,7 +130,8 @@ export async function transcribeAttempt(attemptId: number): Promise<'blocked' | 
 
 /** Retries anything left untranscribed (offline at the time, app closed, etc.). */
 export async function processPendingTranscriptions() {
-  if (!navigator.onLine) return
+  // On-phone transcription works offline once the model is downloaded; Azure needs a connection.
+  if (!navigator.onLine && (await engineSettings()).engine === 'azure') return
   const waiting = await db.speechAttempts.filter((a) => (a.transcription === 'pending' || a.transcription === 'failed') && shouldTranscribe(a)).toArray()
   for (const a of waiting) {
     // Without its audio (e.g. restored from a backup) it can't be transcribed; transcribeAttempt marks it failed once.
@@ -116,11 +147,10 @@ export async function ensureClipTranscript(sourceId: number, segment: number) {
   const source = await db.shadowSources.get(sourceId)
   if (!source || source.clipTranscripts?.[segment]) return source?.clipTranscripts?.[segment]
   const range = source.segments[segment]
-  if ((await usageLeft()) < range.end - range.start) return undefined
   const audio = await db.shadowAudio.get(sourceId)
   if (!audio) return undefined
-  const result = await transcribe(audio.blob, { range })
-  await addUsage(result.audioSeconds)
+  const result = await runTranscription(audio.blob, range.end - range.start, { range }).catch(() => null)
+  if (!result) return undefined
   const clip = { text: result.text, words: result.words.map(({ text, start, end }) => ({ text, start, end })) }
   const fresh = await db.shadowSources.get(sourceId)
   await db.shadowSources.update(sourceId, { clipTranscripts: { ...fresh?.clipTranscripts, [segment]: clip } })
@@ -143,9 +173,8 @@ export async function ensureBuiltInClipTranscript(clip: BuiltInClip, blob: Blob)
     await db.clipTranscripts.put(entry)
     return entry
   }
-  if ((await usageLeft()) < clip.durationSec) return undefined
-  const result = await transcribe(blob)
-  await addUsage(result.audioSeconds)
+  const result = await runTranscription(blob, clip.durationSec).catch(() => null)
+  if (!result) return undefined
   const entry = { clipId: clip.id, text: result.text, words: result.words.map(({ text, start, end, punct }) => ({ text, start, end, punct })) }
   await db.clipTranscripts.put(entry)
   return entry
