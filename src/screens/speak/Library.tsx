@@ -21,7 +21,7 @@ function BackHeader({ to, title, action }: { to: string; title: string; action?:
       <Link to={to} aria-label="Back" className={iconButtonClass}>
         <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
       </Link>
-      <h1 className="flex-1 text-headline font-semibold">{title}</h1>
+      <h1 className="flex-1 font-serif text-headline font-medium">{title}</h1>
       {action}
     </header>
   )

@@ -216,6 +216,7 @@ function LogForm({
       const result = await logPages(book, today, n)
       if (!result.ok) return setError(result.error)
       onSaved(result.pages, result.finished)
+      setPages('') // the form only remounts when the page count moved (not at the last page)
       // The form remounts to reset; put focus back where the user was typing.
       requestAnimationFrame(() => document.getElementById('log-pages')?.focus())
     } catch {

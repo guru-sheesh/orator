@@ -1,7 +1,8 @@
-import { AUDIO_TABLES, db, DEFAULT_SETTINGS } from './db'
+import { AUDIO_TABLES, db, DEFAULT_SETTINGS, normaliseAttempt, type SpeechAttempt } from './db'
 
-// Audio (and the imported-audio index, useless without its audio) stays out of JSON backups.
-const NOT_IN_BACKUP = new Set<string>([...AUDIO_TABLES, 'shadowSources'])
+// Audio (and the imported-audio index, useless without its audio) stays out of JSON backups,
+// as does content the app re-downloads by itself (clip catalogue and transcripts).
+const NOT_IN_BACKUP = new Set<string>([...AUDIO_TABLES, 'shadowSources', 'kv', 'clipTranscripts'])
 const backedUpTables = () => db.tables.filter((t) => !NOT_IN_BACKUP.has(t.name))
 
 const APP = 'orator'
@@ -52,7 +53,8 @@ export async function importAllData(text: string): Promise<void> {
   await db.transaction('rw', backedUpTables(), async () => {
     for (const table of backedUpTables()) {
       await table.clear()
-      const rows = file.tables[table.name]
+      let rows = file.tables[table.name]
+      if (table.name === 'speechAttempts' && Array.isArray(rows)) rows = rows.map((a) => normaliseAttempt(a as SpeechAttempt))
       if (Array.isArray(rows) && rows.length) await table.bulkAdd(rows)
     }
   })

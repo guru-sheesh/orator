@@ -5,7 +5,8 @@ import { updateSettings, updateTargets, useSettings } from '../data/daily'
 import { backupFileName, deleteAllData, downloadBlob, exportAllData, importAllData, markExported } from '../data/backup'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Card, cx, iconButtonClass, Label, ProgressBar, Segmented } from '../components/ui'
-import { useAzureUsage } from '../data/transcription'
+import { useAzureUsage, useTranscriptionStatus } from '../data/transcription'
+import { OfflineSettings, SpeechSettings } from './SettingsOffline'
 import { useCoachStatus } from '../data/analysis'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
 
@@ -28,6 +29,7 @@ export default function Settings() {
   const settings = useSettings()
   const usage = useAzureUsage()
   const coach = useCoachStatus()
+  const speech = useTranscriptionStatus()
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [pending, setPending] = useState<Pending>(null)
   const [busy, setBusy] = useState(false)
@@ -74,7 +76,7 @@ export default function Settings() {
         <Link to="/" aria-label="Back to Today" className={iconButtonClass}>
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="text-headline font-semibold">Settings</h1>
+        <h1 className="font-serif text-headline font-medium">Settings</h1>
       </header>
 
       <Card>
@@ -107,16 +109,25 @@ export default function Settings() {
         )}
       </Card>
 
-      {usage && (
+      {settings && <SpeechSettings engine={settings.transcriptionEngine ?? 'whisper'} size={settings.whisperSize ?? 'base'} />}
+
+      <OfflineSettings />
+
+      {usage && settings?.transcriptionEngine === 'azure' && (
         <Card>
-          <Label>Transcription usage · this month</Label>
+          <Label>Azure usage this month</Label>
           <p className="tabular-nums">
             <span className="text-stat font-semibold">{formatHours(usage.seconds)}</span> <span className="text-muted">of {formatHours(usage.limit)} free</span>
           </p>
           <ProgressBar value={Math.round(usage.seconds)} max={usage.limit} label="Azure transcription time used" />
+          {speech && !speech.configured && (
+            <p role="status" className="text-sm text-danger">
+              Azure isn’t set up on the server: {speech.missing.join(' and ')} {speech.missing.length === 1 ? 'is' : 'are'} missing in Netlify’s environment variables. Switch to “On this phone” above to transcribe without it.
+            </p>
+          )}
           <p className="text-caption text-subtle">
             {usage.nearLimit
-              ? 'The free limit is almost used up. New recordings are saved but not transcribed until the 1st.'
+              ? 'The free limit is almost used up. Switch to “On this phone” to keep transcribing.'
               : 'Azure’s free tier covers about 5 hours of audio a month. A full daily session uses roughly 10–15 minutes.'}
           </p>
         </Card>
@@ -127,7 +138,7 @@ export default function Settings() {
         <div className="flex items-center justify-between gap-3">
           <span>Provider</span>
           <span className="text-muted">
-            {coach === undefined ? 'Checking…' : !coach ? 'Unavailable offline' : `${coach.provider === 'claude' ? 'Claude' : 'Gemini'}${coach.configured ? '' : ' · key missing'}`}
+            {coach === undefined ? 'Checking…' : !coach ? 'Unavailable offline' : `${coach.provider === 'claude' ? 'Claude' : 'Gemini'}${coach.configured ? '' : ' · AI_API_KEY missing'}`}
           </span>
         </div>
         <p className="flex gap-2 rounded-md bg-info-soft px-3 py-2.5 text-sm">

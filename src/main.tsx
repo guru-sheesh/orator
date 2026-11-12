@@ -1,6 +1,9 @@
 import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
+import '@fontsource-variable/schibsted-grotesk'
+import '@fontsource-variable/newsreader/opsz.css'
+import '@fontsource-variable/newsreader/opsz-italic.css'
 import './styles/tokens.css'
 import { AppShell } from './components/AppShell'
 import { RouteError } from './components/RouteError'
@@ -43,10 +46,26 @@ const router = createBrowserRouter([
 ])
 
 // Finish transcriptions left over from offline use or a closed app, once the first screen is up.
+let resuming = false
+let again = false
 const resume = () => {
-  void import('./data/transcription').then((m) => m.processPendingTranscriptions())
-  // Have today's shadowing clip on the phone before the session even starts.
-  void Promise.all([import('./data/clips'), import('./lib/date')]).then(([c, d]) => c.prefetchTodaysClip(d.toDateKey())).catch(() => {})
+  // A reconnect while a run is in progress queues one more run rather than being lost.
+  if (resuming) {
+    again = true
+    return
+  }
+  resuming = true
+  void (async () => {
+    const [{ processPendingTranscriptions }, { refreshOfflinePack }] = await Promise.all([import('./data/transcription'), import('./data/offline')])
+    // In parallel: a month of shadowing clips, and the speech model followed by anything waiting to be transcribed.
+    await refreshOfflinePack(() => processPendingTranscriptions()).catch(() => {})
+  })().finally(() => {
+    resuming = false
+    if (again) {
+      again = false
+      resume()
+    }
+  })
 }
 if ('requestIdleCallback' in window) requestIdleCallback(resume, { timeout: 5000 })
 else setTimeout(resume, 2000)
@@ -61,9 +80,11 @@ window.addEventListener('vite:preloadError', (e) => {
 })
 window.addEventListener('load', () => setTimeout(() => sessionStorage.removeItem('reloaded-for-update'), 10_000))
 
-// Installed apps are resumed rather than reloaded, so check for a new version when the app comes back.
+// Installed apps are resumed rather than restarted, so also top up the offline pack then.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void navigator.serviceWorker?.getRegistration().then((r) => r?.update())
+  if (document.visibilityState !== 'visible') return
+  void navigator.serviceWorker?.getRegistration().then((r) => r?.update())
+  resume()
 })
 
 createRoot(document.getElementById('root')!).render(

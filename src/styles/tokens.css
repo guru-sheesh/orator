@@ -11,55 +11,55 @@
 :root {
   color-scheme: dark;
 
-  /* Surfaces */
-  --bg: #121315;
-  --surface: #1a1b1e;
-  --raised: #222327;
-  --border: #34363b;          /* decorative dividers */
-  --border-strong: #6e7178;   /* inputs, controls (3:1 min) */
+  /* "Rehearsal room": ink-blue stage, warm spotlight, red on-air light. */
+  --bg: #12141c;
+  --surface: #1a1d28;
+  --raised: #242837;
+  --border: #2f3445;          /* decorative dividers */
+  --border-strong: #6b7186;   /* inputs, controls (3.5:1) */
 
-  /* Text */
-  --text: #eceae5;            /* 15.5:1 on bg */
-  --text-muted: #a8a49d;      /* 7.5:1 on bg */
-  --text-subtle: #938f88;     /* 4.9:1 on raised */
+  --text: #edeef3;            /* 15.9:1 on bg */
+  --text-muted: #a7acbc;      /* 8.1:1 */
+  --text-subtle: #9095a8;     /* 4.9:1 on raised */
 
-  /* Brand + status */
-  --primary: #e2a65a;         /* brass: primary actions, progress */
-  --on-primary: #1a1206;
-  --primary-soft: rgb(226 166 90 / 0.14);
-  --success: #86bc93;         /* "Complete" states */
-  --on-success: #121315;
-  --success-soft: rgb(134 188 147 / 0.14);
-  --danger: #ee8274;          /* recording, destructive */
-  --on-danger: #1a0b08;
-  --danger-soft: rgb(238 130 116 / 0.14);
-  --info: #8fb8de;            /* pauses, neutral analysis markers */
-  --info-soft: rgb(143 184 222 / 0.14);
-  --focus: #e2a65a;
+  --primary: #f2c66d;         /* spotlight: primary actions, progress */
+  --on-primary: #23190a;
+  --primary-soft: rgb(242 198 109 / 0.13);
+  --success: #79cfa6;
+  --on-success: #0f1a15;
+  --success-soft: rgb(121 207 166 / 0.13);
+  --danger: #ff7d6e;          /* on-air: recording, destructive */
+  --on-danger: #1d0a07;
+  --danger-soft: rgb(255 125 110 / 0.13);
+  --info: #96b2ff;
+  --info-soft: rgb(150 178 255 / 0.13);
+  --focus: #f2c66d;
+  --glow: rgb(242 198 109 / 0.16);
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f7f5f1;
+  --bg: #f2f3f7;
   --surface: #ffffff;
-  --raised: #efece6;
-  --border: #d9d4cb;
-  --border-strong: #8c867c;
-  --text: #1c1b19;
-  --text-muted: #57534d;
-  --text-subtle: #6b665f;
-  --primary: #8a3d0c;
+  --raised: #e7e9f0;
+  --border: #d3d6e0;
+  --border-strong: #7d8295;
+  --text: #161924;
+  --text-muted: #4d5366;
+  --text-subtle: #5d6377;
+  --primary: #7a5200;
   --on-primary: #ffffff;
-  --primary-soft: rgb(138 61 12 / 0.1);
-  --success: #2e6a3e;
+  --primary-soft: rgb(122 82 0 / 0.09);
+  --success: #1d6b4a;
   --on-success: #ffffff;
-  --success-soft: rgb(46 106 62 / 0.1);
-  --danger: #b3261e;
+  --success-soft: rgb(29 107 74 / 0.09);
+  --danger: #b42318;
   --on-danger: #ffffff;
-  --danger-soft: rgb(179 38 30 / 0.08);
-  --info: #1e5a8c;
-  --info-soft: rgb(30 90 140 / 0.08);
-  --focus: #8a3d0c;
+  --danger-soft: rgb(180 35 24 / 0.08);
+  --info: #2c4db0;
+  --info-soft: rgb(44 77 176 / 0.08);
+  --focus: #7a5200;
+  --glow: rgb(122 82 0 / 0.08);
 }
 
 @theme inline {
@@ -86,8 +86,8 @@
 }
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Lora", ui-serif, Georgia, serif;
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", ui-serif, Georgia, serif;
 
   /* Type scale (rem at 16px base) */
   --text-caption: 0.8125rem;   /* 13px labels, meta */
@@ -100,8 +100,8 @@
   --text-transcript--line-height: 1.7;
   --text-title: 1.25rem;       /* 20px card / section titles */
   --text-title--line-height: 1.35;
-  --text-headline: 1.625rem;   /* 26px screen titles */
-  --text-headline--line-height: 1.25;
+  --text-headline: 2rem;       /* 32px serif screen titles */
+  --text-headline--line-height: 1.1;
   --text-stat: 2rem;           /* 32px numbers inside rings and meters */
   --text-stat--line-height: 1.15;
   --text-display: 2.5rem;      /* 40px timers, key numbers, the word to describe */
@@ -110,7 +110,7 @@
   /* Radii */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-pill: 999px;
 
   /* Elevation: dark mode relies on surface steps, not shadows */
@@ -134,7 +134,9 @@
     /* Keep focused elements clear of the sticky bottom nav */
     scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
+  body { background: var(--bg); font-feature-settings: "ss01"; }
   h1, h2, h3 { text-wrap: balance; }
+  .font-serif { font-optical-sizing: auto; }
   @keyframes pulse-ring { 50% { opacity: 0.15; } }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {

@@ -83,6 +83,14 @@ The user decided feedback does NOT need citations. Replace the source library wi
 - Transcripts are pre-made locally with Whisper (`tools/transcribe-clips.py`, faster-whisper `small.en`, venv in `%LOCALAPPDATA%\orator-whisper`) into `public/audio/transcripts/<id>.json`, so no Azure time is spent on clips; Azure is only a fallback if one is missing.
 - `tools/prune-clips.ts` then drops clips that aren't the speaker (host introductions, audience Q&A) or aren't suitable to repeat aloud, renumbers them and repairs the order. Rebuild order: build-clips → transcribe-clips → prune-clips.
 
+## 0.9d On-phone transcription and full offline use (user, 2026-11-11) — SUPERSEDES 0.5/0.6 where they conflict
+
+- **Whisper on the phone is the default speech-to-text** (transformers.js in a Web Worker, `src/lib/whisper.ts`): `onnx-community/whisper-{base,tiny}.en_timestamped` (q8, wasm), Xenova repos as fallback. The user picks Standard or Light in Settings. Azure stays as an opt-in engine; Whisper never falls back to Azure by itself (audio stays on the phone).
+- The model (~70–105 MB with the runtime) is cached by transformers.js in Cache Storage and downloads by itself on Wi-Fi; on mobile data or data-saver it waits for "Download now". After "Remove model", it only downloads when asked.
+- **Quick review on the phone** (`src/lib/localAnalysis.ts`): every transcribed answer gets an instant measured review (fillers, pauses, pace, restarts, long sentences, wordiness, key ideas missed/copied, target word said) in the same SpeechAnalysis/CoachingFeedback shapes, so feedback, retry, comparison and trends work offline. When online, the AI coach replaces it (`analysisSource`/`feedbackSource` = `local` | `ai`). Comparisons use the quick review for both attempts when their sources differ.
+- **Offline pack** (`src/data/offline.ts`): on first launch and whenever the app is opened or reconnects, the next 30 practice days of shadowing clips plus transcripts download into IndexedDB, the clip catalogue is saved in the `kv` table, and fonts are self-hosted and precached. Only the AI coach needs a connection.
+- Design refresh "rehearsal room": ink-blue surfaces, spotlight-gold primary, on-air red for recording; Newsreader (serif titles, transcripts) + Schibsted Grotesk (UI), self-hosted via Fontsource. See `design-system.md`.
+
 ## 0.8 Source library: anti-fabrication rules (sections 7-9) — see 0.8a
 
 - The coaching AI may ONLY cite sources that exist in the app's `SourceReference` table, by ID. It must never write a citation, quotation, author or page number free-hand.

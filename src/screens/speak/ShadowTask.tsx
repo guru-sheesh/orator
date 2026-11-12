@@ -8,7 +8,7 @@ import { ensureBuiltInClipTranscript, ensureClipTranscript } from '../../data/tr
 import { clipPromptId, decodeEnvelope, getClipAudio, loadClipCatalogue, useClipTranscript, type BuiltInClip } from '../../data/clips'
 import { TranscriptText } from '../../components/Transcript'
 import type { TranscriptWord } from '../../lib/transcribe'
-import { splitPhrases } from '../../lib/audioAnalysis'
+import { splitPhrases, splitPhrasesBySentence } from '../../lib/audioAnalysis'
 import { ClipPlayer, type ClipPlayerHandle } from '../../components/ClipPlayer'
 import { PromptRecorder } from '../../components/PromptRecorder'
 import { buttonClass, Card, Label, Segmented } from '../../components/ui'
@@ -176,15 +176,21 @@ function ShadowStages({
   ensureTranscript: () => Promise<unknown>
 }) {
   const [stage, setStage] = useState<Stage>('listen')
-  const [phraseIndex, setPhraseIndex] = useState(0)
+  const [chosenPhrase, setPhraseIndex] = useState(0)
   const [recordingNow, setRecordingNow] = useState(false)
   const player = useRef<ClipPlayerHandle>(null)
-  const phrases = useMemo(() => splitPhrases(envelope, segment), [envelope, segment])
+  // Repeat phrases follow the speaker's sentences when the transcript is there; pauses alone are the fallback.
+  const phrases = useMemo(
+    () => (clipWords && splitPhrasesBySentence(clipWords, segment.start, segment, envelope)) || splitPhrases(envelope, segment),
+    [envelope, segment, clipWords],
+  )
+  // The phrase list can change when the transcript arrives; never point past its end.
+  const phraseIndex = Math.min(chosenPhrase, Math.max(0, phrases.length - 1))
   const attempts = useAttempts(session.id, 'shadowing')
   const baseId = promptBase
   const delivered = attempts?.some((a) => a.stage === 'deliver')
   const clipSec = segment.end - segment.start
-  const phrase = phrases[Math.min(phraseIndex, phrases.length - 1)]
+  const phrase = phrases[phraseIndex]
   const transcript = clipWords ? { words: clipWords, offset: segment.start } : undefined
   const [transcriptStatus, setTranscriptStatus] = useState<'idle' | 'loading' | 'failed'>('idle')
 

@@ -30,8 +30,7 @@ function countRow(label: string, a: number, b: number): CompareRow {
   }
 }
 
-export function dimensions(a: SpeechAttempt) {
-  const an = a.analysis!
+export function dimensions(a: SpeechAttempt, an = a.analysis!) {
   const m = a.metrics!
   return {
     fillers: (an.fillers?.length ?? 0) + (an.soundFillers?.length ?? 0),
@@ -48,8 +47,11 @@ export function dimensions(a: SpeechAttempt) {
 }
 
 export function compareAttempts(firstAttempt: SpeechAttempt, secondAttempt: SpeechAttempt) {
-  const a = dimensions(firstAttempt)
-  const b = dimensions(secondAttempt)
+  // Compare like with like: if one attempt has the AI review and the other only the quick one, use the quick review for both.
+  const sameSource = firstAttempt.analysisSource === secondAttempt.analysisSource
+  const pick = (x: SpeechAttempt) => (sameSource ? x.analysis! : (x.localAnalysis ?? x.analysis!))
+  const a = dimensions(firstAttempt, pick(firstAttempt))
+  const b = dimensions(secondAttempt, pick(secondAttempt))
   const rows: CompareRow[] = [
     countRow('Fillers', a.fillers, b.fillers),
     countRow('Restarts', a.restarts, b.restarts),
@@ -92,6 +94,6 @@ export function compareAttempts(firstAttempt: SpeechAttempt, secondAttempt: Spee
     rows,
     improved,
     needsWork: [...worse, ...stillPresent],
-    nextPriority: secondAttempt.analysis!.priority.weakness,
+    nextPriority: pick(secondAttempt).priority.weakness,
   }
 }

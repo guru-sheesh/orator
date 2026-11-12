@@ -20,7 +20,7 @@ export function AppShell() {
       </main>
       <nav
         aria-label="Main"
-        className="sticky bottom-0 grid grid-cols-4 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+        className="sticky bottom-0 z-10 grid grid-cols-4 border-t border-border/70 bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
       >
         {TABS.map(({ to, label, icon: Icon, also }) => {
           const active = to === '/' ? pathname === '/' || !!also?.includes(pathname) : pathname.startsWith(to)
@@ -31,10 +31,10 @@ export function AppShell() {
               aria-current={active ? 'page' : undefined}
               className={cx(
                 'relative flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium',
-                active ? 'text-primary before:absolute before:inset-x-[30%] before:top-0 before:h-0.5 before:rounded-b-sm before:bg-primary' : 'text-subtle',
+                active ? 'text-text before:absolute before:top-0 before:h-0.5 before:w-8 before:rounded-b-sm before:bg-primary' : 'text-subtle hover:text-muted',
               )}
             >
-              <Icon size={24} strokeWidth={1.75} aria-hidden="true" />
+              <Icon size={24} strokeWidth={active ? 2 : 1.75} className={active ? 'text-primary' : undefined} aria-hidden="true" />
               {label}
             </Link>
           )

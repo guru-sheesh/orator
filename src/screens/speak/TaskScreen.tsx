@@ -67,7 +67,7 @@ function TaskBody({ session, taskId }: { session: SpeechSession; taskId: TaskId 
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-caption text-subtle">Task {index + 1} of 6</p>
-          <h1 className="truncate text-title font-semibold">{meta.title}</h1>
+          <h1 className="truncate font-serif text-[1.5rem] leading-tight font-medium">{meta.title}</h1>
         </div>
         <span className="rounded-sm bg-raised px-2.5 py-1 text-caption font-medium text-muted tabular-nums" title="Session time today">
           <span className="sr-only">Session time today: </span>

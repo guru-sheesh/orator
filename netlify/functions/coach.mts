@@ -7,6 +7,7 @@
  *   - feedback: CoachingFeedback, given the analysis and candidate talks
  * Provider is switchable with AI_PROVIDER = gemini | claude, no code changes needed.
  */
+import { env, sameOrigin } from '../lib/guard.mts'
 import { ANALYSIS_SCHEMA, FEEDBACK_SCHEMA, type CoachRequest, type FeedbackRequest } from '../../src/lib/analysisTypes.ts'
 
 const TIMEOUT_MS = Number(process.env.COACH_TIMEOUT_MS) || 9_000 // Netlify free functions stop at ~10 s
@@ -98,7 +99,11 @@ async function callGemini(p: Prompt, key: string, signal: AbortSignal): Promise<
   if (!res.ok) return { ok: false, status: res.status, error: (await res.text()).slice(0, 300) }
   const data = (await res.json()) as any
   const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text ?? '').join('') ?? ''
-  return { ok: true, data: JSON.parse(text) }
+  try {
+    return { ok: true, data: JSON.parse(text) }
+  } catch {
+    return { ok: false, status: 502, error: 'model returned invalid JSON' }
+  }
 }
 
 async function callClaude(p: Prompt, key: string, signal: AbortSignal): Promise<Result> {
@@ -123,13 +128,15 @@ async function callClaude(p: Prompt, key: string, signal: AbortSignal): Promise<
 }
 
 export default async (req: Request): Promise<Response> => {
-  const site = req.headers.get('sec-fetch-site')
-  if (site && site !== 'same-origin') return Response.json({ error: 'forbidden' }, { status: 403 })
-
-  const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
-  const key = process.env.AI_API_KEY
-  if (req.method === 'GET') return Response.json({ provider, configured: !!key })
+  const provider = (env('AI_PROVIDER') || 'gemini').toLowerCase()
+  // AI_API_KEY is the documented name; the provider's own name is accepted too.
+  const key = env('AI_API_KEY', ...(provider === 'claude' ? ['ANTHROPIC_API_KEY'] : ['GEMINI_API_KEY', 'GOOGLE_API_KEY']))
+  if (req.method === 'GET') return Response.json({ provider, configured: !!key }, { headers: { 'Cache-Control': 'no-store' } })
+  if (req.method !== 'POST') return Response.json({ error: 'method-not-allowed' }, { status: 405 })
+  // Only this app's own pages may spend the AI quota.
+  if (!sameOrigin(req)) return Response.json({ error: 'forbidden' }, { status: 403 })
   if (!key) return Response.json({ error: 'not-configured' }, { status: 503 })
+  if (Number(req.headers.get('content-length') ?? 0) > 100_000) return Response.json({ error: 'bad-request' }, { status: 413 })
 
   let body: CoachRequest | FeedbackRequest
   try {
@@ -137,7 +144,10 @@ export default async (req: Request): Promise<Response> => {
   } catch {
     return Response.json({ error: 'bad-request' }, { status: 400 })
   }
-  if (!body?.transcript || body.transcript.length > 20_000) return Response.json({ error: 'bad-request' }, { status: 400 })
+  if (typeof body?.transcript !== 'string' || !body.transcript || body.transcript.length > 20_000 || typeof body.prompt !== 'string' || !(body.task in TASK_NOTES)) {
+    return Response.json({ error: 'bad-request' }, { status: 400 })
+  }
+  if ('mode' in body && body.mode === 'feedback' && !Array.isArray(body.talks)) return Response.json({ error: 'bad-request' }, { status: 400 })
   const prompt = 'mode' in body && body.mode === 'feedback' ? feedbackPrompt(body) : analysisPrompt(body as CoachRequest)
 
   const controller = new AbortController()

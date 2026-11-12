@@ -6,6 +6,17 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # transformers.js pulls in onnxruntime-node, which only Node uses; skip its large GPU download.
+  ONNXRUNTIME_NODE_INSTALL = "skip"
+
+# Basic hardening for every page: no MIME sniffing, no framing by other sites, mic limited to this app.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "microphone=(self), camera=(), geolocation=()"
 
 # The service worker must never be cached, or app updates won't reach installed phones.
 [[headers]]

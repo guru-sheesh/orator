@@ -15,6 +15,12 @@ export interface Settings {
   lastExportAt?: number
   /** Azure audio seconds used, per calendar month (`YYYY-MM`), for the free-tier meter (§0.6). */
   azureUsage?: { month: string; seconds: number }
+  /** Where recordings are transcribed: on the phone (Whisper, default) or by Azure. */
+  transcriptionEngine?: 'whisper' | 'azure'
+  /** Which on-device Whisper model to use. */
+  whisperSize?: 'base' | 'tiny'
+  /** False after the user removes the model: it then downloads only when they ask. */
+  whisperAutoDownload?: boolean
 }
 
 export interface DailyStatus {
@@ -99,6 +105,16 @@ export interface SpeechAttempt {
   pronunciation?: Transcription['scores']
   metrics?: SpeechMetrics
   analysisStatus?: 'pending' | 'done' | 'failed' | 'skipped'
+  /** Who produced `analysis`/`feedback`: the quick on-phone review or the AI coach (which replaces it when online). */
+  analysisSource?: 'local' | 'ai'
+  feedbackSource?: 'local' | 'ai'
+  /** The on-phone review, kept so attempts reviewed by different sources can still be compared like for like. */
+  localAnalysis?: SpeechAnalysis
+  /** State of the AI coach for this attempt. */
+  aiStatus?: 'pending' | 'done' | 'failed' | 'unavailable'
+  aiError?: string
+  /** Automatic AI attempts that failed; the batch stops trying after a few (a manual retry resets it). */
+  aiTries?: number
   analysisError?: string
   analysis?: SpeechAnalysis
   feedbackStatus?: 'pending' | 'done' | 'failed'
@@ -166,6 +182,12 @@ export interface ClipTranscript {
   words: TranscriptWord[]
 }
 
+/** Small key-value store for cached content (e.g. the clip catalogue, so it works offline). */
+export interface KeyValue {
+  key: string
+  value: unknown
+}
+
 /** Rotation bookkeeping so practice prompts don't repeat until a bank is exhausted. */
 export interface ContentUsage {
   key: string
@@ -196,6 +218,7 @@ export const db = new Dexie('orator') as Dexie & {
   talks: EntityTable<Talk, 'id'>
   clipAudio: EntityTable<ClipAudio, 'clipId'>
   clipTranscripts: EntityTable<ClipTranscript, 'clipId'>
+  kv: EntityTable<KeyValue, 'key'>
 }
 
 db.version(1).stores({
@@ -227,6 +250,20 @@ db.version(5)
     await tx.table('clipAudio').clear()
     await tx.table('clipTranscripts').clear()
   })
+
+db.version(6).stores({ kv: 'key' })
+
+/** Marks reviews made before quick reviews existed as AI reviews (they were). */
+export function normaliseAttempt(a: SpeechAttempt) {
+  if (a.analysisStatus === 'done' && a.analysis && !a.analysisSource) a.analysisSource = 'ai'
+  if (a.feedbackStatus === 'done' && a.feedback && !a.feedbackSource) a.feedbackSource = 'ai'
+  if (a.aiStatus === 'pending') delete a.aiStatus
+  return a
+}
+
+db.version(7)
+  .stores({})
+  .upgrade((tx) => tx.table('speechAttempts').toCollection().modify((a: SpeechAttempt) => void normaliseAttempt(a)))
 
 /** Tables holding audio blobs: excluded from JSON backups (too large, and not JSON). */
 export const AUDIO_TABLES = ['recordings', 'shadowAudio', 'clipAudio'] as const

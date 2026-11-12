@@ -132,7 +132,21 @@ export function useSession(id: number | undefined) {
   return useLiveQuery(async () => (id === undefined ? null : ((await db.speechSessions.get(id)) ?? null)), [id])
 }
 
-export async function startSession(): Promise<number> {
+let starting: Promise<number> | null = null
+
+/**
+ * Starts today's session, or returns the one that already exists. There is only
+ * ever one session a day: a second one would hide the tasks already done.
+ */
+export function startSession(): Promise<number> {
+  // Two taps (or two buttons) at once share the same call.
+  starting ??= createSession().finally(() => (starting = null))
+  return starting
+}
+
+async function createSession(): Promise<number> {
+  const existing = await db.speechSessions.where('date').equals(toDateKey()).last()
+  if (existing?.id !== undefined) return existing.id
   const level = await currentLevel()
   // The built-in clip of the day comes first; imported audio is the fallback.
   const clip = await clipForNewSession()
@@ -219,6 +233,27 @@ export async function setTaskStatus(sessionId: number, task: TaskId, status: Tas
   })
 }
 
+/**
+ * Marks a task done as soon as everything it asks for has been recorded, so
+ * leaving the screen (to read feedback, or because the phone closed the app)
+ * never brings a finished task back as "not done".
+ */
+export async function completeTaskIfRecorded(sessionId: number, task: TaskId) {
+  const session = await db.speechSessions.get(sessionId)
+  if (!session || session.tasks[task] === 'done') return
+  const attempts = await db.speechAttempts.where('sessionId').equals(sessionId).filter((a) => a.task === task).toArray()
+  const recorded = new Set(attempts.map((a) => a.promptId))
+  const complete =
+    task === 'words'
+      ? session.plan.words.every((id) => recorded.has(id))
+      : task === 'questions'
+        ? session.plan.questions.every((id) => recorded.has(id))
+        : task === 'shadowing'
+          ? attempts.some((a) => a.stage === 'deliver')
+          : attempts.length > 0
+  if (complete) await setTaskStatus(sessionId, task, 'done')
+}
+
 export function nextPendingTask(session: SpeechSession): TaskId | undefined {
   return TASKS.find((t) => session.tasks[t.id] === 'pending')?.id
 }
@@ -260,12 +295,33 @@ export async function saveAttempt(input: {
     if (keep || transcribeIt) await db.recordings.put({ attemptId: id, blob: input.blob })
     return id
   })
+  // The recording is safely stored; a failure here must not look like a failed save.
+  await completeTaskIfRecorded(input.session.id!, input.task).catch(() => {})
   if (transcribeIt) void transcribeAttempt(id)
   return id
 }
 
 export function useAttempt(id: number | null | undefined) {
   return useLiveQuery(async () => (id == null ? null : ((await db.speechAttempts.get(id)) ?? null)), [id])
+}
+
+/** The newest attempt at one prompt, so a task screen can show it again after you leave and come back. */
+export function useLatestAttempt(sessionId: number | undefined, task: TaskId, promptId: string, stage?: ShadowStage) {
+  return useLiveQuery(async () => {
+    if (sessionId === undefined) return null
+    const all = await db.speechAttempts.where('sessionId').equals(sessionId).filter((a) => a.task === task && a.promptId === promptId && a.stage === stage).toArray()
+    return all.sort((a, b) => a.attemptNumber - b.attemptNumber).at(-1) ?? null
+  }, [sessionId, task, promptId, stage])
+}
+
+/** Today's newest answer that has (or can get) feedback: where "Feedback and retry" leads. */
+export function useLatestFeedbackAttempt(sessionId: number | undefined) {
+  return useLiveQuery(async () => {
+    if (sessionId === undefined) return null
+    const all = (await db.speechAttempts.where('sessionId').equals(sessionId).toArray()).filter((a) => a.transcription !== 'skipped')
+    const newest = (xs: typeof all) => xs.sort((a, b) => a.createdAt - b.createdAt).at(-1)
+    return newest(all.filter((a) => a.analysisStatus === 'done')) ?? newest(all) ?? null
+  }, [sessionId])
 }
 
 export function useAttempts(sessionId: number | undefined, task: TaskId) {

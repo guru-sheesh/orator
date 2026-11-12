@@ -46,7 +46,7 @@ export async function computeTrends(now = new Date()): Promise<Trends> {
     const from = toDateKey(start)
     const to = toDateKey(addDays(start, 6))
     const inWeek = firsts.filter((a) => a.date >= from && a.date <= to)
-    const dims = inWeek.map(dimensions)
+    const dims = inWeek.map((a) => dimensions(a))
     const minutes = inWeek.reduce((s, a) => s + a.metrics!.durationSec / 60, 0)
     const fillers = dims.reduce((s, d) => s + d.fillers, 0)
     return {
@@ -84,8 +84,11 @@ export async function computeTrends(now = new Date()): Promise<Trends> {
   for (const g of groups.values()) {
     if (g.length < 2) continue
     g.sort((x, y) => x.attemptNumber - y.attemptNumber)
-    const a = dimensions(g[0])
-    const b = dimensions(g.at(-1)!)
+    const first = g[0]
+    const last = g.at(-1)!
+    const same = first.analysisSource === last.analysisSource
+    const a = dimensions(first, same ? first.analysis! : (first.localAnalysis ?? first.analysis!))
+    const b = dimensions(last, same ? last.analysis! : (last.localAnalysis ?? last.analysis!))
     retries.pairs++
     if (b.fillers < a.fillers) retries.fillersImproved++
     if (b.hesitations < a.hesitations) retries.hesitationsImproved++

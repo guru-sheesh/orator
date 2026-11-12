@@ -56,7 +56,7 @@ export default function Progress() {
         <Link to="/" aria-label="Back to Today" className={iconButtonClass}>
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="text-headline font-semibold">Progress</h1>
+        <h1 className="font-serif text-headline font-medium">Progress</h1>
       </header>
 
       <Segmented

@@ -20,7 +20,7 @@ export function cx(...classes: (string | false | null | undefined)[]) {
 export function Card({ className, ...props }: ComponentProps<'section'>) {
   return (
     <section
-      className={cx('flex flex-col gap-3 rounded-lg bg-surface px-5 py-4 light:border light:border-border', className)}
+      className={cx('flex flex-col gap-3 rounded-lg border border-border/70 bg-surface px-5 py-4', className)}
       {...props}
     />
   )
@@ -28,17 +28,17 @@ export function Card({ className, ...props }: ComponentProps<'section'>) {
 
 /** Section title of a card. A heading by default so screen-reader users can jump between sections. */
 export function Label({ className, as: Tag = 'h2', ...props }: ComponentPropsWithoutRef<'h2'> & { as?: ElementType }) {
-  return <Tag className={cx('text-caption font-medium uppercase tracking-[0.06em] text-subtle', className)} {...props} />
+  return <Tag className={cx('text-caption font-medium text-subtle', className)} {...props} />
 }
 
 export function PageHeader({ eyebrow, title, actions }: { eyebrow?: string; title: string; actions?: ReactNode }) {
   return (
-    <header className="flex min-h-12 items-center gap-2">
-      <div className="flex-1">
-        {eyebrow && <p className="text-caption text-subtle">{eyebrow}</p>}
-        <h1 className="text-headline font-semibold">{title}</h1>
+    <header className="flex min-h-14 items-end gap-2 pb-1">
+      <div className="min-w-0 flex-1">
+        {eyebrow && <p className="mb-1 text-caption text-subtle">{eyebrow}</p>}
+        <h1 className="font-serif text-headline font-medium tracking-[-0.01em]">{title}</h1>
       </div>
-      {actions}
+      {actions && <div className="flex flex-none items-center">{actions}</div>}
     </header>
   )
 }

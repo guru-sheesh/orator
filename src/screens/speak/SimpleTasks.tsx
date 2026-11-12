@@ -25,7 +25,8 @@ function Sequence({
   const firstOpen = items.findIndex((i) => !recorded.has(i.id))
   // Resume at the first unrecorded prompt, once the attempts have loaded.
   const [chosen, setIndex] = useState<number>()
-  if (chosen === undefined && attempts) setIndex(firstOpen < 0 ? 0 : firstOpen)
+  // With everything recorded, open on the last prompt, where "Finish task" is.
+  if (chosen === undefined && attempts) setIndex(firstOpen < 0 ? items.length - 1 : firstOpen)
   const index = chosen ?? 0
   const item = items[index]
   const last = index === items.length - 1
