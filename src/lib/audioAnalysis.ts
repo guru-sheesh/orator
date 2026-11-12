@@ -238,16 +238,24 @@ export function phraseWordRanges(words: TimedWord[], offset: number, envelope: U
   return merged
 }
 
-/** Turns word ranges into play ranges, cutting at the quietest moment around each boundary so no word is clipped. */
+/** Turns word ranges into play ranges, cutting at the quietest moment between phrases so no word is clipped or carried over. */
 function phraseTimes(merged: [number, number][], words: TimedWord[], offset: number, segment: ShadowSegment, envelope: Uint8Array): ShadowSegment[] {
-  const quietest = (fromSec: number, toSec: number) => {
-    const lo = Math.max(0, Math.floor(fromSec * ENVELOPE_RATE))
-    const hi = Math.min(envelope.length - 1, Math.ceil(toSec * ENVELOPE_RATE))
+  const clamp = (t: number) => Math.min(segment.end, Math.max(segment.start, t))
+  /**
+   * The cut between two phrases: the quietest moment in the gap between the last
+   * word of one and the first word of the next, never inside either word, so a
+   * phrase can't end with the first sound of the next sentence. With no gap
+   * (words run together), it's the boundary itself.
+   */
+  const cutBetween = (lastEnd: number, nextStart: number) => {
+    if (nextStart - lastEnd < 0.1) return (lastEnd + Math.max(lastEnd, nextStart)) / 2
+    const lo = Math.ceil(lastEnd * ENVELOPE_RATE)
+    const hi = Math.floor(nextStart * ENVELOPE_RATE) - 1
+    if (hi < lo) return (lastEnd + nextStart) / 2
     let best = lo
     for (let f = lo; f <= hi; f++) if (envelope[f] < envelope[best]) best = f
-    return hi >= lo ? (best + 0.5) / ENVELOPE_RATE : (fromSec + toSec) / 2
+    return Math.min(nextStart, Math.max(lastEnd, (best + 0.5) / ENVELOPE_RATE))
   }
-  const clamp = (t: number) => Math.min(segment.end, Math.max(segment.start, t))
   return merged
     .map(([a, b], i) => {
       const wordsStart = offset + words[a].start
@@ -256,13 +264,13 @@ function phraseTimes(merged: [number, number][], words: TimedWord[], offset: num
       let start = wordsStart - 0.4
       if (i > 0) {
         const prevEnd = offset + words[a - 1].end
-        if (wordsStart - prevEnd <= LONG_GAP_SEC) start = quietest(prevEnd - 0.1, Math.max(wordsStart, prevEnd) + 0.1)
+        if (wordsStart - prevEnd <= LONG_GAP_SEC) start = cutBetween(prevEnd, wordsStart)
       }
       // End likewise. A long gap (applause, a laugh, a long silence) belongs to neither phrase.
       let end = wordsEnd + 0.6
       if (i < merged.length - 1) {
         const nextStart = offset + words[b + 1].start
-        end = nextStart - wordsEnd <= LONG_GAP_SEC ? quietest(wordsEnd - 0.1, Math.max(nextStart, wordsEnd) + 0.1) : Math.min(end, nextStart - 0.4)
+        end = nextStart - wordsEnd <= LONG_GAP_SEC ? cutBetween(wordsEnd, nextStart) : Math.min(end, nextStart - 0.4)
       }
       return { start: clamp(start), end: clamp(end) }
     })
